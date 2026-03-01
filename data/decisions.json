@@ -1,0 +1,392 @@
+{
+  "decisions": [
+    {
+      "id": "d-001",
+      "title": "Contract packaging",
+      "categoryId": "prelims",
+      "options": [
+        {
+          "name": "Single main contractor package",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Split groundworks and main build packages",
+          "costDeltaExVat": -10000
+        }
+      ],
+      "selectedOptionIndex": 1,
+      "notes": "Project brief currently prefers a single main contract, but an early groundworks split remains possible.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "d-002",
+      "title": "Courtyard drainage build-up",
+      "categoryId": "groundworks",
+      "options": [
+        {
+          "name": "Standard slot drains and falls",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Concealed drainage channels with extra sump capacity",
+          "costDeltaExVat": 6000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Courtyard detailing will affect groundworks coordination and threshold levels.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-003",
+      "title": "Steel frame finish",
+      "categoryId": "structure",
+      "options": [
+        {
+          "name": "Standard intumescent coating where required",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Higher-finish exposed steel package",
+          "costDeltaExVat": 9000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Depends on whether any steel remains visible internally.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-004",
+      "title": "Roof covering strategy",
+      "categoryId": "roofs",
+      "options": [
+        {
+          "name": "Cost-led pitched covering with standard warm roof links",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgrade to premium standing seam / enhanced link detailing",
+          "costDeltaExVat": 12000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Warm roof link detailing is fixed; final finish level is still open.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-005",
+      "title": "Cladding species",
+      "categoryId": "envelope",
+      "options": [
+        {
+          "name": "Larch (treated, hidden fixings)",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Cedar (treated, hidden fixings)",
+          "costDeltaExVat": 8000
+        }
+      ],
+      "selectedOptionIndex": 0,
+      "notes": "Courtyard treated as envelope for reporting; courtyard finishing tracked separately long-term.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "d-006",
+      "title": "Wall build-up / insulation thickness",
+      "categoryId": "envelope",
+      "options": [
+        {
+          "name": "Baseline compliant fabric build-up",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced insulation and airtightness package",
+          "costDeltaExVat": 10000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Trade-off between upfront cost and operational performance.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-007",
+      "title": "Large slider specification",
+      "categoryId": "windows",
+      "options": [
+        {
+          "name": "Standard sliding system",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Higher-performance slimline slider system",
+          "costDeltaExVat": 15000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Applies to the two principal large openings in the living volume.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-008",
+      "title": "Solar control glazing",
+      "categoryId": "windows",
+      "options": [
+        {
+          "name": "Standard double glazing specification",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Targeted solar-control glass to south/west elevations",
+          "costDeltaExVat": 7000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Useful if overheating risk remains after passive shading review.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-009",
+      "title": "MVHR confirmation",
+      "categoryId": "mech_elec",
+      "options": [
+        {
+          "name": "Proceed with MVHR throughout",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Natural ventilation fallback with local extract only",
+          "costDeltaExVat": -9000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Project assumptions currently treat MVHR as likely.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-010",
+      "title": "Electrical allowance level",
+      "categoryId": "mech_elec",
+      "options": [
+        {
+          "name": "Standard switch/socket and lighting package",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced lighting scenes and joinery-integrated power",
+          "costDeltaExVat": 12000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Needs coordination with kitchen, joinery, and external lighting decisions.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-011",
+      "title": "Kitchen cabinetry and worktops",
+      "categoryId": "kitchen_utility",
+      "options": [
+        {
+          "name": "Vermland cabinetry and worktops (£24,000)",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Higher-spec fully bespoke cabinetry and worktops",
+          "costDeltaExVat": 15000
+        }
+      ],
+      "selectedOptionIndex": 0,
+      "notes": "Current preferred supplier is Vermland at £24,000 ex VAT for cabinetry and worktops.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-02-28"
+    },
+    {
+      "id": "d-012",
+      "title": "Appliance package",
+      "categoryId": "kitchen_utility",
+      "options": [
+        {
+          "name": "Allowance of £15,000 for appliances",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Premium appliance package above allowance",
+          "costDeltaExVat": 8000
+        }
+      ],
+      "selectedOptionIndex": 0,
+      "notes": "Current working assumption is a £15,000 appliance spend.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-02-28"
+    },
+    {
+      "id": "d-013",
+      "title": "Bath selection (1 bath)",
+      "categoryId": "bathrooms",
+      "options": [
+        {
+          "name": "Standard acrylic bath",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Stone resin / premium bath",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": 1,
+      "notes": "Single bath item for the family bathroom.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "d-014",
+      "title": "Shower package (3 showers)",
+      "categoryId": "bathrooms",
+      "options": [
+        {
+          "name": "Standard concealed thermostatic sets x3",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Premium brassware / larger heads x3",
+          "costDeltaExVat": 4500
+        }
+      ],
+      "selectedOptionIndex": 0,
+      "notes": "Applies across three shower locations.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "d-015",
+      "title": "Basin / sink selection (4 sinks)",
+      "categoryId": "bathrooms",
+      "options": [
+        {
+          "name": "Standard ceramic basins x4",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Designer basin package x4",
+          "costDeltaExVat": 3200
+        }
+      ],
+      "selectedOptionIndex": 1,
+      "notes": "Includes family bathroom, ensuites, and powder room sinks.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "d-016",
+      "title": "Bathroom wall finish",
+      "categoryId": "bathrooms",
+      "options": [
+        {
+          "name": "Targeted tiling to wet areas only",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "More extensive full-height tiling package",
+          "costDeltaExVat": 5000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This one overlaps with finishes and should be coordinated before procurement.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-017",
+      "title": "Internal door specification",
+      "categoryId": "joinery",
+      "options": [
+        {
+          "name": "Paint-grade flush doors",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Higher-spec veneer / rebated detail doors",
+          "costDeltaExVat": 7000
+        }
+      ],
+      "selectedOptionIndex": 0,
+      "notes": "Impacts second-fix joinery package and decorating scope.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "d-018",
+      "title": "Wardrobe extent",
+      "categoryId": "joinery",
+      "options": [
+        {
+          "name": "Essential fitted wardrobes only",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Expanded fitted storage package",
+          "costDeltaExVat": 9000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Can be postponed or phased if contingency tightens.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-019",
+      "title": "Floor finish level",
+      "categoryId": "finishes",
+      "options": [
+        {
+          "name": "Polished terrazzo to c.100 sqm + engineered oak to 110 sqm + basic garage concrete finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Higher-spec terrazzo and premium wide-board oak upgrade",
+          "costDeltaExVat": 10000
+        }
+      ],
+      "selectedOptionIndex": 0,
+      "notes": "Current working assumption is polished terrazzo to the main living zones, engineered oak to the remaining house areas, and a basic non-polished garage concrete finish.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "d-020",
+      "title": "Decorating scope",
+      "categoryId": "finishes",
+      "options": [
+        {
+          "name": "Standard paint system",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced finish schedule with feature areas",
+          "costDeltaExVat": 4000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Can be held until later once rooms are fully coordinated.",
+      "createdDate": "2026-02-28"
+    },
+    {
+      "id": "d-021",
+      "title": "EV charging allowance",
+      "categoryId": "utilities",
+      "options": [
+        {
+          "name": "Single standard charger",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Load-managed charger with future PV/battery integration",
+          "costDeltaExVat": 1800
+        }
+      ],
+      "selectedOptionIndex": 0,
+      "notes": "Useful to coordinate with phase 2 PV and battery ambitions.",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-03-01"
+    }
+  ]
+}

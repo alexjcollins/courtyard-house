@@ -1,0 +1,215 @@
+{
+  "suppliers": [
+    {
+      "id": "sup-arboricultural-consultant",
+      "name": "Arboricultural Consultant",
+      "trade": "Arboricultural consultancy",
+      "notes": "Tree survey and arboricultural planning input."
+    },
+    {
+      "id": "sup-ashford-borough-council",
+      "name": "Ashford Borough Council",
+      "trade": "Planning authority",
+      "notes": "Local authority fees and planning-related application charges."
+    },
+    {
+      "id": "sup-project-architect",
+      "name": "Project Architect",
+      "trade": "Architectural services",
+      "notes": "Lead architect appointment for design and coordination."
+    },
+    {
+      "id": "sup-ecological-consultant",
+      "name": "Ecological Consultant",
+      "trade": "Ecological consultancy",
+      "notes": "Ecological study and planning support."
+    },
+    {
+      "id": "sup-topographical-surveyor",
+      "name": "Topographical Surveyor",
+      "trade": "Topographical survey",
+      "notes": "Topographical survey and related site information."
+    },
+    {
+      "id": "sup-vermland",
+      "name": "Vermland",
+      "trade": "Kitchen cabinetry & worktops",
+      "notes": "Current kitchen supplier for cabinetry and worktops."
+    }
+  ],
+  "quotes": [
+    {
+      "id": "q-001",
+      "supplierId": "sup-vermland",
+      "categoryId": "kitchen_utility",
+      "title": "Kitchen cabinetry and worktops",
+      "amountExVat": 24000,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "received",
+      "quoteDate": "2026-02-28",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-02-28",
+      "notes": "Vermland quote for all kitchen cabinetry and worktops."
+    }
+  ],
+  "purchaseOrders": [
+    {
+      "id": "po-architect-appointment",
+      "supplierId": "sup-project-architect",
+      "categoryId": "fees",
+      "title": "Architect appointment",
+      "amountExVat": 62000,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Professional appointment for architect services."
+    },
+    {
+      "id": "po-topographical-study",
+      "supplierId": "sup-topographical-surveyor",
+      "categoryId": "fees",
+      "title": "Topographical study",
+      "amountExVat": 1900,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Initial topographical study and survey information."
+    },
+    {
+      "id": "po-ecological-study",
+      "supplierId": "sup-ecological-consultant",
+      "categoryId": "fees",
+      "title": "Ecological study",
+      "amountExVat": 3300,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Ecological study and related planning input."
+    },
+    {
+      "id": "po-pre-planning-application",
+      "supplierId": "sup-ashford-borough-council",
+      "categoryId": "fees",
+      "title": "Pre-planning application",
+      "amountExVat": 555,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Pre-planning application fee paid to the local authority."
+    },
+    {
+      "id": "po-arboricultural-study",
+      "supplierId": "sup-arboricultural-consultant",
+      "categoryId": "fees",
+      "title": "Arboricultural study",
+      "amountExVat": 1475,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Arboricultural study and associated reporting."
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-architect-001",
+      "purchaseOrderId": "po-architect-appointment",
+      "supplierId": "sup-project-architect",
+      "number": "ARCH-001",
+      "amountExVat": 30000,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Architect payment recorded against appointment.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-architect-stage4-001",
+      "purchaseOrderId": "po-architect-appointment",
+      "supplierId": "sup-project-architect",
+      "number": "ARCH-004",
+      "amountExVat": 9750,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Architect RIBA Stage 4 fees, settled across three payments.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-topographical-001",
+      "purchaseOrderId": "po-topographical-study",
+      "supplierId": "sup-topographical-surveyor",
+      "number": "TOPO-001",
+      "amountExVat": 1900,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Topographical study payment recorded in full.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-ecological-001",
+      "purchaseOrderId": "po-ecological-study",
+      "supplierId": "sup-ecological-consultant",
+      "number": "ECO-001",
+      "amountExVat": 3300,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Ecological study payment recorded in full.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-pre-planning-001",
+      "purchaseOrderId": "po-pre-planning-application",
+      "supplierId": "sup-ashford-borough-council",
+      "number": "ABC-PP-001",
+      "amountExVat": 555,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Pre-planning application fee paid to Ashford Borough Council.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-arboricultural-001",
+      "purchaseOrderId": "po-arboricultural-study",
+      "supplierId": "sup-arboricultural-consultant",
+      "number": "ARB-001",
+      "amountExVat": 1475,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Arboricultural study payment recorded in full.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    }
+  ]
+}

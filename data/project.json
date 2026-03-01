@@ -1,0 +1,77 @@
+{
+  "projectId": "selfbuild-001",
+  "name": "Courtyard House",
+  "location": "Gribble Bridge Lane, Biddenden, Kent",
+  "currency": "GBP",
+  "budgeting": {
+    "budgetsDefaultExVat": true,
+    "vatRates": {
+      "default": 0.0,
+      "reduced": 0.05,
+      "standard": 0.2
+    }
+  },
+  "areas": {
+    "houseGIA_sqm": 210,
+    "garage_sqm": 40,
+    "totalBuilt_sqm": 250,
+    "courtyard_sqm": 25,
+    "terracePlinth_sqm": 53.75
+  },
+  "construction": {
+    "form": "3 gabled volumes with flat roof links around central courtyard",
+    "primaryStructure": {
+      "type": "steel-portal-frame",
+      "status": "tbd",
+      "notes": "Assumed portal frame; timber build-up/infill details to be confirmed with structural engineer."
+    },
+    "foundations": {
+      "type": "raft-slab",
+      "notes": "No piles anticipated."
+    },
+    "roof": {
+      "flatLinks": "warm-roof",
+      "rooflights": false
+    },
+    "cladding": {
+      "materialOptions": ["larch", "cedar"],
+      "fixings": "hidden",
+      "treated": true
+    },
+    "glazing": {
+      "spec": "double",
+      "frames": "thin aluminium",
+      "largeGlazing": {
+        "type": "standard sliding",
+        "panelHeight_m": 2.4,
+        "openings": [
+          { "location": "living volume", "width_m": 5.5 },
+          { "location": "living volume", "width_m": 6.5 }
+        ]
+      }
+    },
+    "services": {
+      "gas": false,
+      "heating": "ASHP + UFH",
+      "ventilation": "MVHR (likely)",
+      "evCharger": true,
+      "solarPV": { "planned": true, "phase": 2 },
+      "battery": { "planned": true, "phase": 2 },
+      "woodBurner": false
+    },
+    "garage": {
+      "assumption": "insulated + plastered minimal spec (worst-case cost placeholder)",
+      "notes": "If budget tight, garage can be simplified later."
+    },
+    "courtyard": {
+      "reportingCategory": "envelope",
+      "finishBudgetApproach": "separate long-term budget bucket",
+      "notes": "Courtyard impacts glazing/views and drainage detailing."
+    }
+  },
+  "procurement": {
+    "strategy": "single-main-contract",
+    "possibleSplit": ["groundworks", "main-build"],
+    "notes": "Prefer single contract; may split groundworks to start sooner."
+  }
+}

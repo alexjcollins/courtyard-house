@@ -1,0 +1,76 @@
+{
+  "payments": [
+    {
+      "id": "pay-architect-001",
+      "invoiceId": "inv-architect-001",
+      "amountExVat": 30000,
+      "paidDate": "2026-03-01",
+      "fundingSourceId": "src-ether",
+      "reference": "ARCH-PMT-001",
+      "notes": "Architect payment made."
+    },
+    {
+      "id": "pay-architect-stage4-001",
+      "invoiceId": "inv-architect-stage4-001",
+      "amountExVat": 3250,
+      "paidDate": "2026-03-01",
+      "fundingSourceId": "src-ether",
+      "reference": "ARCH-004-PMT-001",
+      "notes": "Architect RIBA Stage 4 payment 1 of 3."
+    },
+    {
+      "id": "pay-architect-stage4-002",
+      "invoiceId": "inv-architect-stage4-001",
+      "amountExVat": 3250,
+      "paidDate": "2026-03-01",
+      "fundingSourceId": "src-ether",
+      "reference": "ARCH-004-PMT-002",
+      "notes": "Architect RIBA Stage 4 payment 2 of 3."
+    },
+    {
+      "id": "pay-architect-stage4-003",
+      "invoiceId": "inv-architect-stage4-001",
+      "amountExVat": 3250,
+      "paidDate": "2026-03-01",
+      "fundingSourceId": "src-ether",
+      "reference": "ARCH-004-PMT-003",
+      "notes": "Architect RIBA Stage 4 payment 3 of 3."
+    },
+    {
+      "id": "pay-topographical-001",
+      "invoiceId": "inv-topographical-001",
+      "amountExVat": 1900,
+      "paidDate": "2026-03-01",
+      "fundingSourceId": "src-ether",
+      "reference": "TOPO-PMT-001",
+      "notes": "Topographical study payment made."
+    },
+    {
+      "id": "pay-ecological-001",
+      "invoiceId": "inv-ecological-001",
+      "amountExVat": 3300,
+      "paidDate": "2026-03-01",
+      "fundingSourceId": "src-ether",
+      "reference": "ECO-PMT-001",
+      "notes": "Ecological study payment made."
+    },
+    {
+      "id": "pay-pre-planning-001",
+      "invoiceId": "inv-pre-planning-001",
+      "amountExVat": 555,
+      "paidDate": "2026-03-01",
+      "fundingSourceId": "src-ether",
+      "reference": "ABC-PP-001",
+      "notes": "Pre-planning application fee paid to Ashford Borough Council."
+    },
+    {
+      "id": "pay-arboricultural-001",
+      "invoiceId": "inv-arboricultural-001",
+      "amountExVat": 1475,
+      "paidDate": "2026-03-01",
+      "fundingSourceId": "src-ether",
+      "reference": "ARB-PMT-001",
+      "notes": "Arboricultural study payment made."
+    }
+  ]
+}

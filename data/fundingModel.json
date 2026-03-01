@@ -1,0 +1,88 @@
+{
+  "model": "generic-self-build-stages",
+  "assumptions": {
+    "baselineBuildBudgetExVat": 680500,
+    "contingencyExVat": 100000,
+    "startDate": "2026-04-01",
+    "buildStartDate": "2026-09-07",
+    "buildEndDate": "2027-09-10"
+  },
+  "sources": [
+    {
+      "id": "src-ether",
+      "name": "Ether",
+      "type": "company-cash",
+      "amountExVat": 180000,
+      "status": "available",
+      "notes": "Company funding assumption: £100k of core company cash plus most professional fees, currently modelled as roughly £80k."
+    },
+    {
+      "id": "src-savings",
+      "name": "Personal savings",
+      "type": "cash",
+      "amountExVat": 150000,
+      "status": "available",
+      "notes": "Expected personal cash contribution alongside company funding."
+    },
+    {
+      "id": "src-mortgage",
+      "name": "Self-build mortgage",
+      "type": "debt",
+      "amountExVat": 500000,
+      "status": "target",
+      "notes": "Target mortgage facility for main construction drawdowns after pre-start."
+    }
+  ],
+  "stages": [
+    {
+      "id": "s1",
+      "name": "Pre-start (design, surveys, conditions)",
+      "percent": 0.1,
+      "milestoneId": "m-tech-freeze",
+      "fundingSourceId": "src-ether",
+      "drawdownPercent": 0,
+      "drawdownExcluded": true,
+      "notes": "Self-funded before the mortgage starts."
+    },
+    {
+      "id": "s2",
+      "name": "Foundations complete",
+      "percent": 0.15,
+      "milestoneId": "m-foundations-complete",
+      "fundingSourceId": "src-mortgage",
+      "drawdownPercent": 0.1666666667
+    },
+    {
+      "id": "s3",
+      "name": "Weather-tight",
+      "percent": 0.25,
+      "milestoneId": "m-watertight",
+      "fundingSourceId": "src-mortgage",
+      "drawdownPercent": 0.2777777778
+    },
+    {
+      "id": "s4",
+      "name": "First fix complete",
+      "percent": 0.2,
+      "milestoneId": "m-first-fix",
+      "fundingSourceId": "src-mortgage",
+      "drawdownPercent": 0.2222222222
+    },
+    {
+      "id": "s5",
+      "name": "Second fix / near completion",
+      "percent": 0.25,
+      "milestoneId": "m-second-fix",
+      "fundingSourceId": "src-mortgage",
+      "drawdownPercent": 0.2777777778
+    },
+    {
+      "id": "s6",
+      "name": "Final account / retention",
+      "percent": 0.05,
+      "milestoneId": "m-practical-completion",
+      "fundingSourceId": "src-mortgage",
+      "drawdownPercent": 0.0555555556
+    }
+  ]
+}
