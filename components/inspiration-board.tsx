@@ -43,7 +43,8 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
   const [sourceUrl, setSourceUrl] = useState("")
   const [title, setTitle] = useState("")
   const [room, setRoom] = useState("")
-  const [tags, setTags] = useState("")
+  const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState("")
   const [notes, setNotes] = useState("")
   const [draftImages, setDraftImages] = useState<DraftImage[]>([])
   const [ingestedItem, setIngestedItem] = useState<IngestedItem | null>(null)
@@ -59,6 +60,20 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
     () =>
       [...new Set(items.map((item) => item.room).filter(Boolean) as string[])].sort(),
     [items],
+  )
+  const allTags = useMemo(
+    () =>
+      [...new Set(items.flatMap((item) => item.tags || []).filter(Boolean))].sort((a, b) =>
+        a.localeCompare(b),
+      ),
+    [items],
+  )
+  const suggestedTags = useMemo(
+    () =>
+      allTags.filter((tag) =>
+        !selectedTags.some((selectedTag) => selectedTag.toLowerCase() === tag.toLowerCase()),
+      ),
+    [allTags, selectedTags],
   )
 
   const filteredItems = useMemo(() => {
@@ -90,7 +105,8 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
     setSourceUrl("")
     setTitle("")
     setRoom("")
-    setTags("")
+    setSelectedTags([])
+    setTagInput("")
     setNotes("")
     setDraftImages([])
     setIngestedItem(null)
@@ -113,7 +129,8 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
     setSourceUrl(item.sourceUrl || "")
     setTitle(item.title)
     setRoom(item.room || "")
-    setTags((item.tags || []).join(", "))
+    setSelectedTags(item.tags || [])
+    setTagInput("")
     setNotes(item.notes || "")
     setIngestedItem(null)
     setDraftImages(
@@ -126,6 +143,24 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
       })),
     )
     setMessage("")
+  }
+
+  function addTag(rawValue: string) {
+    const nextTag = rawValue.trim()
+    if (!nextTag) return
+
+    setSelectedTags((current) => {
+      if (current.some((tag) => tag.toLowerCase() === nextTag.toLowerCase())) {
+        return current
+      }
+
+      return [...current, nextTag]
+    })
+    setTagInput("")
+  }
+
+  function removeTag(tagToRemove: string) {
+    setSelectedTags((current) => current.filter((tag) => tag !== tagToRemove))
   }
 
   async function ingestLink() {
@@ -234,10 +269,7 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
           room,
           sourceUrl,
           notes,
-          tags: tags
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter(Boolean),
+          tags: selectedTags,
           images: draftImages.map(({ key, alt, sourceUrl: originalUrl }) => ({
             key,
             alt,
@@ -369,7 +401,7 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
           setIsEditorOpen(true)
         }}
       >
-        <DialogContent className="max-w-5xl border-border p-0 sm:max-w-5xl">
+        <DialogContent className="max-h-[calc(100vh-2rem)] max-w-5xl overflow-y-auto border-border p-0 sm:max-w-5xl">
           <Card className="border-0 py-0">
             <CardHeader className="px-5 pt-5">
               <DialogHeader>
@@ -407,16 +439,72 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
                   onChange={(event) => setTitle(event.target.value)}
                   placeholder="Title"
                 />
-                <Input
-                  value={room}
-                  onChange={(event) => setRoom(event.target.value)}
-                  placeholder="Room e.g. Kitchen or Alex Master Bathroom"
-                />
-                <Input
-                  value={tags}
-                  onChange={(event) => setTags(event.target.value)}
-                  placeholder="Tags, comma separated"
-                />
+                <div className="space-y-2">
+                  <Input
+                    value={room}
+                    onChange={(event) => setRoom(event.target.value)}
+                    placeholder="Room e.g. Kitchen or Alex Master Bathroom"
+                    list="inspiration-room-options"
+                  />
+                  <datalist id="inspiration-room-options">
+                    {rooms.map((roomOption) => (
+                      <option key={roomOption} value={roomOption} />
+                    ))}
+                  </datalist>
+                  {rooms.length ? (
+                    <p className="text-xs text-muted-foreground">
+                      Reuse an existing room value where possible for consistency.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-2 border border-border/70 p-3">
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="border border-border/70 px-2 py-1 text-xs text-foreground"
+                      >
+                        {tag} ×
+                      </button>
+                    ))}
+                  </div>
+                  <Input
+                    value={tagInput}
+                    onChange={(event) => setTagInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === ",") {
+                        event.preventDefault()
+                        addTag(tagInput)
+                      }
+
+                      if (event.key === "Backspace" && !tagInput && selectedTags.length > 0) {
+                        event.preventDefault()
+                        removeTag(selectedTags[selectedTags.length - 1])
+                      }
+                    }}
+                    placeholder="Add a tag and press Enter"
+                  />
+                </div>
+
+                {suggestedTags.length ? (
+                  <div className="flex flex-wrap gap-2">
+                    {suggestedTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => addTag(tag)}
+                        className="border border-border/70 px-2 py-1 text-xs text-muted-foreground"
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               <Textarea

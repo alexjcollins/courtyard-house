@@ -74,6 +74,14 @@
       "meta": { "area_sqm": 53.75 }
     },
     {
+      "id": "gw-nissen-hut-demo",
+      "categoryId": "groundworks",
+      "name": "Demolition of existing Nissen hut and breakup/removal of remaining foundations",
+      "budgetExVat": 15000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
       "id": "str-portal-frame",
       "categoryId": "structure",
       "name": "Steel portal frame supply + erection (TBC design)",

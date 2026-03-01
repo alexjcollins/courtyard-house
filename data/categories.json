@@ -2,7 +2,7 @@
   "categories": [
     { "id": "prelims", "name": "Prelims & site setup", "budgetExVat": 30000, "vatRate": 0.0, "notes": "Temporary works, site welfare, setup, access, and general contractor overheads before the main build flow starts." },
     { "id": "fees", "name": "Professional fees & statutory", "budgetExVat": 77230, "vatRate": 0.2, "reportingBucket": "soft_cost", "notes": "Architect, structural engineer, topographical study, ecological study, arboricultural study, pre-planning application, consultants, approvals, and other non-construction professional costs." },
-    { "id": "groundworks", "name": "Groundworks, drainage & foundations", "budgetExVat": 95000, "vatRate": 0.0, "notes": "Excavation, below-ground drainage, services entries, raft slab works, and external ground formation tied to the building." },
+    { "id": "groundworks", "name": "Groundworks, drainage & foundations", "budgetExVat": 110000, "vatRate": 0.0, "notes": "Excavation, below-ground drainage, services entries, raft slab works, demolition of the existing Nissen hut, removal of old foundations, and external ground formation tied to the building." },
     { "id": "structure", "name": "Superstructure (steel frame + structural works)", "budgetExVat": 90000, "vatRate": 0.0, "notes": "Primary frame, structural carpentry, and other key load-bearing elements that take the build out of the ground." },
     { "id": "roofs", "name": "Roofs (pitched + warm roof links)", "budgetExVat": 35000, "vatRate": 0.0, "notes": "Pitched roof build-ups, flat link roofs, waterproofing, and associated trims and rainwater interfaces." },
     { "id": "envelope", "name": "Envelope (walls/insulation/cladding/airtightness + courtyard interface)", "budgetExVat": 90000, "vatRate": 0.0, "notes": "External wall build-up, insulation, membranes, cladding, and the critical detailing around the courtyard edge." },
@@ -23,8 +23,8 @@
     "rules": "Global pot; allocate via decisions or manual transfers later."
   },
   "totals": {
-    "baselineBuildBudgetExVat": 757730,
+    "baselineBuildBudgetExVat": 772730,
     "contingencyExVat": 100000,
-    "envelopeExVat": 857730
+    "envelopeExVat": 872730
   }
 }
