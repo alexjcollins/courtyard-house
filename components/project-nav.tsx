@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FolderKanban, ShoppingCart, GitBranch, Settings2, Wallet } from "lucide-react"
+import { Home, FolderKanban, ShoppingCart, GitBranch, Settings2, Wallet, Images } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navigationItems = [
@@ -10,6 +10,7 @@ const navigationItems = [
   { href: "/categories", label: "Categories", icon: FolderKanban },
   { href: "/procurement", label: "Procurement", icon: ShoppingCart },
   { href: "/decisions", label: "Decisions", icon: Settings2 },
+  { href: "/inspiration", label: "Inspiration", icon: Images },
   { href: "/funding", label: "Funding", icon: Wallet },
   { href: "/timeline", label: "Timeline", icon: GitBranch },
 ] as const

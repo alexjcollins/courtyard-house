@@ -10,6 +10,7 @@ const DATA_FILE_NAMES = [
   "payments.json",
   "decisions.json",
   "ideas.json",
+  "inspiration.json",
   "timeline.json",
   "fundingModel.json",
 ]
@@ -204,10 +205,25 @@ async function main() {
 
   const config = getSpacesConfig()
   const dataDirectory = path.join(process.cwd(), "data")
+  const requestedFiles = process.argv.slice(2)
+  const filesToSeed =
+    requestedFiles.length > 0
+      ? requestedFiles.map((fileName) => {
+          if (!DATA_FILE_NAMES.includes(fileName)) {
+            throw new Error(
+              `Unknown data file "${fileName}". Expected one of: ${DATA_FILE_NAMES.join(", ")}`,
+            )
+          }
 
-  console.log(`Seeding ${DATA_FILE_NAMES.length} data files to ${getObjectUrl(config, "data/")}`)
+          return fileName
+        })
+      : DATA_FILE_NAMES
 
-  for (const fileName of DATA_FILE_NAMES) {
+  console.log(
+    `Seeding ${filesToSeed.length} data file${filesToSeed.length === 1 ? "" : "s"} to ${getObjectUrl(config, "data/")}`,
+  )
+
+  for (const fileName of filesToSeed) {
     const localPath = path.join(dataDirectory, fileName)
     const content = await readFile(localPath, "utf8")
     const key = `data/${fileName}`

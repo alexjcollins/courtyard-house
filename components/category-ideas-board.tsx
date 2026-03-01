@@ -181,59 +181,24 @@ export function CategoryIdeasBoard({
       const uploadedImages: DraftImage[] = []
 
       for (const file of selection) {
-        const extension =
-          file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg"
-        const draftId =
-          typeof crypto !== "undefined" && "randomUUID" in crypto
-            ? crypto.randomUUID()
-            : `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-        const key = `files/ideas/uploads/${draftId}.${extension}`
+        const formData = new FormData()
+        formData.set("file", file)
+        formData.set("folder", "files/ideas/uploads")
 
-        const uploadResponse = await fetch("/api/files/sign", {
+        const uploadResponse = await fetch("/api/files/upload", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            key,
-            action: "upload",
-            expiresInSeconds: 60 * 30,
-          }),
+          body: formData,
         })
         const uploadPayload = await uploadResponse.json()
         if (!uploadResponse.ok) {
-          throw new Error(uploadPayload.error || "Could not create upload URL.")
-        }
-
-        const putResponse = await fetch(uploadPayload.url as string, {
-          method: "PUT",
-          headers: {
-            "Content-Type": file.type || "application/octet-stream",
-          },
-          body: file,
-        })
-
-        if (!putResponse.ok) {
-          throw new Error(`Could not upload ${file.name}.`)
-        }
-
-        const downloadResponse = await fetch("/api/files/sign", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            key,
-            action: "download",
-            expiresInSeconds: 60 * 60,
-          }),
-        })
-        const downloadPayload = await downloadResponse.json()
-        if (!downloadResponse.ok) {
-          throw new Error(downloadPayload.error || "Could not create preview URL.")
+          throw new Error(uploadPayload.error || `Could not upload ${file.name}.`)
         }
 
         uploadedImages.push({
-          key,
-          alt: file.name,
+          key: uploadPayload.image.key as string,
+          alt: (uploadPayload.image.alt as string) || file.name,
           sourceUrl: undefined,
-          signedUrl: downloadPayload.url as string,
+          signedUrl: uploadPayload.image.signedUrl as string,
           origin: "uploaded",
         })
       }

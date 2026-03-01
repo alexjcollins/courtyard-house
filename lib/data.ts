@@ -17,6 +17,7 @@ export const DATA_FILE_NAMES = [
   "payments.json",
   "decisions.json",
   "ideas.json",
+  "inspiration.json",
   "timeline.json",
   "fundingModel.json",
 ] as const
@@ -230,6 +231,29 @@ export type IdeasFile = {
   ideas: Idea[]
 }
 
+export type InspirationItem = {
+  id: string
+  title: string
+  room?: string
+  sourceUrl?: string
+  notes?: string
+  tags?: string[]
+  images?: IdeaImage[]
+  metadata?: {
+    description?: string
+    siteName?: string
+    priceText?: string
+    ingestedAt?: string
+    updatedFromUrlAt?: string
+  }
+  createdDate?: string
+  updatedDate?: string
+}
+
+export type InspirationFile = {
+  items: InspirationItem[]
+}
+
 export type Milestone = {
   id: string
   name: string
@@ -305,6 +329,10 @@ export type UpcomingPayment = {
 export type IdeaSummary = Idea & {
   imageUrls: string[]
   selectedCostDeltaExVat: number
+}
+
+export type InspirationSummary = InspirationItem & {
+  imageUrls: string[]
 }
 
 export type CategorySummary = Category & {
@@ -730,6 +758,15 @@ function createIdeaId(title: string): string {
   return `idea-${slugify(title)}-${randomSuffix}`
 }
 
+function createInspirationId(title: string): string {
+  const randomSuffix =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID().slice(0, 8)
+      : Math.random().toString(36).slice(2, 10)
+
+  return `insp-${slugify(title)}-${randomSuffix}`
+}
+
 function categoryNameById(
   categoryId: string | undefined,
   categories: Category[],
@@ -856,6 +893,86 @@ export type SaveIdeaInput = {
   tags?: string[]
   images?: IdeaImage[]
   metadata?: Idea["metadata"]
+}
+
+export type SaveInspirationInput = {
+  itemId?: string
+  title: string
+  room?: string
+  sourceUrl?: string
+  notes?: string
+  tags?: string[]
+  images?: IdeaImage[]
+  metadata?: InspirationItem["metadata"]
+}
+
+export async function getInspirationItems(): Promise<InspirationSummary[]> {
+  const inspirationFile = await readJsonFile<InspirationFile>("inspiration.json")
+
+  return [...inspirationFile.items]
+    .sort((left, right) =>
+      (right.updatedDate || right.createdDate || "").localeCompare(
+        left.updatedDate || left.createdDate || "",
+      ),
+    )
+    .map((item) => ({
+      ...item,
+      imageUrls: (item.images || []).map((image) =>
+        createPrivateObjectSignedUrl(image.key, {
+          expiresInSeconds: 60 * 60,
+        }),
+      ),
+    }))
+}
+
+export async function saveInspirationItem(
+  input: SaveInspirationInput,
+): Promise<InspirationItem> {
+  const inspirationFile = await readJsonFile<InspirationFile>("inspiration.json")
+  const today = new Date().toISOString().slice(0, 10)
+  const currentItem = input.itemId
+    ? inspirationFile.items.find((item) => item.id === input.itemId) || null
+    : null
+
+  if (input.itemId && !currentItem) {
+    throw new Error("Inspiration item not found.")
+  }
+
+  const nextItem: InspirationItem = {
+    id: currentItem?.id || createInspirationId(input.title),
+    title: input.title.trim(),
+    room: input.room?.trim() || undefined,
+    sourceUrl: input.sourceUrl?.trim() || undefined,
+    notes: input.notes?.trim() || undefined,
+    tags: normalizeTags(input.tags),
+    images: input.images ?? currentItem?.images ?? [],
+    metadata: input.metadata ?? currentItem?.metadata,
+    createdDate: currentItem?.createdDate || today,
+    updatedDate: today,
+  }
+
+  if (currentItem) {
+    const itemIndex = inspirationFile.items.findIndex((item) => item.id === currentItem.id)
+    inspirationFile.items[itemIndex] = nextItem
+  } else {
+    inspirationFile.items.unshift(nextItem)
+  }
+
+  await writeDataFileText("inspiration.json", formatJson(inspirationFile))
+
+  return nextItem
+}
+
+export async function deleteInspirationItem(itemId: string): Promise<void> {
+  const inspirationFile = await readJsonFile<InspirationFile>("inspiration.json")
+  const nextItems = inspirationFile.items.filter((item) => item.id !== itemId)
+
+  if (nextItems.length === inspirationFile.items.length) {
+    throw new Error("Inspiration item not found.")
+  }
+
+  inspirationFile.items = nextItems
+  await writeDataFileText("inspiration.json", formatJson(inspirationFile))
 }
 
 export async function saveIdea(input: SaveIdeaInput): Promise<Idea> {
