@@ -5,6 +5,13 @@ import { useRouter } from "next/navigation"
 import type { IdeaImage, InspirationSummary } from "@/lib/data"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 
@@ -31,6 +38,7 @@ type InspirationBoardProps = {
 
 export function InspirationBoard({ items }: InspirationBoardProps) {
   const router = useRouter()
+  const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
   const [sourceUrl, setSourceUrl] = useState("")
   const [title, setTitle] = useState("")
@@ -86,10 +94,21 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
     setNotes("")
     setDraftImages([])
     setIngestedItem(null)
+  }
+
+  function closeEditor() {
+    setIsEditorOpen(false)
+    resetForm()
+  }
+
+  function openCreateModal() {
+    resetForm()
     setMessage("")
+    setIsEditorOpen(true)
   }
 
   function startEditing(item: InspirationSummary) {
+    setIsEditorOpen(true)
     setEditingItemId(item.id)
     setSourceUrl(item.sourceUrl || "")
     setTitle(item.title)
@@ -106,7 +125,7 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
         origin: "saved" as const,
       })),
     )
-    setMessage(`Editing ${item.title}.`)
+    setMessage("")
   }
 
   async function ingestLink() {
@@ -240,8 +259,9 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
         throw new Error(payload.error || "Could not save inspiration item.")
       }
 
-      setMessage(editingItemId ? "Inspiration updated." : "Inspiration saved.")
-      resetForm()
+      const successMessage = editingItemId ? "Inspiration updated." : "Inspiration saved."
+      closeEditor()
+      setMessage(successMessage)
       router.refresh()
     } catch (error) {
       setMessage(
@@ -273,7 +293,7 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
       }
 
       if (editingItemId === item.id) {
-        resetForm()
+        closeEditor()
       }
 
       setMessage("Inspiration deleted.")
@@ -289,128 +309,8 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
 
   return (
     <div className="space-y-8">
-      <Card className="border-border/70 py-0">
-        <CardHeader className="px-5 pt-5">
-          <CardTitle className="text-2xl font-medium tracking-tight">
-            {editingItemId ? "Edit inspiration" : "Add inspiration"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 px-5 pb-5">
-          <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
-            <Input
-              value={sourceUrl}
-              onChange={(event) => setSourceUrl(event.target.value)}
-              placeholder="Paste a link to pull title, source, and images"
-            />
-            <Button
-              type="button"
-              onClick={() =>
-                startTransition(() => {
-                  void ingestLink()
-                })
-              }
-              disabled={isIngesting}
-            >
-              {isIngesting ? "Ingesting…" : "Ingest link"}
-            </Button>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <Input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Title"
-            />
-            <Input
-              value={room}
-              onChange={(event) => setRoom(event.target.value)}
-              placeholder="Room e.g. Kitchen or Alex Master Bathroom"
-            />
-            <Input
-              value={tags}
-              onChange={(event) => setTags(event.target.value)}
-              placeholder="Tags, comma separated"
-            />
-          </div>
-
-          <Textarea
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder="Notes about the look, materials, or why this works"
-            className="min-h-[120px]"
-          />
-
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <Input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={(event) => {
-                  void uploadImages(event.target.files)
-                  event.currentTarget.value = ""
-                }}
-                className="max-w-sm"
-              />
-              {isUploading ? (
-                <p className="text-sm text-muted-foreground">Uploading images…</p>
-              ) : null}
-            </div>
-
-            {draftImages.length ? (
-              <div className="grid gap-3 sm:grid-cols-3">
-                {draftImages.map((image) => (
-                  <div key={image.key} className="border border-border/70 p-2">
-                    <img
-                      src={image.signedUrl}
-                      alt={image.alt || title || "Inspiration image"}
-                      className="aspect-square w-full object-cover"
-                    />
-                    <div className="mt-2 flex items-center justify-between gap-3">
-                      <p className="text-xs text-muted-foreground">
-                        {image.origin === "uploaded"
-                          ? "Uploaded"
-                          : image.origin === "saved"
-                            ? "Saved"
-                            : "Ingested"}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => removeDraftImage(image.key)}
-                        className="text-xs text-muted-foreground underline underline-offset-4"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Button
-              type="button"
-              onClick={() =>
-                startTransition(() => {
-                  void saveItem()
-                })
-              }
-              disabled={isSaving}
-            >
-              {isSaving ? "Saving…" : editingItemId ? "Save changes" : "Save inspiration"}
-            </Button>
-            <Button type="button" variant="outline" onClick={resetForm}>
-              {editingItemId ? "Cancel edit" : "Clear"}
-            </Button>
-          </div>
-
-          {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
-        </CardContent>
-      </Card>
-
       <section className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-[1fr_260px]">
+        <div className="grid gap-3 lg:grid-cols-[1fr_260px_auto]">
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -428,7 +328,14 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
               </option>
             ))}
           </select>
+          <Button type="button" onClick={openCreateModal}>
+            Add inspiration
+          </Button>
         </div>
+
+        {!isEditorOpen && message ? (
+          <p className="text-sm text-muted-foreground">{message}</p>
+        ) : null}
 
         {filteredItems.length === 0 ? (
           <p className="text-sm text-muted-foreground">No inspiration items match the current filter.</p>
@@ -450,6 +357,147 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
           </div>
         )}
       </section>
+
+      <Dialog
+        open={isEditorOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeEditor()
+            return
+          }
+
+          setIsEditorOpen(true)
+        }}
+      >
+        <DialogContent className="max-w-5xl border-border p-0 sm:max-w-5xl">
+          <Card className="border-0 py-0">
+            <CardHeader className="px-5 pt-5">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-medium tracking-tight">
+                  {editingItemId ? "Edit inspiration" : "Add inspiration"}
+                </DialogTitle>
+                <DialogDescription>
+                  Upload images or ingest a reference link, then tag it by room and label.
+                </DialogDescription>
+              </DialogHeader>
+            </CardHeader>
+            <CardContent className="space-y-4 px-5 pb-5">
+              <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
+                <Input
+                  value={sourceUrl}
+                  onChange={(event) => setSourceUrl(event.target.value)}
+                  placeholder="Paste a link to pull title, source, and images"
+                />
+                <Button
+                  type="button"
+                  onClick={() =>
+                    startTransition(() => {
+                      void ingestLink()
+                    })
+                  }
+                  disabled={isIngesting}
+                >
+                  {isIngesting ? "Ingesting…" : "Ingest link"}
+                </Button>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <Input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Title"
+                />
+                <Input
+                  value={room}
+                  onChange={(event) => setRoom(event.target.value)}
+                  placeholder="Room e.g. Kitchen or Alex Master Bathroom"
+                />
+                <Input
+                  value={tags}
+                  onChange={(event) => setTags(event.target.value)}
+                  placeholder="Tags, comma separated"
+                />
+              </div>
+
+              <Textarea
+                value={notes}
+                onChange={(event) => setNotes(event.target.value)}
+                placeholder="Notes about the look, materials, or why this works"
+                className="min-h-[120px]"
+              />
+
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(event) => {
+                      void uploadImages(event.target.files)
+                      event.currentTarget.value = ""
+                    }}
+                    className="max-w-sm"
+                  />
+                  {isUploading ? (
+                    <p className="text-sm text-muted-foreground">Uploading images…</p>
+                  ) : null}
+                </div>
+
+                {draftImages.length ? (
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {draftImages.map((image) => (
+                      <div key={image.key} className="border border-border/70 p-2">
+                        <img
+                          src={image.signedUrl}
+                          alt={image.alt || title || "Inspiration image"}
+                          className="aspect-square w-full object-cover"
+                        />
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                          <p className="text-xs text-muted-foreground">
+                            {image.origin === "uploaded"
+                              ? "Uploaded"
+                              : image.origin === "saved"
+                                ? "Saved"
+                                : "Ingested"}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => removeDraftImage(image.key)}
+                            className="text-xs text-muted-foreground underline underline-offset-4"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  onClick={() =>
+                    startTransition(() => {
+                      void saveItem()
+                    })
+                  }
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Saving…" : editingItemId ? "Save changes" : "Save inspiration"}
+                </Button>
+                <Button type="button" variant="outline" onClick={closeEditor}>
+                  Cancel
+                </Button>
+              </div>
+
+              {isEditorOpen && message ? (
+                <p className="text-sm text-muted-foreground">{message}</p>
+              ) : null}
+            </CardContent>
+          </Card>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
