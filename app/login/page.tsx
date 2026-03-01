@@ -23,15 +23,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="grid min-h-[calc(100vh-144px)] items-end gap-10 md:grid-cols-[1.2fr_0.8fr]">
           <section className="pb-12">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-              Private project manager
+              Project Management
             </p>
             <h1 className="mt-4 max-w-3xl text-5xl font-medium tracking-tight text-foreground md:text-7xl">
-              Courtyard house build control, budgeted from the top down.
+              Courtyard House build management platform.
             </h1>
             <p className="mt-5 max-w-xl text-sm leading-6 text-muted-foreground">
-              Single-password access for the live MVP. The app reads project data from
-              JSON and keeps the interface focused on budget, procurement, decisions,
-              and milestones.
+              Enter your password to access the platform to work on timelines, budgets, and procurement.
             </p>
           </section>
 
