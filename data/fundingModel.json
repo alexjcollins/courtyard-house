@@ -13,6 +13,8 @@
       "name": "Ether",
       "type": "company-cash",
       "amountExVat": 180000,
+      "actualAmountExVat": 180000,
+      "predictedAmountExVat": 180000,
       "status": "available",
       "notes": "Company funding assumption: £100k of core company cash plus most professional fees, currently modelled as roughly £80k."
     },
@@ -21,14 +23,20 @@
       "name": "Personal savings",
       "type": "cash",
       "amountExVat": 150000,
+      "actualAmountExVat": 150000,
+      "predictedAmountExVat": 150000,
       "status": "available",
-      "notes": "Expected personal cash contribution alongside company funding."
+      "notes": "Expected personal cash contribution alongside company funding.",
+      "accounts": [],
+      "entries": []
     },
     {
       "id": "src-mortgage",
       "name": "Self-build mortgage",
       "type": "debt",
       "amountExVat": 500000,
+      "actualAmountExVat": 0,
+      "predictedAmountExVat": 500000,
       "status": "target",
       "notes": "Target mortgage facility for main construction drawdowns after pre-start."
     }

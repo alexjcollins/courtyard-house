@@ -163,12 +163,29 @@ export type Payment = {
   amountExVat: number
   paidDate: string
   fundingSourceId?: string
+  fundingAccountId?: string
   reference?: string
   notes?: string
 }
 
 export type PaymentsFile = {
   payments: Payment[]
+}
+
+export type FundingSourceAccount = {
+  id: string
+  name: string
+  startingBalanceExVat: number
+  notes?: string
+}
+
+export type FundingSourceEntry = {
+  id: string
+  accountId: string
+  date: string
+  amountExVat: number
+  status: "actual" | "predicted"
+  description?: string
 }
 
 export type Decision = {
@@ -286,8 +303,12 @@ export type FundingModelFile = {
     name: string
     type: string
     amountExVat: number
+    actualAmountExVat?: number
+    predictedAmountExVat?: number
     status: string
     notes?: string
+    accounts?: FundingSourceAccount[]
+    entries?: FundingSourceEntry[]
   }>
   stages: Array<{
     id: string
@@ -425,6 +446,8 @@ export type ProjectData = {
   }>
   funding: {
     totalPlannedExVat: number
+    totalActualAvailableExVat: number
+    totalProjectedBalanceExVat: number
     totalAllocatedExVat: number
     totalRemainingExVat: number
     projectGapExVat: number
@@ -433,11 +456,29 @@ export type ProjectData = {
       name: string
       type: string
       amountExVat: number
+      actualAmountExVat: number
+      predictedAmountExVat: number
       status: string
       notes?: string
       allocatedExVat: number
       remainingExVat: number
+      projectedBalanceExVat: number
       paymentCount: number
+      hasLedger: boolean
+      accounts: Array<{
+        id: string
+        name: string
+        startingBalanceExVat: number
+        actualSavedExVat: number
+        predictedSavedExVat: number
+        paymentAllocatedExVat: number
+        currentBalanceExVat: number
+        projectedBalanceExVat: number
+        entryCount: number
+        paymentCount: number
+      }>
+      entries: FundingSourceEntry[]
+      unassignedAllocatedExVat: number
     }>
     allocations: Array<{
       paymentId: string
@@ -445,6 +486,8 @@ export type ProjectData = {
       amountExVat: number
       fundingSourceId?: string
       fundingSourceName: string
+      fundingAccountId?: string
+      fundingAccountName?: string
       invoiceId: string
       invoiceNumber: string
       supplierName: string
@@ -749,22 +792,90 @@ function normalizeTags(tags: string[] | undefined): string[] {
   return [...new Set((tags || []).map((tag) => tag.trim()).filter(Boolean))]
 }
 
-function createIdeaId(title: string): string {
+function createShortId(prefix: string, seed: string): string {
   const randomSuffix =
     typeof crypto !== "undefined" && "randomUUID" in crypto
       ? crypto.randomUUID().slice(0, 8)
       : Math.random().toString(36).slice(2, 10)
 
-  return `idea-${slugify(title)}-${randomSuffix}`
+  return `${prefix}-${slugify(seed)}-${randomSuffix}`
+}
+
+function createIdeaId(title: string): string {
+  return createShortId("idea", title)
 }
 
 function createInspirationId(title: string): string {
-  const randomSuffix =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID().slice(0, 8)
-      : Math.random().toString(36).slice(2, 10)
+  return createShortId("insp", title)
+}
 
-  return `insp-${slugify(title)}-${randomSuffix}`
+function createFundingAccountId(name: string): string {
+  return createShortId("fund-account", name)
+}
+
+function createFundingEntryId(description: string): string {
+  return createShortId("fund-entry", description || "entry")
+}
+
+function hasFundingLedger(
+  source: Pick<FundingModelFile["sources"][number], "accounts" | "entries">,
+): boolean {
+  return Boolean(source.accounts?.length || source.entries?.length)
+}
+
+function calculateActualFundingSourceAmount(
+  source: Pick<
+    FundingModelFile["sources"][number],
+    "amountExVat" | "actualAmountExVat" | "accounts" | "entries"
+  >,
+): number {
+  if (!hasFundingLedger(source)) {
+    return Number(source.actualAmountExVat ?? source.amountExVat ?? 0)
+  }
+
+  const startingBalance = (source.accounts || []).reduce(
+    (sum, account) => sum + Number(account.startingBalanceExVat || 0),
+    0,
+  )
+  const actualEntryTotal = (source.entries || [])
+    .filter((entry) => entry.status !== "predicted")
+    .reduce((sum, entry) => sum + Number(entry.amountExVat || 0), 0)
+
+  return startingBalance + actualEntryTotal
+}
+
+function calculatePredictedFundingSourceAmount(
+  source: Pick<
+    FundingModelFile["sources"][number],
+    "amountExVat" | "actualAmountExVat" | "predictedAmountExVat" | "accounts" | "entries"
+  >,
+): number {
+  if (!hasFundingLedger(source)) {
+    return Number(
+      source.predictedAmountExVat ?? source.actualAmountExVat ?? source.amountExVat ?? 0,
+    )
+  }
+
+  const actualAmount = calculateActualFundingSourceAmount(source)
+  const predictedEntryTotal = (source.entries || [])
+    .filter((entry) => entry.status === "predicted")
+    .reduce((sum, entry) => sum + Number(entry.amountExVat || 0), 0)
+
+  return actualAmount + predictedEntryTotal
+}
+
+function syncFundingSourceAmount(
+  source: FundingModelFile["sources"][number],
+): FundingModelFile["sources"][number] {
+  const actualAmountExVat = calculateActualFundingSourceAmount(source)
+  const predictedAmountExVat = calculatePredictedFundingSourceAmount(source)
+
+  return {
+    ...source,
+    amountExVat: predictedAmountExVat,
+    actualAmountExVat,
+    predictedAmountExVat,
+  }
 }
 
 function categoryNameById(
@@ -975,6 +1086,179 @@ export async function deleteInspirationItem(itemId: string): Promise<void> {
   await writeDataFileText("inspiration.json", formatJson(inspirationFile))
 }
 
+export type SaveFundingSourceAccountInput = {
+  sourceId: string
+  accountId?: string
+  name: string
+  startingBalanceExVat: number
+  notes?: string
+}
+
+export type SaveFundingSourceEntryInput = {
+  sourceId: string
+  entryId?: string
+  accountId: string
+  date: string
+  amountExVat: number
+  status: "actual" | "predicted"
+  description?: string
+}
+
+export type UpdatePaymentFundingAllocationInput = {
+  paymentId: string
+  fundingSourceId?: string
+  fundingAccountId?: string
+}
+
+export async function saveFundingSourceAccount(
+  input: SaveFundingSourceAccountInput,
+): Promise<FundingSourceAccount> {
+  const fundingModel = await readJsonFile<FundingModelFile>("fundingModel.json")
+  const sourceIndex = fundingModel.sources.findIndex((source) => source.id === input.sourceId)
+
+  if (sourceIndex === -1) {
+    throw new Error("Funding source not found.")
+  }
+
+  const source = fundingModel.sources[sourceIndex]
+  const normalizedName = input.name.trim()
+  if (!normalizedName) {
+    throw new Error("Source name is required.")
+  }
+
+  const existingAccount = input.accountId
+    ? (source.accounts || []).find((account) => account.id === input.accountId) || null
+    : null
+
+  if (input.accountId && !existingAccount) {
+    throw new Error("Savings pot not found.")
+  }
+
+  if (
+    (source.accounts || []).some(
+      (account) =>
+        account.id !== input.accountId &&
+        account.name.toLowerCase() === normalizedName.toLowerCase(),
+    )
+  ) {
+    throw new Error("A savings pot with that name already exists.")
+  }
+
+  const nextAccount: FundingSourceAccount = {
+    id: existingAccount?.id || createFundingAccountId(normalizedName),
+    name: normalizedName,
+    startingBalanceExVat: Number(input.startingBalanceExVat || 0),
+    notes: input.notes?.trim() || undefined,
+  }
+
+  fundingModel.sources[sourceIndex] = syncFundingSourceAmount({
+    ...source,
+    accounts: existingAccount
+      ? (source.accounts || []).map((account) =>
+          account.id === existingAccount.id ? nextAccount : account,
+        )
+      : [...(source.accounts || []), nextAccount],
+    entries: source.entries || [],
+  })
+
+  await writeDataFileText("fundingModel.json", formatJson(fundingModel))
+  return nextAccount
+}
+
+export async function saveFundingSourceEntry(
+  input: SaveFundingSourceEntryInput,
+): Promise<FundingSourceEntry> {
+  const fundingModel = await readJsonFile<FundingModelFile>("fundingModel.json")
+  const sourceIndex = fundingModel.sources.findIndex((source) => source.id === input.sourceId)
+
+  if (sourceIndex === -1) {
+    throw new Error("Funding source not found.")
+  }
+
+  const source = fundingModel.sources[sourceIndex]
+  const account = (source.accounts || []).find((entry) => entry.id === input.accountId)
+  if (!account) {
+    throw new Error("Savings pot not found.")
+  }
+
+  if (!input.date) {
+    throw new Error("Date is required.")
+  }
+
+  const existingEntry = input.entryId
+    ? (source.entries || []).find((entry) => entry.id === input.entryId) || null
+    : null
+
+  if (input.entryId && !existingEntry) {
+    throw new Error("Savings entry not found.")
+  }
+
+  const nextEntry: FundingSourceEntry = {
+    id: existingEntry?.id || createFundingEntryId(input.description || account.name),
+    accountId: input.accountId,
+    date: input.date,
+    amountExVat: Number(input.amountExVat || 0),
+    status: input.status,
+    description: input.description?.trim() || undefined,
+  }
+
+  fundingModel.sources[sourceIndex] = syncFundingSourceAmount({
+    ...source,
+    accounts: source.accounts || [],
+    entries: existingEntry
+      ? (source.entries || [])
+          .map((entry) => (entry.id === existingEntry.id ? nextEntry : entry))
+          .sort((left, right) => left.date.localeCompare(right.date))
+      : [...(source.entries || []), nextEntry].sort((left, right) =>
+          left.date.localeCompare(right.date),
+        ),
+  })
+
+  await writeDataFileText("fundingModel.json", formatJson(fundingModel))
+  return nextEntry
+}
+
+export async function updatePaymentFundingAllocation(
+  input: UpdatePaymentFundingAllocationInput,
+): Promise<void> {
+  const [paymentsFile, fundingModel] = await Promise.all([
+    readJsonFile<PaymentsFile>("payments.json"),
+    readJsonFile<FundingModelFile>("fundingModel.json"),
+  ])
+
+  const paymentIndex = paymentsFile.payments.findIndex((payment) => payment.id === input.paymentId)
+  if (paymentIndex === -1) {
+    throw new Error("Payment not found.")
+  }
+
+  const fundingSource = input.fundingSourceId
+    ? fundingModel.sources.find((source) => source.id === input.fundingSourceId)
+    : undefined
+
+  if (input.fundingSourceId && !fundingSource) {
+    throw new Error("Funding source not found.")
+  }
+
+  if (input.fundingAccountId) {
+    const accountBelongsToSource = (fundingSource?.accounts || []).some(
+      (account) => account.id === input.fundingAccountId,
+    )
+
+    if (!accountBelongsToSource) {
+      throw new Error("Savings pot does not belong to that funding source.")
+    }
+  }
+
+  paymentsFile.payments[paymentIndex] = {
+    ...paymentsFile.payments[paymentIndex],
+    fundingSourceId: input.fundingSourceId || undefined,
+    fundingAccountId:
+      input.fundingSourceId && input.fundingAccountId ? input.fundingAccountId : undefined,
+  }
+
+  await writeDataFileText("payments.json", formatJson(paymentsFile))
+}
+
 export async function saveIdea(input: SaveIdeaInput): Promise<Idea> {
   const [ideasFile, categoriesFile] = await Promise.all([
     readJsonFile<IdeasFile>("ideas.json"),
@@ -1175,6 +1459,24 @@ export async function getProjectData(): Promise<ProjectData> {
   const fundingSourceMap = new Map(
     (fundingModel.sources || []).map((source) => [source.id, source]),
   )
+  const fundingSourceActualAmountMap = new Map(
+    (fundingModel.sources || []).map((source) => [
+      source.id,
+      calculateActualFundingSourceAmount(source),
+    ]),
+  )
+  const fundingSourcePredictedAmountMap = new Map(
+    (fundingModel.sources || []).map((source) => [
+      source.id,
+      calculatePredictedFundingSourceAmount(source),
+    ]),
+  )
+  const fundingAccountMap = new Map<string, FundingSourceAccount>()
+  for (const source of fundingModel.sources || []) {
+    for (const account of source.accounts || []) {
+      fundingAccountMap.set(account.id, account)
+    }
+  }
 
   const paymentsByInvoiceId = new Map<string, Payment[]>()
   for (const payment of paymentsFile.payments) {
@@ -1210,6 +1512,10 @@ export async function getProjectData(): Promise<ProjectData> {
       amountExVat: payment.amountExVat,
       fundingSourceId: payment.fundingSourceId,
       fundingSourceName: fundingSource?.name || "Unassigned",
+      fundingAccountId: payment.fundingAccountId,
+      fundingAccountName: payment.fundingAccountId
+        ? fundingAccountMap.get(payment.fundingAccountId)?.name
+        : undefined,
       invoiceId: payment.invoiceId,
       invoiceNumber: invoice?.number || payment.invoiceId,
       supplierName,
@@ -1559,6 +1865,11 @@ export async function getProjectData(): Promise<ProjectData> {
       ? fundingSourceMap.get(stage.fundingSourceId)
       : undefined
     const drawdownPercent = stage.drawdownExcluded ? 0 : stage.drawdownPercent ?? stage.percent
+    const sourceAmountExVat = fundingSource
+      ? fundingSourcePredictedAmountMap.get(fundingSource.id) ??
+        fundingSource.predictedAmountExVat ??
+        fundingSource.amountExVat
+      : 0
     return {
       ...stage,
       milestoneName: milestone?.name || stage.milestoneId,
@@ -1566,7 +1877,7 @@ export async function getProjectData(): Promise<ProjectData> {
       fundingSourceName: fundingSource?.name,
       drawdownPercent,
       drawdownExcluded: Boolean(stage.drawdownExcluded),
-      amountExVat: fundingSource ? fundingSource.amountExVat * drawdownPercent : 0,
+      amountExVat: sourceAmountExVat * drawdownPercent,
     }
   })
 
@@ -1578,17 +1889,77 @@ export async function getProjectData(): Promise<ProjectData> {
       (sum, allocation) => sum + allocation.amountExVat,
       0,
     )
+    const actualAmountExVat =
+      fundingSourceActualAmountMap.get(source.id) ??
+      source.actualAmountExVat ??
+      source.amountExVat
+    const predictedAmountExVat =
+      fundingSourcePredictedAmountMap.get(source.id) ??
+      source.predictedAmountExVat ??
+      source.amountExVat
+    const accounts = (source.accounts || []).map((account) => {
+      const actualSavedExVat = (source.entries || [])
+        .filter((entry) => entry.accountId === account.id && entry.status !== "predicted")
+        .reduce((sum, entry) => sum + entry.amountExVat, 0)
+      const predictedSavedExVat = (source.entries || [])
+        .filter((entry) => entry.accountId === account.id && entry.status === "predicted")
+        .reduce((sum, entry) => sum + entry.amountExVat, 0)
+      const accountAllocations = allocations.filter(
+        (allocation) => allocation.fundingAccountId === account.id,
+      )
+      const paymentAllocatedExVat = accountAllocations.reduce(
+        (sum, allocation) => sum + allocation.amountExVat,
+        0,
+      )
+
+      return {
+        id: account.id,
+        name: account.name,
+        startingBalanceExVat: account.startingBalanceExVat,
+        actualSavedExVat,
+        predictedSavedExVat,
+        paymentAllocatedExVat,
+        currentBalanceExVat:
+          account.startingBalanceExVat + actualSavedExVat - paymentAllocatedExVat,
+        projectedBalanceExVat:
+          account.startingBalanceExVat +
+          actualSavedExVat +
+          predictedSavedExVat -
+          paymentAllocatedExVat,
+        entryCount: (source.entries || []).filter((entry) => entry.accountId === account.id).length,
+        paymentCount: accountAllocations.length,
+      }
+    })
+    const unassignedAllocatedExVat = allocations
+      .filter((allocation) => !allocation.fundingAccountId)
+      .reduce((sum, allocation) => sum + allocation.amountExVat, 0)
 
     return {
       ...source,
+      amountExVat: predictedAmountExVat,
+      actualAmountExVat,
+      predictedAmountExVat,
       allocatedExVat,
-      remainingExVat: source.amountExVat - allocatedExVat,
+      remainingExVat: actualAmountExVat - allocatedExVat,
+      projectedBalanceExVat: predictedAmountExVat - allocatedExVat,
       paymentCount: allocations.length,
+      hasLedger: hasFundingLedger(source),
+      accounts,
+      entries: source.entries || [],
+      unassignedAllocatedExVat,
     }
   })
 
   const funding = {
     totalPlannedExVat: fundingSources.reduce((sum, source) => sum + source.amountExVat, 0),
+    totalActualAvailableExVat: fundingSources.reduce(
+      (sum, source) => sum + source.remainingExVat,
+      0,
+    ),
+    totalProjectedBalanceExVat: fundingSources.reduce(
+      (sum, source) => sum + source.projectedBalanceExVat,
+      0,
+    ),
     totalAllocatedExVat: fundingSources.reduce(
       (sum, source) => sum + source.allocatedExVat,
       0,
