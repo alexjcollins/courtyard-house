@@ -1,10 +1,12 @@
 import { StatusBadge } from "@/components/status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { requirePermission } from "@/lib/auth"
 import { getProjectData } from "@/lib/data"
 import { formatCurrency, formatDate } from "@/lib/format"
 
 export default async function ProcurementPage() {
+  await requirePermission("procurement:view")
   const data = await getProjectData()
 
   return (

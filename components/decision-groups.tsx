@@ -1,25 +1,39 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import type { CategorySummary } from "@/lib/data"
 import { formatCurrency } from "@/lib/format"
 import { StatusBadge } from "@/components/status-badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
 type DecisionGroupsProps = {
   categories: CategorySummary[]
   mode?: "open" | "closed"
+  canEdit?: boolean
+  showCosts?: boolean
 }
 
 export function DecisionGroups({
   categories,
   mode = "open",
+  canEdit = true,
+  showCosts = true,
 }: DecisionGroupsProps) {
   const router = useRouter()
   const [pendingKey, setPendingKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>(
+    Object.fromEntries(categories.map((category) => [category.id, true])),
+  )
   const [optimisticSelections, setOptimisticSelections] = useState<
     Record<string, number | null>
   >(
@@ -32,6 +46,37 @@ export function DecisionGroups({
       ),
     ),
   )
+
+  const decisionCounts = useMemo(
+    () =>
+      Object.fromEntries(
+        categories.map((category) => [
+          category.id,
+          category.decisions.filter((decision) => {
+            const selectedIndex = optimisticSelections[decision.id] ?? null
+            return selectedIndex !== null
+          }).length,
+        ]),
+      ),
+    [categories, optimisticSelections],
+  )
+
+  useEffect(() => {
+    setExpandedCategories((current) => ({
+      ...Object.fromEntries(categories.map((category) => [category.id, true])),
+      ...current,
+    }))
+    setOptimisticSelections(
+      Object.fromEntries(
+        categories.flatMap((category) =>
+          category.decisions.map((decision) => [
+            decision.id,
+            decision.selectedOptionIndex,
+          ]),
+        ),
+      ),
+    )
+  }, [categories])
 
   async function setDecisionSelection(
     decisionId: string,
@@ -74,140 +119,196 @@ export function DecisionGroups({
     }
   }
 
+  function toggleCategory(categoryId: string) {
+    setExpandedCategories((current) => ({
+      ...current,
+      [categoryId]: !(current[categoryId] ?? true),
+    }))
+  }
+
   return (
     <div className="space-y-4">
       {error ? <p className="text-sm text-[color:var(--accent)]">{error}</p> : null}
 
       {categories.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          {mode === "open"
-            ? "No open decisions."
-            : "No closed decisions yet."}
+          {mode === "open" ? "No open decisions." : "No closed decisions yet."}
         </p>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        {categories.map((category) => (
-          <Card key={category.id} className="border-border/70 py-0">
-            <CardHeader className="px-5 pt-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Category
-                  </p>
-                  <CardTitle className="mt-2 text-2xl font-medium tracking-tight">
+      <div className="space-y-3">
+        {categories.map((category) => {
+          const isExpanded = expandedCategories[category.id] ?? true
+          const selectedCount = decisionCounts[category.id] || 0
+
+          return (
+            <section key={category.id} className="border border-border/70">
+              <button
+                type="button"
+                onClick={() => toggleCategory(category.id)}
+                className="flex w-full items-center justify-between gap-4 border-b border-border/60 px-5 py-4 text-left"
+              >
+                <div className="min-w-0">
+                  <p className="text-lg font-medium tracking-tight text-foreground">
                     {category.name}
-                  </CardTitle>
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {category.decisions.length} decision
+                    {category.decisions.length === 1 ? "" : "s"}
+                    {mode === "closed"
+                      ? ` selected`
+                      : selectedCount > 0
+                        ? ` · ${selectedCount} selected`
+                        : ""}
+                  </p>
                 </div>
-                <StatusBadge
-                  status={
-                    category.decisions.some((decision) => decision.selectedOptionIndex !== null)
-                      ? "accepted"
-                      : "planned"
-                  }
-                />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {category.decisions.length}{" "}
-                {mode === "open" ? "open" : "closed"} decision
-                {category.decisions.length === 1 ? "" : "s"}
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4 px-5 pb-5">
-              {category.decisions.map((decision) => {
-                const selectedIndex = optimisticSelections[decision.id] ?? null
-                const selectedOption =
-                  selectedIndex === null
-                    ? null
-                    : decision.options[selectedIndex] || null
+                <div className="flex items-center gap-3">
+                  <StatusBadge
+                    status={
+                      selectedCount > 0 || mode === "closed" ? "accepted" : "planned"
+                    }
+                  />
+                  <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                    {isExpanded ? "Hide" : "Show"}
+                  </span>
+                </div>
+              </button>
 
-                return (
-                  <div key={decision.id} className="border border-border/70 bg-secondary/20">
-                    <div className="flex items-start justify-between gap-4 border-b border-border/60 px-4 py-4">
-                      <div>
-                        <p className="text-sm font-medium text-foreground">{decision.title}</p>
-                        <p className="mt-1 text-sm text-muted-foreground">{decision.notes}</p>
-                      </div>
-                      <StatusBadge status={selectedOption ? "accepted" : "planned"} />
-                    </div>
-                    <div className="space-y-px">
-                      {decision.options.map((option, index) => {
-                        const isSelected = selectedIndex === index
-                        const requestKey = `${decision.id}:${index}`
-                        const isPending = pendingKey === requestKey
-                        const clearKey = `${decision.id}:clear`
-                        const isClearing = pendingKey === clearKey
+              {isExpanded ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[24%]">Decision</TableHead>
+                      <TableHead className="w-[18%]">Current</TableHead>
+                      <TableHead className="w-[46%]">Options</TableHead>
+                      <TableHead className="w-[12%]">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {category.decisions.map((decision) => {
+                      const selectedIndex = optimisticSelections[decision.id] ?? null
+                      const selectedOption =
+                        selectedIndex === null
+                          ? null
+                          : decision.options[selectedIndex] || null
 
-                        return (
-                          <button
-                            key={option.name}
-                            type="button"
-                            onClick={() =>
-                              void setDecisionSelection(
-                                decision.id,
-                                isSelected ? null : index,
-                              )
-                            }
-                            disabled={pendingKey !== null}
-                            aria-pressed={isSelected}
-                            className={cn(
-                              "flex w-full cursor-pointer items-center justify-between gap-3 border-t border-border/60 px-4 py-3 text-left transition-colors first:border-t-0 disabled:cursor-wait disabled:opacity-70",
-                              isSelected
-                                ? "bg-foreground text-background"
-                                : "hover:bg-secondary/50",
+                      return (
+                        <TableRow key={decision.id} className="align-top">
+                          <TableCell className="py-4">
+                            <p className="font-medium text-foreground">{decision.title}</p>
+                            {decision.notes ? (
+                              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                                {decision.notes}
+                              </p>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="py-4">
+                            {selectedOption ? (
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium text-foreground">
+                                  {selectedOption.name}
+                                </p>
+                                {showCosts ? (
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatCurrency(selectedOption.costDeltaExVat)}
+                                  </p>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                No selection
+                              </span>
                             )}
-                          >
-                            <div>
-                              <p
-                                className={cn(
-                                  "text-sm font-medium",
-                                  isSelected ? "text-background" : "text-foreground",
-                                )}
-                              >
-                                {isSelected ? "Selected: " : ""}
-                                {option.name}
-                              </p>
-                              <p
-                                className={cn(
-                                  "mt-1 text-sm",
-                                  isSelected
-                                    ? "text-background/70"
-                                    : "text-muted-foreground",
-                                )}
-                              >
-                                Cost delta {formatCurrency(option.costDeltaExVat)}
-                              </p>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <div className="space-y-2">
+                              {decision.options.map((option, index) => {
+                                const isSelected = selectedIndex === index
+                                const requestKey = `${decision.id}:${index}`
+                                const clearKey = `${decision.id}:clear`
+                                const isSaving = pendingKey === requestKey
+                                const isClearing = isSelected && pendingKey === clearKey
+
+                                return (
+                                  <button
+                                    key={option.name}
+                                    type="button"
+                                    onClick={
+                                      canEdit
+                                        ? () =>
+                                            void setDecisionSelection(
+                                              decision.id,
+                                              isSelected ? null : index,
+                                            )
+                                        : undefined
+                                    }
+                                    disabled={!canEdit || pendingKey !== null}
+                                    aria-pressed={isSelected}
+                                    className={cn(
+                                      "flex w-full items-center justify-between gap-3 border border-border/60 px-3 py-2 text-left transition-colors disabled:opacity-70",
+                                      canEdit ? "disabled:cursor-wait" : "cursor-default",
+                                      isSelected
+                                        ? "bg-foreground text-background"
+                                        : "hover:bg-secondary/30",
+                                      !canEdit && "hover:bg-transparent",
+                                    )}
+                                  >
+                                    <span
+                                      className={cn(
+                                        "text-sm",
+                                        isSelected ? "text-background" : "text-foreground",
+                                      )}
+                                    >
+                                      {option.name}
+                                    </span>
+                                    <span
+                                      className={cn(
+                                        "text-sm",
+                                        isSelected
+                                          ? "text-background/70"
+                                          : "text-muted-foreground",
+                                      )}
+                                    >
+                                      {isSaving
+                                        ? "Saving..."
+                                        : isClearing
+                                          ? "Clearing..."
+                                          : showCosts
+                                            ? formatCurrency(option.costDeltaExVat)
+                                            : isSelected
+                                              ? "Selected"
+                                              : "Available"}
+                                    </span>
+                                  </button>
+                                )
+                              })}
                             </div>
-                            <div className="flex items-center gap-3">
-                              {isSelected ? (
-                                <span
-                                  className={cn(
-                                    "text-[11px] uppercase tracking-[0.2em]",
-                                    isSelected
-                                      ? "text-background/70"
-                                      : "text-muted-foreground",
-                                  )}
-                                >
-                                  Click to clear
-                                </span>
-                              ) : null}
-                              <StatusBadge status={isSelected ? "accepted" : "planned"} />
-                              {isPending ? (
-                                <span className="text-[11px] uppercase tracking-[0.2em]">
-                                  {isClearing ? "Clearing" : "Saving"}
-                                </span>
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <div className="space-y-2">
+                              <StatusBadge
+                                status={selectedOption ? "accepted" : "planned"}
+                              />
+                              {selectedOption && canEdit ? (
+                                <p className="text-xs leading-5 text-muted-foreground">
+                                  Click the selected option to clear it.
+                                </p>
+                              ) : !canEdit ? (
+                                <p className="text-xs leading-5 text-muted-foreground">
+                                  Read-only
+                                </p>
                               ) : null}
                             </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                )
-              })}
-            </CardContent>
-          </Card>
-        ))}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              ) : null}
+            </section>
+          )
+        })}
       </div>
     </div>
   )

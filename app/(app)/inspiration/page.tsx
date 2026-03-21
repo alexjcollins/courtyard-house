@@ -1,8 +1,10 @@
 import { InspirationBoard } from "@/components/inspiration-board"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { requirePermission } from "@/lib/auth"
 import { getInspirationItems } from "@/lib/data"
 
 export default async function InspirationPage() {
+  const viewer = await requirePermission("inspiration:view")
   const items = await getInspirationItems()
   const roomCount = new Set(items.map((item) => item.room).filter(Boolean)).size
   const tagCount = new Set(items.flatMap((item) => item.tags || [])).size
@@ -29,7 +31,7 @@ export default async function InspirationPage() {
         <MetricCard label="Tags in use" value={String(tagCount)} />
       </div>
 
-      <InspirationBoard items={items} />
+      <InspirationBoard items={items} canEdit={viewer.role === "admin"} />
     </div>
   )
 }

@@ -37,11 +37,15 @@ type IngestedIdea = {
 type CategoryIdeasBoardProps = {
   categoryId: string
   ideas: IdeaWithUrls[]
+  canEdit?: boolean
+  showCosts?: boolean
 }
 
 export function CategoryIdeasBoard({
   categoryId,
   ideas,
+  canEdit = true,
+  showCosts = true,
 }: CategoryIdeasBoardProps) {
   const router = useRouter()
   const [sourceUrl, setSourceUrl] = useState("")
@@ -320,13 +324,14 @@ export function CategoryIdeasBoard({
 
   return (
     <div className="space-y-6">
-      <Card className="border-border/70 py-0">
-        <CardHeader className="px-5 pt-5">
-          <CardTitle className="text-2xl font-medium tracking-tight">
-            {editingIdeaId ? "Edit idea" : "Capture a new idea"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4 px-5 pb-5">
+      {canEdit ? (
+        <Card className="border-border/70 py-0">
+          <CardHeader className="px-5 pt-5">
+            <CardTitle className="text-2xl font-medium tracking-tight">
+              {editingIdeaId ? "Edit idea" : "Capture a new idea"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 px-5 pb-5">
           <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
             <Input
               value={sourceUrl}
@@ -465,8 +470,11 @@ export function CategoryIdeasBoard({
           </div>
 
           {message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {!canEdit && message ? <p className="text-sm text-muted-foreground">{message}</p> : null}
 
       <section className="space-y-4">
         <div>
@@ -487,10 +495,16 @@ export function CategoryIdeasBoard({
                 key={idea.id}
                 idea={idea}
                 pending={pendingIdeaId === idea.id}
-                onEdit={() => startEditingIdea(idea)}
-                onToggle={(status) => {
-                  void setPickedState(idea.id, status)
-                }}
+                onEdit={canEdit ? () => startEditingIdea(idea) : undefined}
+                onToggle={
+                  canEdit
+                    ? (status) => {
+                        void setPickedState(idea.id, status)
+                      }
+                    : undefined
+                }
+                canEdit={canEdit}
+                showCosts={showCosts}
               />
             ))}
           </div>
@@ -513,10 +527,16 @@ export function CategoryIdeasBoard({
                 key={idea.id}
                 idea={idea}
                 pending={pendingIdeaId === idea.id}
-                onEdit={() => startEditingIdea(idea)}
-                onToggle={(status) => {
-                  void setPickedState(idea.id, status)
-                }}
+                onEdit={canEdit ? () => startEditingIdea(idea) : undefined}
+                onToggle={
+                  canEdit
+                    ? (status) => {
+                        void setPickedState(idea.id, status)
+                      }
+                    : undefined
+                }
+                canEdit={canEdit}
+                showCosts={showCosts}
               />
             ))}
           </div>
@@ -531,11 +551,15 @@ function IdeaCard({
   pending,
   onEdit,
   onToggle,
+  canEdit,
+  showCosts,
 }: {
   idea: IdeaWithUrls
   pending: boolean
-  onEdit: () => void
-  onToggle: (status: "collected" | "picked") => void
+  onEdit?: () => void
+  onToggle?: (status: "collected" | "picked") => void
+  canEdit: boolean
+  showCosts: boolean
 }) {
   return (
     <Card className="border-border/70 py-0">
@@ -567,29 +591,31 @@ function IdeaCard({
           </div>
         ) : null}
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="border border-border/70 bg-secondary/20 p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Estimated cost
-            </p>
-            <p className="mt-2 text-lg font-medium text-foreground">
-              {formatCurrency(idea.estimatedTotalExVat || 0)}
-            </p>
+        {showCosts ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="border border-border/70 bg-secondary/20 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Estimated cost
+              </p>
+              <p className="mt-2 text-lg font-medium text-foreground">
+                {formatCurrency(idea.estimatedTotalExVat || 0)}
+              </p>
+            </div>
+            <div className="border border-border/70 bg-secondary/20 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                Forecast delta
+              </p>
+              <p
+                className={cn(
+                  "mt-2 text-lg font-medium",
+                  idea.selectedCostDeltaExVat >= 0 ? "text-foreground" : "text-emerald-700",
+                )}
+              >
+                {formatCurrency(idea.selectedCostDeltaExVat)}
+              </p>
+            </div>
           </div>
-          <div className="border border-border/70 bg-secondary/20 p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Forecast delta
-            </p>
-            <p
-              className={cn(
-                "mt-2 text-lg font-medium",
-                idea.selectedCostDeltaExVat >= 0 ? "text-foreground" : "text-emerald-700",
-              )}
-            >
-              {formatCurrency(idea.selectedCostDeltaExVat)}
-            </p>
-          </div>
-        </div>
+        ) : null}
 
         {idea.notes ? <p className="text-sm text-muted-foreground">{idea.notes}</p> : null}
 
@@ -614,22 +640,24 @@ function IdeaCard({
           ))}
         </div>
 
-        <div className="flex gap-3">
-          <Button type="button" variant="outline" onClick={onEdit}>
-            Edit
-          </Button>
-          <Button
-            type="button"
-            onClick={() => onToggle(idea.status === "picked" ? "collected" : "picked")}
-            disabled={pending}
-          >
-            {pending
-              ? "Saving…"
-              : idea.status === "picked"
-                ? "Unpick idea"
-                : "Pick idea"}
-          </Button>
-        </div>
+        {canEdit ? (
+          <div className="flex gap-3">
+            <Button type="button" variant="outline" onClick={onEdit}>
+              Edit
+            </Button>
+            <Button
+              type="button"
+              onClick={() => onToggle?.(idea.status === "picked" ? "collected" : "picked")}
+              disabled={pending}
+            >
+              {pending
+                ? "Saving…"
+                : idea.status === "picked"
+                  ? "Unpick idea"
+                  : "Pick idea"}
+            </Button>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   )

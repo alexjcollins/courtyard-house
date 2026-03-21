@@ -1,74 +1,186 @@
 import "server-only"
 
-import { createHmac, timingSafeEqual } from "node:crypto"
-import { cookies } from "next/headers"
+import { withAuth, type NoUserInfo, type UserInfo } from "@workos-inc/authkit-nextjs"
+import { NextResponse } from "next/server"
 import { redirect } from "next/navigation"
+import { cache } from "react"
 
-export const AUTH_COOKIE_NAME = "selfbuild_session"
-export const AUTH_COOKIE_TTL_SECONDS = 60 * 60 * 12
-export const AUTH_COOKIE_REMEMBER_TTL_SECONDS = 60 * 60 * 24 * 30
+export const APP_ROLES = ["admin", "architect"] as const
+export type AppRole = (typeof APP_ROLES)[number]
 
-function getAuthSecret(): string {
-  return process.env.SELFBUILD_AUTH_SECRET || "change-this-auth-secret"
+export const APP_PERMISSIONS = [
+  "dashboard:view",
+  "categories:view",
+  "decisions:view",
+  "inspiration:view",
+  "timeline:view",
+  "procurement:view",
+  "funding:view",
+  "admin:view",
+  "decisions:edit",
+  "ideas:edit",
+  "inspiration:edit",
+  "funding:edit",
+  "admin:edit",
+] as const
+
+export type AppPermission = (typeof APP_PERMISSIONS)[number]
+
+const ROLE_PERMISSIONS: Record<AppRole, AppPermission[]> = {
+  admin: [...APP_PERMISSIONS],
+  architect: [
+    "dashboard:view",
+    "categories:view",
+    "decisions:view",
+    "inspiration:view",
+    "timeline:view",
+  ],
 }
 
-export function getSharedPassword(): string {
-  return process.env.SELFBUILD_PASSWORD || "courtyard-house"
+export type AuthViewer = {
+  user: UserInfo["user"]
+  sessionId: string
+  organizationId: string
+  role: AppRole
+  roles: AppRole[]
+  permissions: AppPermission[]
 }
 
-function signTokenPayload(payload: string): string {
-  return createHmac("sha256", getAuthSecret()).update(payload).digest("base64url")
+function isAppRole(value: string): value is AppRole {
+  return APP_ROLES.includes(value as AppRole)
 }
 
-export function createAuthToken(remember = false, now = Date.now()): string {
-  const ttl = remember
-    ? AUTH_COOKIE_REMEMBER_TTL_SECONDS
-    : AUTH_COOKIE_TTL_SECONDS
-  const expiresAt = Math.floor(now / 1000) + ttl
-  const payload = `${expiresAt}:${remember ? 1 : 0}`
-  return `${payload}.${signTokenPayload(payload)}`
+function isAppPermission(value: string): value is AppPermission {
+  return APP_PERMISSIONS.includes(value as AppPermission)
 }
 
-export function verifyAuthToken(token: string | null | undefined): boolean {
-  if (!token) return false
+function getSafeRoleList(auth: UserInfo | NoUserInfo): AppRole[] {
+  const rawRoles = [
+    ...(auth.roles || []),
+    ...(auth.role ? [auth.role] : []),
+  ].filter(Boolean)
 
-  const parts = token.split(".")
-  if (parts.length !== 2) return false
+  return [...new Set(rawRoles.filter(isAppRole))]
+}
 
-  const [payload, providedSignature] = parts
-  if (!payload || !providedSignature) return false
+function getPrimaryRole(roles: AppRole[]): AppRole | null {
+  if (roles.includes("admin")) return "admin"
+  if (roles.includes("architect")) return "architect"
+  return null
+}
 
-  const [expiresAtRaw] = payload.split(":")
-  const expiresAt = Number(expiresAtRaw)
-  if (!Number.isFinite(expiresAt) || expiresAt <= Math.floor(Date.now() / 1000)) {
-    return false
+function toViewer(auth: UserInfo | NoUserInfo): AuthViewer | null {
+  if (!auth.user || !auth.sessionId || !auth.organizationId) {
+    return null
   }
 
-  const expectedSignature = signTokenPayload(payload)
-  const providedBuffer = Buffer.from(providedSignature)
-  const expectedBuffer = Buffer.from(expectedSignature)
+  const roles = getSafeRoleList(auth)
+  const role = getPrimaryRole(roles)
 
-  if (providedBuffer.length !== expectedBuffer.length) {
-    return false
+  if (!role) {
+    return null
   }
 
-  return timingSafeEqual(providedBuffer, expectedBuffer)
+  const permissions = [
+    ...new Set([
+      ...roles.flatMap((entry) => ROLE_PERMISSIONS[entry]),
+      ...(auth.permissions || []).filter(isAppPermission),
+    ]),
+  ]
+
+  return {
+    user: auth.user,
+    sessionId: auth.sessionId,
+    organizationId: auth.organizationId,
+    role,
+    roles,
+    permissions,
+  }
 }
+
+const getOptionalAuth = cache(async () => withAuth())
+const getRequiredAuth = cache(async () => withAuth({ ensureSignedIn: true }))
 
 export function getSafeNextPath(nextRaw: unknown): string {
   const nextPath = typeof nextRaw === "string" ? nextRaw : "/"
   if (!nextPath.startsWith("/")) return "/"
   if (nextPath.startsWith("//")) return "/"
   if (nextPath.startsWith("/login")) return "/"
+  if (nextPath.startsWith("/callback")) return "/"
   return nextPath
 }
 
-export async function isAuthenticated(): Promise<boolean> {
-  const cookieStore = await cookies()
-  return verifyAuthToken(cookieStore.get(AUTH_COOKIE_NAME)?.value)
+export async function getCurrentViewer(): Promise<AuthViewer | null> {
+  return toViewer(await getOptionalAuth())
 }
 
-export async function requireAuth(nextPath = "/"): Promise<void> {
-  if (await isAuthenticated()) return
-  redirect(`/login?next=${encodeURIComponent(getSafeNextPath(nextPath))}`)
+export async function isAuthenticated(): Promise<boolean> {
+  return Boolean(await getCurrentViewer())
+}
+
+export async function requireSession(): Promise<AuthViewer> {
+  const viewer = toViewer(await getRequiredAuth())
+
+  if (!viewer) {
+    redirect("/unauthorized")
+  }
+
+  return viewer
+}
+
+export async function requireRole(
+  role: AppRole | AppRole[],
+): Promise<AuthViewer> {
+  const viewer = await requireSession()
+  const allowedRoles = Array.isArray(role) ? role : [role]
+
+  if (!allowedRoles.includes(viewer.role)) {
+    redirect("/unauthorized")
+  }
+
+  return viewer
+}
+
+export async function requirePermission(
+  permission: AppPermission,
+): Promise<AuthViewer> {
+  const viewer = await requireSession()
+
+  if (!viewer.permissions.includes(permission)) {
+    redirect("/unauthorized")
+  }
+
+  return viewer
+}
+
+export function hasPermission(
+  viewer: Pick<AuthViewer, "permissions">,
+  permission: AppPermission,
+): boolean {
+  return viewer.permissions.includes(permission)
+}
+
+export function canViewCosts(viewer: Pick<AuthViewer, "role">): boolean {
+  return viewer.role === "admin"
+}
+
+export async function authorizeApi(permission: AppPermission): Promise<
+  | { viewer: AuthViewer; response?: undefined }
+  | { viewer?: undefined; response: NextResponse }
+> {
+  const viewer = await getCurrentViewer()
+
+  if (!viewer) {
+    return {
+      response: NextResponse.json({ error: "Unauthorized." }, { status: 401 }),
+    }
+  }
+
+  if (!viewer.permissions.includes(permission)) {
+    return {
+      response: NextResponse.json({ error: "Forbidden." }, { status: 403 }),
+    }
+  }
+
+  return { viewer }
 }

@@ -1,10 +1,13 @@
 import { DecisionGroups } from "@/components/decision-groups"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { canViewCosts, requirePermission } from "@/lib/auth"
 import { getProjectData } from "@/lib/data"
 import { formatCurrency } from "@/lib/format"
 
 export default async function DecisionsPage() {
+  const viewer = await requirePermission("decisions:view")
   const data = await getProjectData()
+  const showCosts = canViewCosts(viewer)
   const openDecisions = data.decisionsFile.decisions.filter(
     (decision) => decision.selectedOptionIndex === null,
   )
@@ -50,7 +53,7 @@ export default async function DecisionsPage() {
         </h1>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className={`grid gap-4 md:grid-cols-2 ${showCosts ? "xl:grid-cols-4" : ""}`}>
         <Card className="border-border/70 py-0">
           <CardHeader className="px-5 pt-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -71,26 +74,30 @@ export default async function DecisionsPage() {
             </CardTitle>
           </CardHeader>
         </Card>
-        <Card className="border-border/70 py-0">
-          <CardHeader className="px-5 pt-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Selected delta
-            </p>
-            <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
-              {formatCurrency(selectedDelta)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="border-border/70 py-0">
-          <CardHeader className="px-5 pt-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Forecast impact
-            </p>
-            <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
-              {formatCurrency(data.totals.forecast.exVat)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+        {showCosts ? (
+          <>
+            <Card className="border-border/70 py-0">
+              <CardHeader className="px-5 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Selected delta
+                </p>
+                <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
+                  {formatCurrency(selectedDelta)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+            <Card className="border-border/70 py-0">
+              <CardHeader className="px-5 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Forecast impact
+                </p>
+                <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
+                  {formatCurrency(data.totals.forecast.exVat)}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </>
+        ) : null}
       </div>
 
       <section className="space-y-4">
@@ -102,7 +109,12 @@ export default async function DecisionsPage() {
             Decisions still to resolve
           </h2>
         </div>
-        <DecisionGroups categories={openCategories} mode="open" />
+        <DecisionGroups
+          categories={openCategories}
+          mode="open"
+          canEdit={viewer.role === "admin"}
+          showCosts={showCosts}
+        />
       </section>
 
       <section className="space-y-4">
@@ -114,10 +126,17 @@ export default async function DecisionsPage() {
             Selected decisions
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Closed decisions stay editable. Click the selected option to clear it or choose a different option.
+            {viewer.role === "admin"
+              ? "Closed decisions stay editable. Click the selected option to clear it or choose a different option."
+              : "Closed decisions are visible here in read-only mode."}
           </p>
         </div>
-        <DecisionGroups categories={closedCategories} mode="closed" />
+        <DecisionGroups
+          categories={closedCategories}
+          mode="closed"
+          canEdit={viewer.role === "admin"}
+          showCosts={showCosts}
+        />
       </section>
     </div>
   )

@@ -2,11 +2,14 @@ import { StatusBadge } from "@/components/status-badge"
 import { TimelineStrip } from "@/components/timeline-strip"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { canViewCosts, requirePermission } from "@/lib/auth"
 import { getProjectData } from "@/lib/data"
 import { formatCurrency, formatDate } from "@/lib/format"
 
 export default async function TimelinePage() {
+  const viewer = await requirePermission("timeline:view")
   const data = await getProjectData()
+  const showCosts = canViewCosts(viewer)
   const milestoneMap = new Map(
     data.timelineFile.milestones.map((milestone) => [milestone.id, milestone]),
   )
@@ -108,41 +111,43 @@ export default async function TimelinePage() {
         </CardContent>
       </Card>
 
-      <Card className="border-border/70 py-0">
-        <CardHeader className="px-5 pt-5">
-          <CardTitle className="text-2xl font-medium tracking-tight">
-            Funding stages
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-5 pb-5">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Stage</TableHead>
-                <TableHead>Milestone</TableHead>
-                <TableHead>Release date</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Drawdown</TableHead>
-                <TableHead>Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.fundingStages.map((stage) => (
-                <TableRow key={stage.id}>
-                  <TableCell className="font-medium">{stage.name}</TableCell>
-                  <TableCell>{stage.milestoneName}</TableCell>
-                  <TableCell>{formatDate(stage.milestoneDate)}</TableCell>
-                  <TableCell>
-                    {stage.drawdownExcluded ? "Self-funded" : stage.fundingSourceName || "TBC"}
-                  </TableCell>
-                  <TableCell>{Math.round(stage.drawdownPercent * 100)}%</TableCell>
-                  <TableCell>{formatCurrency(stage.amountExVat)}</TableCell>
+      {showCosts ? (
+        <Card className="border-border/70 py-0">
+          <CardHeader className="px-5 pt-5">
+            <CardTitle className="text-2xl font-medium tracking-tight">
+              Funding stages
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-5 pb-5">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Stage</TableHead>
+                  <TableHead>Milestone</TableHead>
+                  <TableHead>Release date</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Drawdown</TableHead>
+                  <TableHead>Amount</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+              </TableHeader>
+              <TableBody>
+                {data.fundingStages.map((stage) => (
+                  <TableRow key={stage.id}>
+                    <TableCell className="font-medium">{stage.name}</TableCell>
+                    <TableCell>{stage.milestoneName}</TableCell>
+                    <TableCell>{formatDate(stage.milestoneDate)}</TableCell>
+                    <TableCell>
+                      {stage.drawdownExcluded ? "Self-funded" : stage.fundingSourceName || "TBC"}
+                    </TableCell>
+                    <TableCell>{Math.round(stage.drawdownPercent * 100)}%</TableCell>
+                    <TableCell>{formatCurrency(stage.amountExVat)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   )
 }

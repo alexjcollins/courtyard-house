@@ -5,24 +5,30 @@ import { StatCard } from "@/components/stat-card"
 import { TimelineStrip } from "@/components/timeline-strip"
 import { StatusBadge } from "@/components/status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { canViewCosts, requirePermission } from "@/lib/auth"
 import { getProjectData } from "@/lib/data"
 import {
   formatCompactCurrency,
   formatCurrency,
+  formatDate,
   formatShortDate,
 } from "@/lib/format"
 
 export default async function DashboardPage() {
+  const viewer = await requirePermission("dashboard:view")
   const data = await getProjectData()
+  const showCosts = canViewCosts(viewer)
 
   return (
     <div className="space-y-8">
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <StatCard
-          eyebrow="Construction budget"
-          value={formatCurrency(data.totals.construction.budget.exVat)}
-          detail={`${formatCurrency(data.totals.construction.budget.incVat)} inc VAT`}
-        />
+      <section className={`grid gap-6 md:grid-cols-2 ${showCosts ? "xl:grid-cols-3" : ""}`}>
+        {showCosts ? (
+          <StatCard
+            eyebrow="Construction budget"
+            value={formatCurrency(data.totals.construction.budget.exVat)}
+            detail={`${formatCurrency(data.totals.construction.budget.incVat)} inc VAT`}
+          />
+        ) : null}
         <StatCard
           eyebrow="Next milestone"
           value={data.dashboard.nextMilestone ? formatShortDate(data.dashboard.nextMilestone.plannedDate) : "TBC"}
@@ -71,56 +77,60 @@ export default async function DashboardPage() {
         </Card>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <StatCard
-          eyebrow="Contingency remaining"
-          value={formatCurrency(data.totals.contingencyRemainingExVat)}
-          detail="Positive selected decision deltas are treated as contingency drawdown."
-        />
-        <StatCard
-          eyebrow="Committed"
-          value={formatCurrency(data.totals.construction.committed.exVat)}
-          detail={`${formatCurrency(data.totals.construction.committed.vat)} VAT`}
-        />
-        <StatCard
-          eyebrow="Invoiced"
-          value={formatCurrency(data.totals.construction.invoiced.exVat)}
-          detail={`${formatCurrency(data.totals.construction.invoiced.incVat)} inc VAT`}
-        />
-        <StatCard
-          eyebrow="Paid"
-          value={formatCurrency(data.totals.construction.paid.exVat)}
-          detail={`${formatCurrency(data.totals.construction.paid.incVat)} inc VAT`}
-        />
-        <StatCard
-          eyebrow="Remaining"
-          value={formatCurrency(data.totals.construction.remainingExVat)}
-          detail={`${formatCurrency(data.totals.construction.forecast.exVat)} forecast`}
-        />
-      </section>
+      {showCosts ? (
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <StatCard
+            eyebrow="Contingency remaining"
+            value={formatCurrency(data.totals.contingencyRemainingExVat)}
+            detail="Positive selected decision deltas are treated as contingency drawdown."
+          />
+          <StatCard
+            eyebrow="Committed"
+            value={formatCurrency(data.totals.construction.committed.exVat)}
+            detail={`${formatCurrency(data.totals.construction.committed.vat)} VAT`}
+          />
+          <StatCard
+            eyebrow="Invoiced"
+            value={formatCurrency(data.totals.construction.invoiced.exVat)}
+            detail={`${formatCurrency(data.totals.construction.invoiced.incVat)} inc VAT`}
+          />
+          <StatCard
+            eyebrow="Paid"
+            value={formatCurrency(data.totals.construction.paid.exVat)}
+            detail={`${formatCurrency(data.totals.construction.paid.incVat)} inc VAT`}
+          />
+          <StatCard
+            eyebrow="Remaining"
+            value={formatCurrency(data.totals.construction.remainingExVat)}
+            detail={`${formatCurrency(data.totals.construction.forecast.exVat)} forecast`}
+          />
+        </section>
+      ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+      <section className={`grid gap-6 ${showCosts ? "xl:grid-cols-[1.25fr_0.75fr]" : ""}`}>
         <div className="space-y-6">
-          <div>
-            <div className="mb-4 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                  Category chart
-                </p>
-                <h2 className="mt-2 text-3xl font-medium tracking-tight">
-                  Budget vs committed vs paid
-                </h2>
+          {showCosts ? (
+            <div>
+              <div className="mb-4 flex items-end justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                    Category chart
+                  </p>
+                  <h2 className="mt-2 text-3xl font-medium tracking-tight">
+                    Budget vs committed vs paid
+                  </h2>
+                </div>
+                <Link
+                  href="/categories"
+                  className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
+                >
+                  View categories
+                  <ArrowRight className="size-4" />
+                </Link>
               </div>
-              <Link
-                href="/categories"
-                className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"
-              >
-                View categories
-                <ArrowRight className="size-4" />
-              </Link>
+              <CategoryBarChart data={data.dashboard.categoryChart} />
             </div>
-            <CategoryBarChart data={data.dashboard.categoryChart} />
-          </div>
+          ) : null}
 
           <Card className="border-border/70 py-0">
             <CardHeader className="px-5 pt-5">
@@ -161,87 +171,89 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        <div className="space-y-6">
-          <Card className="border-border/70 py-0">
-            <CardHeader className="px-5 pt-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                Upcoming payments
-              </p>
-              <CardTitle className="mt-2 text-2xl font-medium tracking-tight">
-                Next 30 / 60 days
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 px-5 pb-5">
-              {[
-                { label: "Next 30", payments: data.dashboard.upcomingPayments30 },
-                { label: "Next 60", payments: data.dashboard.upcomingPayments60 },
-              ].map(({ label, payments }) => (
-                  <div key={label}>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                      {label}
-                    </p>
-                    <div className="mt-3 space-y-3">
-                      {payments.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No scheduled payments.</p>
-                      ) : (
-                        payments.map((payment) => (
-                          <div
-                            key={payment.id}
-                            className="border border-border/70 bg-secondary/40 p-4"
-                          >
-                            <p className="text-sm font-medium text-foreground">{payment.title}</p>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {payment.supplierName} · due {formatDate(payment.dueDate)}
-                            </p>
-                            <div className="mt-3 flex items-center justify-between gap-3 text-sm">
-                              <span className="text-muted-foreground">{payment.source}</span>
-                              <span className="font-medium text-foreground">
-                                {formatCurrency(payment.amountExVat)}
-                              </span>
+        {showCosts ? (
+          <div className="space-y-6">
+            <Card className="border-border/70 py-0">
+              <CardHeader className="px-5 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                  Upcoming payments
+                </p>
+                <CardTitle className="mt-2 text-2xl font-medium tracking-tight">
+                  Next 30 / 60 days
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 px-5 pb-5">
+                {[
+                  { label: "Next 30", payments: data.dashboard.upcomingPayments30 },
+                  { label: "Next 60", payments: data.dashboard.upcomingPayments60 },
+                ].map(({ label, payments }) => (
+                    <div key={label}>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                        {label}
+                      </p>
+                      <div className="mt-3 space-y-3">
+                        {payments.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No scheduled payments.</p>
+                        ) : (
+                          payments.map((payment) => (
+                            <div
+                              key={payment.id}
+                              className="border border-border/70 bg-secondary/40 p-4"
+                            >
+                              <p className="text-sm font-medium text-foreground">{payment.title}</p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {payment.supplierName} · due {formatDate(payment.dueDate)}
+                              </p>
+                              <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+                                <span className="text-muted-foreground">{payment.source}</span>
+                                <span className="font-medium text-foreground">
+                                  {formatCurrency(payment.amountExVat)}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        ))
-                      )}
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/70 py-0">
+              <CardHeader className="px-5 pt-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                  Funding model
+                </p>
+                <CardTitle className="mt-2 text-2xl font-medium tracking-tight">
+                  Planned drawdown
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 px-5 pb-5">
+                {data.fundingStages.filter((stage) => !stage.drawdownExcluded).map((stage) => (
+                  <div
+                    key={stage.id}
+                    className="flex items-center justify-between gap-3 border border-border/70 bg-secondary/30 px-4 py-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{stage.name}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {stage.milestoneName} · {formatShortDate(stage.milestoneDate)} · {stage.fundingSourceName}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-foreground">
+                        {formatCurrency(stage.amountExVat)}
+                      </p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                        {Math.round(stage.drawdownPercent * 100)}%
+                      </p>
                     </div>
                   </div>
                 ))}
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/70 py-0">
-            <CardHeader className="px-5 pt-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                Funding model
-              </p>
-              <CardTitle className="mt-2 text-2xl font-medium tracking-tight">
-                Planned drawdown
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 px-5 pb-5">
-              {data.fundingStages.filter((stage) => !stage.drawdownExcluded).map((stage) => (
-                <div
-                  key={stage.id}
-                  className="flex items-center justify-between gap-3 border border-border/70 bg-secondary/30 px-4 py-3"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{stage.name}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {stage.milestoneName} · {formatShortDate(stage.milestoneDate)} · {stage.fundingSourceName}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-foreground">
-                      {formatCurrency(stage.amountExVat)}
-                    </p>
-                    <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                      {Math.round(stage.drawdownPercent * 100)}%
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        ) : null}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
@@ -261,24 +273,26 @@ export default async function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4 px-5 pb-5">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="border border-border/70 p-3">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Budget
-                  </p>
-                  <p className="mt-2 font-medium text-foreground">
-                    {formatCompactCurrency(category.metrics.budget.exVat)}
-                  </p>
+              {showCosts ? (
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="border border-border/70 p-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                      Budget
+                    </p>
+                    <p className="mt-2 font-medium text-foreground">
+                      {formatCompactCurrency(category.metrics.budget.exVat)}
+                    </p>
+                  </div>
+                  <div className="border border-border/70 p-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                      Paid
+                    </p>
+                    <p className="mt-2 font-medium text-foreground">
+                      {formatCompactCurrency(category.metrics.paid.exVat)}
+                    </p>
+                  </div>
                 </div>
-                <div className="border border-border/70 p-3">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Paid
-                  </p>
-                  <p className="mt-2 font-medium text-foreground">
-                    {formatCompactCurrency(category.metrics.paid.exVat)}
-                  </p>
-                </div>
-              </div>
+              ) : null}
               <p className="text-sm text-muted-foreground">
                 {category.lineItems.length} line items · {category.purchaseOrders.length} POs ·{" "}
                 {category.decisions.length} decisions

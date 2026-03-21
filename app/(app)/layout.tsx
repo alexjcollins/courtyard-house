@@ -1,15 +1,38 @@
 import Link from "next/link"
-import { requireAuth } from "@/lib/auth"
+import { signOut } from "@workos-inc/authkit-nextjs"
 import { getProjectData } from "@/lib/data"
-import { ProjectNav } from "@/components/project-nav"
+import { ProjectNav, type ProjectNavItem } from "@/components/project-nav"
+import { hasPermission, requireSession } from "@/lib/auth"
 
 export default async function ProtectedLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  await requireAuth()
+  const viewer = await requireSession()
   const data = await getProjectData()
+  const allNavigationItems = [
+    { href: "/", label: "Dashboard" },
+    { href: "/categories", label: "Categories" },
+    { href: "/procurement", label: "Procurement" },
+    { href: "/decisions", label: "Decisions" },
+    { href: "/inspiration", label: "Inspiration" },
+    { href: "/funding", label: "Funding" },
+    { href: "/timeline", label: "Timeline" },
+  ] satisfies ProjectNavItem[]
+  const navigationItems = allNavigationItems.filter((item) => {
+    const permissionMap = {
+      "/": "dashboard:view",
+      "/categories": "categories:view",
+      "/procurement": "procurement:view",
+      "/decisions": "decisions:view",
+      "/inspiration": "inspiration:view",
+      "/funding": "funding:view",
+      "/timeline": "timeline:view",
+    } as const
+
+    return hasPermission(viewer, permissionMap[item.href as keyof typeof permissionMap])
+  })
 
   return (
     <div className="min-h-screen p-10">
@@ -29,7 +52,12 @@ export default async function ProtectedLayout({
               </div>
             </div>
 
-            <form action="/api/logout" method="post">
+            <form
+              action={async () => {
+                "use server"
+                await signOut()
+              }}
+            >
               <button
                 type="submit"
                 className="inline-flex h-10 items-center rounded-full border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
@@ -40,7 +68,10 @@ export default async function ProtectedLayout({
           </div>
 
           <div className="mt-6">
-            <ProjectNav />
+            <ProjectNav
+              items={navigationItems}
+              showAdmin={hasPermission(viewer, "admin:view")}
+            />
           </div>
         </header>
 

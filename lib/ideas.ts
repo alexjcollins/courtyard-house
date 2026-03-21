@@ -131,6 +131,14 @@ function parsePrice(value?: string): number | undefined {
   return Number(match[1])
 }
 
+function getOfferRecord(offers: unknown): { price?: unknown; priceCurrency?: unknown } | null {
+  if (!offers || typeof offers !== "object" || Array.isArray(offers)) {
+    return null
+  }
+
+  return offers as { price?: unknown; priceCurrency?: unknown }
+}
+
 function inferCurrency(html: string, url: URL, jsonLdProduct?: Record<string, unknown>): string {
   const metaCurrency = getMetaContent(html, [
     "product:price:currency",
@@ -139,8 +147,8 @@ function inferCurrency(html: string, url: URL, jsonLdProduct?: Record<string, un
   ])
   if (metaCurrency) return metaCurrency.toUpperCase()
 
-  const offers = jsonLdProduct?.offers
-  if (offers && typeof offers === "object" && !Array.isArray(offers)) {
+  const offers = getOfferRecord(jsonLdProduct?.offers)
+  if (offers) {
     const value = offers.priceCurrency
     if (typeof value === "string" && value.trim()) {
       return value.toUpperCase()
@@ -254,12 +262,10 @@ export async function ingestIdeaUrl(
     getMetaContent(html, ["og:site_name", "application-name"]) ||
     (typeof jsonLdProduct?.brand === "string" ? jsonLdProduct.brand : undefined)
 
+  const offerRecord = getOfferRecord(jsonLdProduct?.offers)
   const priceText =
-    (typeof jsonLdProduct?.offers === "object" &&
-    jsonLdProduct.offers &&
-    !Array.isArray(jsonLdProduct.offers) &&
-    typeof jsonLdProduct.offers.price === "string"
-      ? jsonLdProduct.offers.price
+    (offerRecord && typeof offerRecord.price === "string"
+      ? offerRecord.price
       : undefined) ||
     extractPriceText(html)
 

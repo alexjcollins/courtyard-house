@@ -10,11 +10,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { canViewCosts, requirePermission } from "@/lib/auth"
 import { getProjectData } from "@/lib/data"
 import { formatCurrency } from "@/lib/format"
 
 export default async function CategoriesPage() {
+  const viewer = await requirePermission("categories:view")
   const data = await getProjectData()
+  const showCosts = canViewCosts(viewer)
 
   return (
     <div className="space-y-6">
@@ -46,8 +49,9 @@ export default async function CategoriesPage() {
             </CardHeader>
             <CardContent className="px-5 pb-5">
               <p className="text-sm text-muted-foreground">
-                Budget {formatCurrency(category.metrics.budget.exVat)} · Forecast{" "}
-                {formatCurrency(category.metrics.forecast.exVat)}
+                {showCosts
+                  ? `Budget ${formatCurrency(category.metrics.budget.exVat)} · Forecast ${formatCurrency(category.metrics.forecast.exVat)}`
+                  : `${category.lineItems.length} line items · ${category.decisions.length} decisions · ${category.ideas.length} ideas`}
               </p>
             </CardContent>
           </Card>
@@ -65,12 +69,22 @@ export default async function CategoriesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Category</TableHead>
-                <TableHead>Budget</TableHead>
-                <TableHead>Committed</TableHead>
-                <TableHead>Invoiced</TableHead>
-                <TableHead>Paid</TableHead>
-                <TableHead>Forecast</TableHead>
-                <TableHead>Variance</TableHead>
+                {showCosts ? (
+                  <>
+                    <TableHead>Budget</TableHead>
+                    <TableHead>Committed</TableHead>
+                    <TableHead>Invoiced</TableHead>
+                    <TableHead>Paid</TableHead>
+                    <TableHead>Forecast</TableHead>
+                    <TableHead>Variance</TableHead>
+                  </>
+                ) : (
+                  <>
+                    <TableHead>Line items</TableHead>
+                    <TableHead>Decisions</TableHead>
+                    <TableHead>Ideas</TableHead>
+                  </>
+                )}
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -83,12 +97,22 @@ export default async function CategoriesPage() {
                       <p className="mt-1 text-sm text-muted-foreground">{category.notes}</p>
                     ) : null}
                   </TableCell>
-                  <TableCell>{formatCurrency(category.metrics.budget.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(category.metrics.committed.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(category.metrics.invoiced.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(category.metrics.paid.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(category.metrics.forecast.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(category.metrics.variance.exVat)}</TableCell>
+                  {showCosts ? (
+                    <>
+                      <TableCell>{formatCurrency(category.metrics.budget.exVat)}</TableCell>
+                      <TableCell>{formatCurrency(category.metrics.committed.exVat)}</TableCell>
+                      <TableCell>{formatCurrency(category.metrics.invoiced.exVat)}</TableCell>
+                      <TableCell>{formatCurrency(category.metrics.paid.exVat)}</TableCell>
+                      <TableCell>{formatCurrency(category.metrics.forecast.exVat)}</TableCell>
+                      <TableCell>{formatCurrency(category.metrics.variance.exVat)}</TableCell>
+                    </>
+                  ) : (
+                    <>
+                      <TableCell>{category.lineItems.length}</TableCell>
+                      <TableCell>{category.decisions.length}</TableCell>
+                      <TableCell>{category.ideas.length}</TableCell>
+                    </>
+                  )}
                   <TableCell className="text-right">
                     <Link
                       href={`/categories/${category.id}`}
@@ -101,18 +125,20 @@ export default async function CategoriesPage() {
                 </TableRow>
               ))}
             </TableBody>
-            <TableFooter>
-              <TableRow>
-                <TableCell className="font-medium">Total</TableCell>
-                <TableCell>{formatCurrency(data.totals.budget.exVat)}</TableCell>
-                <TableCell>{formatCurrency(data.totals.committed.exVat)}</TableCell>
-                <TableCell>{formatCurrency(data.totals.invoiced.exVat)}</TableCell>
-                <TableCell>{formatCurrency(data.totals.paid.exVat)}</TableCell>
-                <TableCell>{formatCurrency(data.totals.forecast.exVat)}</TableCell>
-                <TableCell>{formatCurrency(data.totals.variance.exVat)}</TableCell>
-                <TableCell />
-              </TableRow>
-            </TableFooter>
+            {showCosts ? (
+              <TableFooter>
+                <TableRow>
+                  <TableCell className="font-medium">Total</TableCell>
+                  <TableCell>{formatCurrency(data.totals.budget.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(data.totals.committed.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(data.totals.invoiced.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(data.totals.paid.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(data.totals.forecast.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(data.totals.variance.exVat)}</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableFooter>
+            ) : null}
           </Table>
         </CardContent>
       </Card>

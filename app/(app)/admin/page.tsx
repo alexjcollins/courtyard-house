@@ -1,8 +1,10 @@
 import { AdminJsonWorkbench } from "@/components/admin-json-workbench"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { requirePermission } from "@/lib/auth"
 import { getEditableFiles, getStorageStatus } from "@/lib/data"
 
 export default async function AdminPage() {
+  await requirePermission("admin:view")
   const [files, storage] = await Promise.all([
     getEditableFiles(),
     Promise.resolve(getStorageStatus()),

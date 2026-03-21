@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server"
-import { isAuthenticated } from "@/lib/auth"
+import { authorizeApi } from "@/lib/auth"
 import { ingestIdeaUrl } from "@/lib/ideas"
 import { createPrivateObjectSignedUrl } from "@/lib/storage"
 
 export async function POST(request: Request) {
-  if (!(await isAuthenticated())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
+  const auth = await authorizeApi("admin:edit")
+  if (auth.response) {
+    return auth.response
   }
 
   try {

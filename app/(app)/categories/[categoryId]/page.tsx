@@ -4,6 +4,7 @@ import { CategoryDecisionList } from "@/components/category-decision-list"
 import { StatusBadge } from "@/components/status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { canViewCosts, requirePermission } from "@/lib/auth"
 import { getProjectData } from "@/lib/data"
 import { formatCurrency } from "@/lib/format"
 
@@ -15,8 +16,10 @@ type CategoryPageProps = {
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { categoryId } = await params
+  const viewer = await requirePermission("categories:view")
   const data = await getProjectData()
   const category = data.categories.find((entry) => entry.id === categoryId)
+  const showCosts = canViewCosts(viewer)
 
   if (!category) {
     notFound()
@@ -44,25 +47,27 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               </p>
             ) : null}
           </CardHeader>
-          <CardContent className="grid gap-4 px-6 pb-6 sm:grid-cols-2 xl:grid-cols-3">
-            {[
-              ["Budget", category.metrics.budget.exVat],
-              ["Committed", category.metrics.committed.exVat],
-              ["Invoiced", category.metrics.invoiced.exVat],
-              ["Paid", category.metrics.paid.exVat],
-              ["Forecast", category.metrics.forecast.exVat],
-              ["Variance", category.metrics.variance.exVat],
-            ].map(([label, value]) => (
-              <div key={label} className="border border-border/70 bg-secondary/30 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  {label}
-                </p>
-                <p className="mt-3 text-2xl font-medium tracking-tight text-foreground">
-                  {formatCurrency(Number(value))}
-                </p>
-              </div>
-            ))}
-          </CardContent>
+          {showCosts ? (
+            <CardContent className="grid gap-4 px-6 pb-6 sm:grid-cols-2 xl:grid-cols-3">
+              {[
+                ["Budget", category.metrics.budget.exVat],
+                ["Committed", category.metrics.committed.exVat],
+                ["Invoiced", category.metrics.invoiced.exVat],
+                ["Paid", category.metrics.paid.exVat],
+                ["Forecast", category.metrics.forecast.exVat],
+                ["Variance", category.metrics.variance.exVat],
+              ].map(([label, value]) => (
+                <div key={label} className="border border-border/70 bg-secondary/30 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    {label}
+                  </p>
+                  <p className="mt-3 text-2xl font-medium tracking-tight text-foreground">
+                    {formatCurrency(Number(value))}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          ) : null}
         </Card>
 
         <Card className="border-border/80 py-0">
@@ -78,7 +83,9 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             <p>{category.invoices.length} invoices</p>
             <p>{category.decisions.length} decisions</p>
             <p>{category.ideas.length} ideas</p>
-            <p>Remaining to forecast: {formatCurrency(category.metrics.remainingExVat)}</p>
+            {showCosts ? (
+              <p>Remaining to forecast: {formatCurrency(category.metrics.remainingExVat)}</p>
+            ) : null}
           </CardContent>
         </Card>
       </section>
@@ -95,14 +102,14 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Item</TableHead>
-                  <TableHead>Budget</TableHead>
+                  {showCosts ? <TableHead>Budget</TableHead> : null}
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {category.lineItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-muted-foreground">
+                    <TableCell colSpan={showCosts ? 3 : 2} className="text-muted-foreground">
                       No line items yet.
                     </TableCell>
                   </TableRow>
@@ -112,7 +119,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                       <TableCell className="max-w-[32rem] whitespace-normal font-medium">
                         {item.name}
                       </TableCell>
-                      <TableCell>{formatCurrency(item.budgetExVat)}</TableCell>
+                      {showCosts ? <TableCell>{formatCurrency(item.budgetExVat)}</TableCell> : null}
                       <TableCell>
                         <StatusBadge status={item.status} />
                       </TableCell>
@@ -134,7 +141,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             {category.decisions.length === 0 ? (
               <p className="text-sm text-muted-foreground">No linked decisions.</p>
             ) : (
-              <CategoryDecisionList decisions={category.decisions} />
+              <CategoryDecisionList
+                decisions={category.decisions}
+                canEdit={viewer.role === "admin"}
+                showCosts={showCosts}
+              />
             )}
           </CardContent>
         </Card>
@@ -147,7 +158,12 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </CardTitle>
         </CardHeader>
         <CardContent className="px-5 pb-5">
-          <CategoryIdeasBoard categoryId={category.id} ideas={category.ideas} />
+          <CategoryIdeasBoard
+            categoryId={category.id}
+            ideas={category.ideas}
+            canEdit={viewer.role === "admin"}
+            showCosts={showCosts}
+          />
         </CardContent>
       </Card>
 
@@ -169,9 +185,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                 category.quotes.map((quote) => (
                   <div key={quote.id} className="border border-border/70 p-4">
                     <p className="text-sm font-medium text-foreground">{quote.title}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {formatCurrency(quote.amountExVat)}
-                    </p>
+                    {showCosts ? (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {formatCurrency(quote.amountExVat)}
+                      </p>
+                    ) : null}
                   </div>
                 ))
               )}
@@ -193,9 +211,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                     <p className="text-sm font-medium text-foreground">
                       {purchaseOrder.title}
                     </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {formatCurrency(purchaseOrder.amountExVat)}
-                    </p>
+                    {showCosts ? (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {formatCurrency(purchaseOrder.amountExVat)}
+                      </p>
+                    ) : null}
                   </div>
                 ))
               )}
@@ -214,9 +234,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                     <p className="text-sm font-medium text-foreground">
                       {invoice.number || invoice.id}
                     </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {formatCurrency(invoice.amountExVat)}
-                    </p>
+                    {showCosts ? (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {formatCurrency(invoice.amountExVat)}
+                      </p>
+                    ) : null}
                   </div>
                 ))
               )}

@@ -34,9 +34,13 @@ type IngestedItem = {
 
 type InspirationBoardProps = {
   items: InspirationSummary[]
+  canEdit?: boolean
 }
 
-export function InspirationBoard({ items }: InspirationBoardProps) {
+export function InspirationBoard({
+  items,
+  canEdit = true,
+}: InspirationBoardProps) {
   const router = useRouter()
   const [isEditorOpen, setIsEditorOpen] = useState(false)
   const [editingItemId, setEditingItemId] = useState<string | null>(null)
@@ -360,9 +364,11 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
               </option>
             ))}
           </select>
-          <Button type="button" onClick={openCreateModal}>
-            Add inspiration
-          </Button>
+          {canEdit ? (
+            <Button type="button" onClick={openCreateModal}>
+              Add inspiration
+            </Button>
+          ) : null}
         </div>
 
         {!isEditorOpen && message ? (
@@ -377,43 +383,48 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
               <InspirationCard
                 key={item.id}
                 item={item}
-                onEdit={() => startEditing(item)}
-                onDelete={() =>
-                  startTransition(() => {
-                    void deleteItem(item)
-                  })
+                onEdit={canEdit ? () => startEditing(item) : undefined}
+                onDelete={
+                  canEdit
+                    ? () =>
+                        startTransition(() => {
+                          void deleteItem(item)
+                        })
+                    : undefined
                 }
                 isDeleting={pendingDeleteItemId === item.id}
+                canEdit={canEdit}
               />
             ))}
           </div>
         )}
       </section>
 
-      <Dialog
-        open={isEditorOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            closeEditor()
-            return
-          }
+      {canEdit ? (
+        <Dialog
+          open={isEditorOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              closeEditor()
+              return
+            }
 
-          setIsEditorOpen(true)
-        }}
-      >
-        <DialogContent className="max-h-[calc(100vh-2rem)] max-w-5xl overflow-y-auto border-border p-0 sm:max-w-5xl">
-          <Card className="border-0 py-0">
-            <CardHeader className="px-5 pt-5">
-              <DialogHeader>
-                <DialogTitle className="text-2xl font-medium tracking-tight">
-                  {editingItemId ? "Edit inspiration" : "Add inspiration"}
-                </DialogTitle>
-                <DialogDescription>
-                  Upload images or ingest a reference link, then tag it by room and label.
-                </DialogDescription>
-              </DialogHeader>
-            </CardHeader>
-            <CardContent className="space-y-4 px-5 pb-5">
+            setIsEditorOpen(true)
+          }}
+        >
+          <DialogContent className="max-h-[calc(100vh-2rem)] max-w-5xl overflow-y-auto border-border p-0 sm:max-w-5xl">
+            <Card className="border-0 py-0">
+              <CardHeader className="px-5 pt-5">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-medium tracking-tight">
+                    {editingItemId ? "Edit inspiration" : "Add inspiration"}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Upload images or ingest a reference link, then tag it by room and label.
+                  </DialogDescription>
+                </DialogHeader>
+              </CardHeader>
+              <CardContent className="space-y-4 px-5 pb-5">
               <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
                 <Input
                   value={sourceUrl}
@@ -582,10 +593,11 @@ export function InspirationBoard({ items }: InspirationBoardProps) {
               {isEditorOpen && message ? (
                 <p className="text-sm text-muted-foreground">{message}</p>
               ) : null}
-            </CardContent>
-          </Card>
-        </DialogContent>
-      </Dialog>
+              </CardContent>
+            </Card>
+          </DialogContent>
+        </Dialog>
+      ) : null}
     </div>
   )
 }
@@ -595,11 +607,13 @@ function InspirationCard({
   onEdit,
   onDelete,
   isDeleting,
+  canEdit,
 }: {
   item: InspirationSummary
-  onEdit: () => void
-  onDelete: () => void
+  onEdit?: () => void
+  onDelete?: () => void
   isDeleting: boolean
+  canEdit: boolean
 }) {
   const secondaryImages = item.imageUrls.slice(1, 5)
 
@@ -636,14 +650,16 @@ function InspirationCard({
               </p>
             ) : null}
           </div>
-          <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" onClick={onEdit}>
-              Edit
-            </Button>
-            <Button type="button" variant="outline" onClick={onDelete} disabled={isDeleting}>
-              {isDeleting ? "Deleting…" : "Delete"}
-            </Button>
-          </div>
+          {canEdit ? (
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" onClick={onEdit}>
+                Edit
+              </Button>
+              <Button type="button" variant="outline" onClick={onDelete} disabled={isDeleting}>
+                {isDeleting ? "Deleting…" : "Delete"}
+              </Button>
+            </div>
+          ) : null}
         </div>
 
         {(item.tags || []).length ? (

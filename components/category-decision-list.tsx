@@ -9,9 +9,15 @@ import { cn } from "@/lib/utils"
 
 type CategoryDecisionListProps = {
   decisions: Decision[]
+  canEdit?: boolean
+  showCosts?: boolean
 }
 
-export function CategoryDecisionList({ decisions }: CategoryDecisionListProps) {
+export function CategoryDecisionList({
+  decisions,
+  canEdit = true,
+  showCosts = true,
+}: CategoryDecisionListProps) {
   const router = useRouter()
   const [pendingKey, setPendingKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -92,19 +98,24 @@ export function CategoryDecisionList({ decisions }: CategoryDecisionListProps) {
                   <button
                     key={option.name}
                     type="button"
-                    onClick={() =>
-                      void setDecisionSelection(
-                        decision.id,
-                        isSelected ? null : index,
-                      )
+                    onClick={
+                      canEdit
+                        ? () =>
+                            void setDecisionSelection(
+                              decision.id,
+                              isSelected ? null : index,
+                            )
+                        : undefined
                     }
-                    disabled={pendingKey !== null}
+                    disabled={!canEdit || pendingKey !== null}
                     aria-pressed={isSelected}
                     className={cn(
-                      "flex w-full cursor-pointer items-center justify-between gap-3 border border-border/60 px-3 py-2 text-left transition-colors disabled:cursor-wait disabled:opacity-70",
+                      "flex w-full items-center justify-between gap-3 border border-border/60 px-3 py-2 text-left transition-colors disabled:opacity-70",
+                      canEdit ? "cursor-pointer disabled:cursor-wait" : "cursor-default",
                       isSelected
                         ? "bg-foreground text-background"
                         : "bg-white/70 hover:bg-secondary/50",
+                      !canEdit && "hover:bg-white/70",
                     )}
                   >
                     <span className={isSelected ? "text-background" : "text-foreground"}>
@@ -112,7 +123,13 @@ export function CategoryDecisionList({ decisions }: CategoryDecisionListProps) {
                       {option.name}
                     </span>
                     <span className={isSelected ? "text-background/70" : "text-muted-foreground"}>
-                      {isPending ? "Saving..." : formatCurrency(option.costDeltaExVat)}
+                      {isPending
+                        ? "Saving..."
+                        : showCosts
+                          ? formatCurrency(option.costDeltaExVat)
+                          : isSelected
+                            ? "Selected"
+                            : "Available"}
                     </span>
                   </button>
                 )
