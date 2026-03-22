@@ -8,6 +8,7 @@
 - `decisions.json`: design and procurement decisions with option cost deltas.
 - `ideas.json`: early product and finish ideas by category, including room tags, URLs, estimated costs, and picked status.
 - `inspiration.json`: moodboard-style references with uploaded images, links, room tags, and searchable labels.
+- `tasks.json`: actionable tasks with status, priority, assignee, and optional links to decisions or milestones.
 - `timeline.json`: milestones and dependency links.
 - `fundingModel.json`: stage-based drawdown model linked to milestones.
 

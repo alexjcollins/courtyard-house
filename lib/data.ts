@@ -18,6 +18,7 @@ export const DATA_FILE_NAMES = [
   "decisions.json",
   "ideas.json",
   "inspiration.json",
+  "tasks.json",
   "timeline.json",
   "fundingModel.json",
 ] as const
@@ -269,6 +270,48 @@ export type InspirationItem = {
 
 export type InspirationFile = {
   items: InspirationItem[]
+}
+
+export type TaskRelationType = "decision" | "milestone"
+export type TaskStatus = "backlog" | "todo" | "in_progress" | "blocked" | "done"
+export type TaskPriority = "low" | "medium" | "high"
+
+export type TaskRelation = {
+  type: TaskRelationType
+  id: string
+  label: string
+}
+
+export type TaskAssignee = {
+  userId: string
+  name: string
+  email: string
+  role?: string
+}
+
+export type Task = {
+  id: string
+  code: string
+  title: string
+  status: TaskStatus
+  priority: TaskPriority
+  assignee?: TaskAssignee
+  related?: TaskRelation[]
+  dueDate?: string
+  notes?: string
+  createdDate?: string
+  updatedDate?: string
+}
+
+export type TasksFile = {
+  tasks: Task[]
+}
+
+export type TaskReferenceOption = {
+  type: TaskRelationType
+  id: string
+  label: string
+  meta?: string
 }
 
 export type Milestone = {
@@ -817,6 +860,20 @@ function createShortId(prefix: string, seed: string): string {
   return `${prefix}-${slugify(seed)}-${randomSuffix}`
 }
 
+function createTaskId(title: string): string {
+  return createShortId("task", title)
+}
+
+function createTaskCode(tasks: Task[]): string {
+  const nextNumber =
+    tasks.reduce((max, task) => {
+      const match = task.code.match(/(\d+)$/)
+      return Math.max(max, match ? Number(match[1]) : 1000)
+    }, 1000) + 1
+
+  return `TASK-${nextNumber}`
+}
+
 function createIdeaId(title: string): string {
   return createShortId("idea", title)
 }
@@ -1033,6 +1090,20 @@ export type SaveInspirationInput = {
   metadata?: InspirationItem["metadata"]
 }
 
+export type SaveTaskInput = {
+  taskId?: string
+  title: string
+  status: TaskStatus
+  priority: TaskPriority
+  assignee?: TaskAssignee
+  related?: Array<{
+    type: TaskRelationType
+    id: string
+  }>
+  dueDate?: string
+  notes?: string
+}
+
 export async function getInspirationItems(): Promise<InspirationSummary[]> {
   const inspirationFile = await readJsonFile<InspirationFile>("inspiration.json")
 
@@ -1100,6 +1171,165 @@ export async function deleteInspirationItem(itemId: string): Promise<void> {
 
   inspirationFile.items = nextItems
   await writeDataFileText("inspiration.json", formatJson(inspirationFile))
+}
+
+export async function getTasksRegisterData(): Promise<{
+  tasks: Task[]
+  relatedOptions: TaskReferenceOption[]
+}> {
+  const [tasksFile, decisionsFile, timelineFile, categoriesFile] = await Promise.all([
+    readJsonFile<TasksFile>("tasks.json"),
+    readJsonFile<DecisionsFile>("decisions.json"),
+    readJsonFile<TimelineFile>("timeline.json"),
+    readJsonFile<CategoriesFile>("categories.json"),
+  ])
+
+  const categoryNameByDecision = new Map(
+    decisionsFile.decisions.map((decision) => [
+      decision.id,
+      categoriesFile.categories.find((category) => category.id === decision.categoryId)?.name ||
+        decision.categoryId,
+    ]),
+  )
+
+  const decisionOptions: TaskReferenceOption[] = decisionsFile.decisions.map((decision) => ({
+    type: "decision",
+    id: decision.id,
+    label: decision.title,
+    meta: categoryNameByDecision.get(decision.id),
+  }))
+
+  const milestoneOptions: TaskReferenceOption[] = timelineFile.milestones.map((milestone) => ({
+    type: "milestone",
+    id: milestone.id,
+    label: milestone.name,
+    meta: milestone.plannedDate,
+  }))
+
+  return {
+    tasks: [...tasksFile.tasks].sort((left, right) =>
+      (right.updatedDate || right.createdDate || "").localeCompare(
+        left.updatedDate || left.createdDate || "",
+      ),
+    ),
+    relatedOptions: [...decisionOptions, ...milestoneOptions],
+  }
+}
+
+export async function saveTask(input: SaveTaskInput): Promise<Task> {
+  const [tasksFile, decisionsFile, timelineFile, categoriesFile] = await Promise.all([
+    readJsonFile<TasksFile>("tasks.json"),
+    readJsonFile<DecisionsFile>("decisions.json"),
+    readJsonFile<TimelineFile>("timeline.json"),
+    readJsonFile<CategoriesFile>("categories.json"),
+  ])
+
+  const currentTask = input.taskId
+    ? tasksFile.tasks.find((task) => task.id === input.taskId) || null
+    : null
+
+  if (input.taskId && !currentTask) {
+    throw new Error("Task not found.")
+  }
+
+  const title = input.title.trim()
+  if (!title) {
+    throw new Error("Task title is required.")
+  }
+
+  const decisionMap = new Map(
+    decisionsFile.decisions.map((decision) => [
+      decision.id,
+      {
+        label: decision.title,
+        meta:
+          categoriesFile.categories.find((category) => category.id === decision.categoryId)?.name ||
+          decision.categoryId,
+      },
+    ]),
+  )
+  const milestoneMap = new Map(
+    timelineFile.milestones.map((milestone) => [
+      milestone.id,
+      {
+        label: milestone.name,
+        meta: milestone.plannedDate,
+      },
+    ]),
+  )
+
+  const related = [...new Map(
+    (input.related || []).map((relation) => [`${relation.type}:${relation.id}`, relation]),
+  ).values()].map((relation) => {
+    if (relation.type === "decision") {
+      const decision = decisionMap.get(relation.id)
+      if (!decision) {
+        throw new Error("Related decision not found.")
+      }
+
+      return {
+        type: relation.type,
+        id: relation.id,
+        label: decision.meta ? `${decision.label} · ${decision.meta}` : decision.label,
+      } satisfies TaskRelation
+    }
+
+    const milestone = milestoneMap.get(relation.id)
+    if (!milestone) {
+      throw new Error("Related milestone not found.")
+    }
+
+    return {
+      type: relation.type,
+      id: relation.id,
+      label: milestone.meta ? `${milestone.label} · ${milestone.meta}` : milestone.label,
+    } satisfies TaskRelation
+  })
+
+  const today = new Date().toISOString().slice(0, 10)
+  const nextTask: Task = {
+    id: currentTask?.id || createTaskId(title),
+    code: currentTask?.code || createTaskCode(tasksFile.tasks),
+    title,
+    status: input.status,
+    priority: input.priority,
+    assignee:
+      input.assignee?.userId && input.assignee.email
+        ? {
+            userId: input.assignee.userId,
+            name: input.assignee.name.trim() || input.assignee.email.trim(),
+            email: input.assignee.email.trim(),
+            role: input.assignee.role?.trim() || undefined,
+          }
+        : undefined,
+    related: related.length > 0 ? related : undefined,
+    dueDate: input.dueDate || undefined,
+    notes: input.notes?.trim() || undefined,
+    createdDate: currentTask?.createdDate || today,
+    updatedDate: today,
+  }
+
+  if (currentTask) {
+    const taskIndex = tasksFile.tasks.findIndex((task) => task.id === currentTask.id)
+    tasksFile.tasks[taskIndex] = nextTask
+  } else {
+    tasksFile.tasks.unshift(nextTask)
+  }
+
+  await writeDataFileText("tasks.json", formatJson(tasksFile))
+  return nextTask
+}
+
+export async function deleteTask(taskId: string): Promise<void> {
+  const tasksFile = await readJsonFile<TasksFile>("tasks.json")
+  const nextTasks = tasksFile.tasks.filter((task) => task.id !== taskId)
+
+  if (nextTasks.length === tasksFile.tasks.length) {
+    throw new Error("Task not found.")
+  }
+
+  tasksFile.tasks = nextTasks
+  await writeDataFileText("tasks.json", formatJson(tasksFile))
 }
 
 export type SaveFundingSourceAccountInput = {

@@ -11,6 +11,7 @@ const DATA_FILE_NAMES = [
   "decisions.json",
   "ideas.json",
   "inspiration.json",
+  "tasks.json",
   "timeline.json",
   "fundingModel.json",
 ]

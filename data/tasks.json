@@ -1,0 +1,55 @@
+{
+  "tasks": [
+    {
+      "id": "task-structural-signoff-seed",
+      "code": "TASK-1001",
+      "title": "Confirm final structural engineer sign-off package",
+      "status": "todo",
+      "priority": "high",
+      "related": [
+        {
+          "type": "milestone",
+          "id": "m-structural-signoff",
+          "label": "Final structural engineer sign-off · 2026-05-22"
+        }
+      ],
+      "notes": "Check that the final steel portal frame assumptions and foundation loading notes are aligned before technical design sign-off.",
+      "createdDate": "2026-03-22",
+      "updatedDate": "2026-03-22"
+    },
+    {
+      "id": "task-cladding-decision-seed",
+      "code": "TASK-1002",
+      "title": "Close out cladding species decision",
+      "status": "in_progress",
+      "priority": "medium",
+      "related": [
+        {
+          "type": "decision",
+          "id": "d-001",
+          "label": "Cladding species · Envelope (walls/insulation/cladding/airtightness + courtyard interface)"
+        }
+      ],
+      "notes": "Pull together maintenance, weathering, and supplier lead-time comparisons before the tender package is frozen.",
+      "createdDate": "2026-03-22",
+      "updatedDate": "2026-03-22"
+    },
+    {
+      "id": "task-bc-notice-seed",
+      "code": "TASK-1003",
+      "title": "Prepare initial building control notice pack",
+      "status": "backlog",
+      "priority": "medium",
+      "related": [
+        {
+          "type": "milestone",
+          "id": "m-bc-notice-lodged",
+          "label": "Initial building control notice lodged · 2026-06-19"
+        }
+      ],
+      "notes": "Gather the technical issue sheets, structural information, and drainage notes needed for the first submission.",
+      "createdDate": "2026-03-22",
+      "updatedDate": "2026-03-22"
+    }
+  ]
+}

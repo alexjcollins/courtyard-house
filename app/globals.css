@@ -110,7 +110,7 @@
   --ag-odd-row-background-color: rgba(255, 255, 255, 0.34);
   --ag-row-hover-color: rgba(15, 23, 42, 0.03);
   --ag-selected-row-background-color: rgba(255, 72, 0, 0.08);
-  --ag-group-background-color: rgba(15, 23, 42, 0.03);
+  --ag-group-background-color: #EFF2F4;
   --ag-font-family: var(--font-sans);
   --ag-font-size: 14px;
   --ag-grid-size: 8px;
@@ -129,6 +129,16 @@
   border-color: rgba(15, 23, 42, 0.06);
 }
 
+.decisions-grid .ag-header-cell,
+.decisions-grid .ag-cell {
+  border-right: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.decisions-grid .ag-header-cell:last-child,
+.decisions-grid .ag-cell:last-child {
+  border-right: 0;
+}
+
 .decisions-grid .ag-group-value {
   font-weight: 500;
 }
@@ -136,4 +146,8 @@
 .decisions-grid .ag-group-cell .ag-cell-wrapper {
   align-items: center;
   min-height: 100%;
+}
+
+.decisions-grid .ag-row.decisions-group-row {
+  background-color: #eff2f4;
 }
