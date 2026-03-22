@@ -1,3 +1,4 @@
+import { MetricCard } from "@/components/metric-card"
 import { StatusBadge } from "@/components/status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -27,16 +28,7 @@ export default async function ProcurementPage() {
           ["POs", data.procurementFile.purchaseOrders.length],
           ["Invoices", data.procurementFile.invoices.length],
         ].map(([label, value]) => (
-          <Card key={label} className="border-border/70 py-0">
-            <CardHeader className="px-5 pt-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                {label}
-              </p>
-              <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
-                {value}
-              </CardTitle>
-            </CardHeader>
-          </Card>
+          <MetricCard key={String(label)} label={String(label)} value={String(value)} />
         ))}
       </div>
 

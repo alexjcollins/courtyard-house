@@ -1,5 +1,5 @@
-import { DecisionGroups } from "@/components/decision-groups"
-import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { DecisionsGrid } from "@/components/decisions-grid"
+import { MetricCard } from "@/components/metric-card"
 import { canViewCosts, requirePermission } from "@/lib/auth"
 import { getProjectData } from "@/lib/data"
 import { formatCurrency } from "@/lib/format"
@@ -25,22 +25,6 @@ export default async function DecisionsPage() {
   const categoriesWithDecisions = data.categories.filter(
     (category) => category.decisions.length > 0,
   )
-  const openCategories = categoriesWithDecisions
-    .map((category) => ({
-      ...category,
-      decisions: category.decisions.filter(
-        (decision) => decision.selectedOptionIndex === null,
-      ),
-    }))
-    .filter((category) => category.decisions.length > 0)
-  const closedCategories = categoriesWithDecisions
-    .map((category) => ({
-      ...category,
-      decisions: category.decisions.filter(
-        (decision) => decision.selectedOptionIndex !== null,
-      ),
-    }))
-    .filter((category) => category.decisions.length > 0)
 
   return (
     <div className="space-y-6">
@@ -54,48 +38,12 @@ export default async function DecisionsPage() {
       </section>
 
       <div className={`grid gap-4 md:grid-cols-2 ${showCosts ? "xl:grid-cols-4" : ""}`}>
-        <Card className="border-border/70 py-0">
-          <CardHeader className="px-5 pt-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Open decisions
-            </p>
-            <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
-              {unresolvedCount}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="border-border/70 py-0">
-          <CardHeader className="px-5 pt-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Closed decisions
-            </p>
-            <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
-              {closedDecisions.length}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+        <MetricCard label="Open decisions" value={String(unresolvedCount)} />
+        <MetricCard label="Closed decisions" value={String(closedDecisions.length)} />
         {showCosts ? (
           <>
-            <Card className="border-border/70 py-0">
-              <CardHeader className="px-5 pt-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Selected delta
-                </p>
-                <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
-                  {formatCurrency(selectedDelta)}
-                </CardTitle>
-              </CardHeader>
-            </Card>
-            <Card className="border-border/70 py-0">
-              <CardHeader className="px-5 pt-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                  Forecast impact
-                </p>
-                <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
-                  {formatCurrency(data.totals.forecast.exVat)}
-                </CardTitle>
-              </CardHeader>
-            </Card>
+            <MetricCard label="Selected delta" value={formatCurrency(selectedDelta)} />
+            <MetricCard label="Forecast impact" value={formatCurrency(data.totals.forecast.exVat)} />
           </>
         ) : null}
       </div>
@@ -103,37 +51,19 @@ export default async function DecisionsPage() {
       <section className="space-y-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-            Open
+            Register
           </p>
           <h2 className="mt-2 text-3xl font-medium tracking-tight">
-            Decisions still to resolve
-          </h2>
-        </div>
-        <DecisionGroups
-          categories={openCategories}
-          mode="open"
-          canEdit={viewer.role === "admin"}
-          showCosts={showCosts}
-        />
-      </section>
-
-      <section className="space-y-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-            Closed
-          </p>
-          <h2 className="mt-2 text-3xl font-medium tracking-tight">
-            Selected decisions
+            Decision register
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {viewer.role === "admin"
-              ? "Closed decisions stay editable. Click the selected option to clear it or choose a different option."
-              : "Closed decisions are visible here in read-only mode."}
+              ? "All decisions are shown in one grouped grid with spreadsheet-style columns. Use the Selection cell to choose an option or clear it back to No selection."
+              : "All decisions are shown in one grouped grid with spreadsheet-style columns, in read-only mode."}
           </p>
         </div>
-        <DecisionGroups
-          categories={closedCategories}
-          mode="closed"
+        <DecisionsGrid
+          categories={categoriesWithDecisions}
           canEdit={viewer.role === "admin"}
           showCosts={showCosts}
         />

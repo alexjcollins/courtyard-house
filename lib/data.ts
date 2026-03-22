@@ -679,17 +679,33 @@ function deriveTimelinePhases(
       name: "Pre-construction",
       milestoneIds: [
         "m-planning",
+        "m-structural-signoff",
         "m-tech-freeze",
+      ],
+    },
+    {
+      id: "phase-tender",
+      name: "Tender & appointment",
+      milestoneIds: [
         "m-tender-issue",
+        "m-bc-notice-lodged",
         "m-tender-return",
+        "m-bc-plan-check",
         "m-contractor-appointed",
       ],
     },
     {
-      id: "phase-substructure",
-      name: "Site setup & substructure",
+      id: "phase-site-setup",
+      name: "Site setup & mobilisation",
       milestoneIds: [
         "m-site-setup",
+        "m-contract-prestart",
+      ],
+    },
+    {
+      id: "phase-substructure",
+      name: "Groundworks & substructure",
+      milestoneIds: [
         "m-groundworks-start",
         "m-foundations-complete",
       ],

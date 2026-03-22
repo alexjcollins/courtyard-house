@@ -2,6 +2,7 @@
 
 import { startTransition, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import { MetricCard } from "@/components/metric-card"
 import type { ProjectData } from "@/lib/data"
 import { formatCurrency, formatDate } from "@/lib/format"
 import { Button } from "@/components/ui/button"
@@ -971,21 +972,6 @@ export function FundingPageClient({
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card className="border-border/70 py-0">
-      <CardHeader className="px-5 pt-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          {label}
-        </p>
-        <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
-          {value}
-        </CardTitle>
-      </CardHeader>
-    </Card>
   )
 }
 

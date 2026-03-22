@@ -1,5 +1,5 @@
 import { InspirationBoard } from "@/components/inspiration-board"
-import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import { MetricCard } from "@/components/metric-card"
 import { requirePermission } from "@/lib/auth"
 import { getInspirationItems } from "@/lib/data"
 
@@ -33,20 +33,5 @@ export default async function InspirationPage() {
 
       <InspirationBoard items={items} canEdit={viewer.role === "admin"} />
     </div>
-  )
-}
-
-function MetricCard({ label, value }: { label: string; value: string }) {
-  return (
-    <Card className="border-border/70 py-0">
-      <CardHeader className="px-5 pt-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-          {label}
-        </p>
-        <CardTitle className="mt-2 text-3xl font-medium tracking-tight">
-          {value}
-        </CardTitle>
-      </CardHeader>
-    </Card>
   )
 }

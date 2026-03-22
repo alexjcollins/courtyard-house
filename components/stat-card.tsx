@@ -70,6 +70,7 @@ export function StatCard({
             {delta.label}
           </p>
         ) : null}
+        {!detail && (!delta || delta.placement === "top-right") ? <div className="h-2.5" /> : null}
       </CardContent>
     </Card>
   )

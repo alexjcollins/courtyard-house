@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import 'ag-grid-community/styles/ag-grid.css';
+@import 'ag-grid-community/styles/ag-theme-quartz.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -97,4 +99,41 @@
   ::selection {
     background: rgba(255, 72, 0, 0.18);
   }
+}
+
+.decisions-grid.ag-theme-quartz {
+  --ag-background-color: rgba(255, 255, 255, 0.72);
+  --ag-foreground-color: oklch(0.145 0 0);
+  --ag-border-color: rgba(15, 23, 42, 0.1);
+  --ag-header-background-color: rgba(15, 23, 42, 0.03);
+  --ag-header-foreground-color: oklch(0.5 0 0);
+  --ag-odd-row-background-color: rgba(255, 255, 255, 0.34);
+  --ag-row-hover-color: rgba(15, 23, 42, 0.03);
+  --ag-selected-row-background-color: rgba(255, 72, 0, 0.08);
+  --ag-group-background-color: rgba(15, 23, 42, 0.03);
+  --ag-font-family: var(--font-sans);
+  --ag-font-size: 14px;
+  --ag-grid-size: 8px;
+  --ag-cell-horizontal-padding: 16px;
+  --ag-header-column-separator-display: none;
+  --ag-row-border-color: rgba(15, 23, 42, 0.06);
+  --ag-wrapper-border-radius: 0px;
+}
+
+.decisions-grid .ag-root-wrapper {
+  border: 0;
+}
+
+.decisions-grid .ag-header,
+.decisions-grid .ag-row {
+  border-color: rgba(15, 23, 42, 0.06);
+}
+
+.decisions-grid .ag-group-value {
+  font-weight: 500;
+}
+
+.decisions-grid .ag-group-cell .ag-cell-wrapper {
+  align-items: center;
+  min-height: 100%;
 }
