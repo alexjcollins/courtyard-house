@@ -3,8 +3,10 @@ import "server-only"
 import { randomUUID } from "node:crypto"
 import { Pool, type PoolClient, type QueryResultRow } from "pg"
 import type { Decision, DecisionsFile } from "@/lib/data"
+import { createPrivateObjectSignedUrl } from "@/lib/storage"
 import {
   type DecisionWorkspaceCategory,
+  type DecisionWorkspaceImage,
   type DecisionWorkspaceItem,
   type DecisionWorkspaceRoom,
   type DecisionWorkspaceSelection,
@@ -72,6 +74,7 @@ type DecisionWorkspaceRow = QueryResultRow & {
   selected_source_url: string | null
   selected_cost_ex_vat: string | number | null
   selected_notes: string | null
+  selected_images: unknown
   item_created_at: string | null
   item_updated_at: string | null
   selection_created_at: string | null
@@ -112,10 +115,37 @@ function createRecordId(prefix: string, seed: string): string {
   return `${prefix}-${slug}-${randomUUID().slice(0, 8)}`
 }
 
+function mapSelectionImages(value: unknown): DecisionWorkspaceImage[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") {
+      return []
+    }
+
+    const key = typeof entry.key === "string" ? entry.key.trim() : ""
+    if (!key) {
+      return []
+    }
+
+    return [
+      {
+        key,
+        alt: typeof entry.alt === "string" ? entry.alt : undefined,
+        sourceUrl: typeof entry.sourceUrl === "string" ? entry.sourceUrl : undefined,
+      },
+    ]
+  })
+}
+
 function mapDecisionSelection(row: DecisionWorkspaceRow): DecisionWorkspaceSelection | null {
   if (!row.current_selection_id || !row.status) {
     return null
   }
+
+  const selectedImages = mapSelectionImages(row.selected_images)
 
   return {
     id: row.current_selection_id,
@@ -125,6 +155,10 @@ function mapDecisionSelection(row: DecisionWorkspaceRow): DecisionWorkspaceSelec
     selectedSourceUrl: row.selected_source_url ?? undefined,
     selectedCostExVat: toNumber(row.selected_cost_ex_vat),
     selectedNotes: row.selected_notes ?? undefined,
+    selectedImages,
+    selectedImageUrls: selectedImages.map((image) =>
+      createPrivateObjectSignedUrl(image.key, { expiresInSeconds: 60 * 60 }),
+    ),
     createdAt: row.selection_created_at ?? undefined,
     updatedAt: row.selection_updated_at ?? undefined,
   }
@@ -161,6 +195,8 @@ function mapDecisionItemRow(row: DecisionWorkspaceRow): DecisionWorkspaceItem {
     selectedSourceUrl: selection?.selectedSourceUrl,
     selectedCostExVat: selection?.selectedCostExVat,
     selectedNotes: selection?.selectedNotes,
+    selectedImages: selection?.selectedImages,
+    selectedImageUrls: selection?.selectedImageUrls,
     createdAt: row.item_created_at ?? undefined,
     updatedAt: row.item_updated_at ?? undefined,
   }
@@ -216,6 +252,7 @@ async function getJoinedDecisionWorkspaceItems(
         current_selection.selected_source_url,
         current_selection.selected_cost_ex_vat,
         current_selection.selected_notes,
+        current_selection.selected_images,
         i.created_at::text as item_created_at,
         i.updated_at::text as item_updated_at,
         current_selection.created_at::text as selection_created_at,
@@ -232,6 +269,7 @@ async function getJoinedDecisionWorkspaceItems(
           selection.selected_source_url,
           selection.selected_cost_ex_vat,
           selection.selected_notes,
+          selection.selected_images,
           selection.created_at,
           selection.updated_at
         from decision_selections selection
@@ -289,6 +327,7 @@ async function getDecisionWorkspaceItemById(
         current_selection.selected_source_url,
         current_selection.selected_cost_ex_vat,
         current_selection.selected_notes,
+        current_selection.selected_images,
         i.created_at::text as item_created_at,
         i.updated_at::text as item_updated_at,
         current_selection.created_at::text as selection_created_at,
@@ -305,6 +344,7 @@ async function getDecisionWorkspaceItemById(
           selection.selected_source_url,
           selection.selected_cost_ex_vat,
           selection.selected_notes,
+          selection.selected_images,
           selection.created_at,
           selection.updated_at
         from decision_selections selection
@@ -448,6 +488,7 @@ export type UpdateDecisionWorkspaceItemInput = {
   selectedSourceUrl?: string | null
   selectedCostExVat?: number | null
   selectedNotes?: string | null
+  selectedImages?: DecisionWorkspaceImage[]
 }
 
 export async function updateDecisionWorkspaceItem(
@@ -458,6 +499,7 @@ export async function updateDecisionWorkspaceItem(
   const normalizedSelectedSource = input.selectedSource?.trim() || null
   const normalizedSelectedSourceUrl = input.selectedSourceUrl?.trim() || null
   const normalizedSelectedNotes = input.selectedNotes?.trim() || null
+  const normalizedSelectedImages = mapSelectionImages(input.selectedImages)
   const requestedSelectedCost =
     input.selectedCostExVat === null || input.selectedCostExVat === undefined
       ? null
@@ -526,12 +568,13 @@ export async function updateDecisionWorkspaceItem(
             status,
             selected_name,
             selected_source,
-            selected_source_url,
-            selected_cost_ex_vat,
-            selected_notes,
-            is_current
-          )
-          values ($1,$2,$3,$4,$5,$6,$7,$8,true)
+          selected_source_url,
+          selected_cost_ex_vat,
+          selected_notes,
+          selected_images,
+          is_current
+        )
+          values ($1,$2,$3,$4,$5,$6,$7,$8,$9,true)
         `,
         [
           `sel-${randomUUID()}`,
@@ -542,6 +585,7 @@ export async function updateDecisionWorkspaceItem(
           normalizedSelectedSourceUrl,
           selectedCostExVat,
           normalizedSelectedNotes,
+          JSON.stringify(normalizedSelectedImages),
         ],
       )
     }
@@ -771,9 +815,10 @@ export async function duplicateDecisionWorkspaceItem(
             selected_source_url,
             selected_cost_ex_vat,
             selected_notes,
+            selected_images,
             is_current
           )
-          values ($1,$2,$3,$4,$5,$6,$7,$8,true)
+          values ($1,$2,$3,$4,$5,$6,$7,$8,$9,true)
         `,
         [
           `sel-${randomUUID()}`,
@@ -784,6 +829,7 @@ export async function duplicateDecisionWorkspaceItem(
           sourceItem.selectedSourceUrl ?? null,
           sourceItem.selectedCostExVat ?? null,
           sourceItem.selectedNotes ?? null,
+          JSON.stringify(sourceItem.selectedImages || []),
         ],
       )
     }

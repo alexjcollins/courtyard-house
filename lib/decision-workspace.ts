@@ -2,6 +2,12 @@ export type DecisionBrowseMode = "room" | "type"
 
 export type DecisionWorkspaceStatus = "open" | "selected" | "on_hold"
 
+export type DecisionWorkspaceImage = {
+  key: string
+  alt?: string | null
+  sourceUrl?: string | null
+}
+
 export type DecisionWorkspaceRoom = {
   id: string
   name: string
@@ -22,6 +28,8 @@ export type DecisionWorkspaceSelection = {
   selectedSourceUrl?: string | null
   selectedCostExVat?: number | null
   selectedNotes?: string | null
+  selectedImages?: DecisionWorkspaceImage[]
+  selectedImageUrls?: string[]
   createdAt?: string | null
   updatedAt?: string | null
 }
@@ -55,6 +63,8 @@ export type DecisionWorkspaceItem = {
   selectedSourceUrl?: string | null
   selectedCostExVat?: number | null
   selectedNotes?: string | null
+  selectedImages?: DecisionWorkspaceImage[]
+  selectedImageUrls?: string[]
   createdAt?: string | null
   updatedAt?: string | null
 }

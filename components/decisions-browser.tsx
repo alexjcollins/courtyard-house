@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type {
   DecisionBrowseMode,
   DecisionWorkspaceCategory,
+  DecisionWorkspaceImage,
   DecisionWorkspaceItem,
   DecisionWorkspaceRoom,
   DecisionWorkspaceStatus,
@@ -58,9 +59,15 @@ type DecisionsBrowserProps = {
   clearHref?: string
   searchPlaceholder?: string
   saveSelectionLabel?: string
+  selectionImageFolder?: string
   roomDialogDescription?: string
   categoryDialogDescription?: string
   itemDialogDescription?: string
+}
+
+type DraftSelectionImage = DecisionWorkspaceImage & {
+  signedUrl: string
+  origin: "uploaded" | "saved"
 }
 
 type DecisionFormState = {
@@ -70,6 +77,7 @@ type DecisionFormState = {
   selectedSourceUrl: string
   selectedCostExVat: string
   selectedNotes: string
+  selectedImages: DraftSelectionImage[]
 }
 
 type RoomFormState = {
@@ -113,6 +121,11 @@ function createInitialFormState(item: DecisionWorkspaceItem): DecisionFormState 
         ? ""
         : String(item.selectedCostExVat),
     selectedNotes: item.selectedNotes || "",
+    selectedImages: (item.selectedImages || []).map((image, index) => ({
+      ...image,
+      signedUrl: item.selectedImageUrls?.[index] || "",
+      origin: "saved",
+    })),
   }
 }
 
@@ -231,6 +244,7 @@ export function DecisionsBrowser({
   clearHref = "/decisions",
   searchPlaceholder = "Search all decisions",
   saveSelectionLabel = "Save decision",
+  selectionImageFolder = "files/decisions/selections",
   roomDialogDescription = "Rooms drive the first column in the Finder-style decisions browser.",
   categoryDialogDescription = "Categories drive the second column when browsing decisions by room.",
   itemDialogDescription = "Create or update the core decision items that feed the workspace and budget rollup.",
@@ -261,6 +275,7 @@ export function DecisionsBrowser({
   )
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [isUploadingSelectionImages, setIsUploadingSelectionImages] = useState(false)
 
   useEffect(() => {
     setLocalRooms(rooms)
@@ -529,6 +544,11 @@ export function DecisionsBrowser({
                 ? null
                 : Number(formState.selectedCostExVat),
             selectedNotes: formState.selectedNotes,
+            selectedImages: formState.selectedImages.map((image) => ({
+              key: image.key,
+              alt: image.alt,
+              sourceUrl: image.sourceUrl,
+            })),
           }),
         })
 
@@ -547,6 +567,64 @@ export function DecisionsBrowser({
         )
       }
     })
+  }
+
+  async function uploadSelectionImages(files: FileList | null) {
+    const selection = Array.from(files || [])
+    if (selection.length === 0) return
+
+    setError(null)
+    setIsUploadingSelectionImages(true)
+
+    try {
+      const uploaded: DraftSelectionImage[] = []
+
+      for (const file of selection) {
+        const formData = new FormData()
+        formData.set("file", file)
+        formData.set("folder", selectionImageFolder)
+
+        const uploadResponse = await fetch("/api/files/upload", {
+          method: "POST",
+          body: formData,
+        })
+        const uploadPayload = await uploadResponse.json()
+        if (!uploadResponse.ok) {
+          throw new Error(uploadPayload.error || `Could not upload ${file.name}.`)
+        }
+
+        uploaded.push({
+          key: uploadPayload.image.key as string,
+          alt: (uploadPayload.image.alt as string) || file.name,
+          signedUrl: uploadPayload.image.signedUrl as string,
+          origin: "uploaded",
+        })
+      }
+
+      setFormState((current) =>
+        current
+          ? {
+              ...current,
+              selectedImages: [...current.selectedImages, ...uploaded],
+            }
+          : current,
+      )
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Could not upload images.")
+    } finally {
+      setIsUploadingSelectionImages(false)
+    }
+  }
+
+  function removeSelectionImage(imageKey: string) {
+    setFormState((current) =>
+      current
+        ? {
+            ...current,
+            selectedImages: current.selectedImages.filter((image) => image.key !== imageKey),
+          }
+        : current,
+    )
   }
 
   async function saveRoom() {
@@ -982,6 +1060,7 @@ export function DecisionsBrowser({
                                 selectedSourceUrl: "",
                                 selectedCostExVat: String(selectedItem.baselineBudgetExVat),
                                 selectedNotes: "Carrying the current baseline budget allowance.",
+                                selectedImages: [],
                               })
                             }
                             className="inline-flex h-10 items-center gap-2 border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
@@ -1117,6 +1196,64 @@ export function DecisionsBrowser({
                         />
                       </div>
 
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                            Selection images
+                          </label>
+                          {canEdit ? (
+                            <label className="inline-flex cursor-pointer items-center border border-border px-3 py-2 text-sm text-muted-foreground transition hover:text-foreground">
+                              {isUploadingSelectionImages ? "Uploading..." : "Upload images"}
+                              <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="sr-only"
+                                disabled={isUploadingSelectionImages || isPending}
+                                onChange={(event) => {
+                                  void uploadSelectionImages(event.target.files)
+                                  event.currentTarget.value = ""
+                                }}
+                              />
+                            </label>
+                          ) : null}
+                        </div>
+
+                        {formState.selectedImages.length ? (
+                          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                            {formState.selectedImages.map((image) => (
+                              <div key={image.key} className="space-y-2 border border-border/70 p-2">
+                                <div className="aspect-[4/3] overflow-hidden bg-secondary/40">
+                                  <img
+                                    src={image.signedUrl}
+                                    alt={image.alt || selectedItem.title}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="truncate text-xs text-muted-foreground">
+                                    {image.alt || "Selection image"}
+                                  </p>
+                                  {canEdit ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => removeSelectionImage(image.key)}
+                                      className="text-xs text-muted-foreground transition hover:text-foreground"
+                                    >
+                                      Remove
+                                    </button>
+                                  ) : null}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="border border-border/70 px-3 py-4 text-sm text-muted-foreground">
+                            No selection images added.
+                          </div>
+                        )}
+                      </div>
+
                       {canEdit ? (
                         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/70 pt-4">
                           <button
@@ -1138,6 +1275,7 @@ export function DecisionsBrowser({
                                   selectedSourceUrl: "",
                                   selectedCostExVat: "",
                                   selectedNotes: "",
+                                  selectedImages: [],
                                 })
                               }
                               className="inline-flex h-10 items-center border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"

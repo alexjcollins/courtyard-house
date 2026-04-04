@@ -2,8 +2,10 @@ import "server-only"
 
 import { randomUUID } from "node:crypto"
 import { Pool, type PoolClient, type QueryResultRow } from "pg"
+import { createPrivateObjectSignedUrl } from "@/lib/storage"
 import type {
   DecisionWorkspaceCategory,
+  DecisionWorkspaceImage,
   DecisionWorkspaceItem,
   DecisionWorkspaceRoom,
   DecisionWorkspaceSelection,
@@ -60,6 +62,7 @@ type FurnitureWorkspaceRow = QueryResultRow & {
   selected_source_url: string | null
   selected_cost_ex_vat: string | number | null
   selected_notes: string | null
+  selected_images: unknown
   item_created_at: string | null
   item_updated_at: string | null
   selection_created_at: string | null
@@ -125,10 +128,37 @@ function toNumber(value: string | number | null | undefined): number | null {
   return Number.isFinite(numericValue) ? numericValue : null
 }
 
+function mapSelectionImages(value: unknown): DecisionWorkspaceImage[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") {
+      return []
+    }
+
+    const key = typeof entry.key === "string" ? entry.key.trim() : ""
+    if (!key) {
+      return []
+    }
+
+    return [
+      {
+        key,
+        alt: typeof entry.alt === "string" ? entry.alt : undefined,
+        sourceUrl: typeof entry.sourceUrl === "string" ? entry.sourceUrl : undefined,
+      },
+    ]
+  })
+}
+
 function mapSelection(row: FurnitureWorkspaceRow): DecisionWorkspaceSelection | null {
   if (!row.current_selection_id || !row.status) {
     return null
   }
+
+  const selectedImages = mapSelectionImages(row.selected_images)
 
   return {
     id: row.current_selection_id,
@@ -138,6 +168,10 @@ function mapSelection(row: FurnitureWorkspaceRow): DecisionWorkspaceSelection | 
     selectedSourceUrl: row.selected_source_url ?? undefined,
     selectedCostExVat: toNumber(row.selected_cost_ex_vat),
     selectedNotes: row.selected_notes ?? undefined,
+    selectedImages,
+    selectedImageUrls: selectedImages.map((image) =>
+      createPrivateObjectSignedUrl(image.key, { expiresInSeconds: 60 * 60 }),
+    ),
     createdAt: row.selection_created_at ?? undefined,
     updatedAt: row.selection_updated_at ?? undefined,
   }
@@ -174,6 +208,8 @@ function mapItem(row: FurnitureWorkspaceRow): DecisionWorkspaceItem {
     selectedSourceUrl: selection?.selectedSourceUrl,
     selectedCostExVat: selection?.selectedCostExVat,
     selectedNotes: selection?.selectedNotes,
+    selectedImages: selection?.selectedImages,
+    selectedImageUrls: selection?.selectedImageUrls,
     createdAt: row.item_created_at ?? undefined,
     updatedAt: row.item_updated_at ?? undefined,
   }
@@ -216,6 +252,7 @@ async function getJoinedItems(client: Pool | PoolClient): Promise<DecisionWorksp
         current_selection.selected_source_url,
         current_selection.selected_cost_ex_vat,
         current_selection.selected_notes,
+        current_selection.selected_images,
         i.created_at::text as item_created_at,
         i.updated_at::text as item_updated_at,
         current_selection.created_at::text as selection_created_at,
@@ -232,6 +269,7 @@ async function getJoinedItems(client: Pool | PoolClient): Promise<DecisionWorksp
           selection.selected_source_url,
           selection.selected_cost_ex_vat,
           selection.selected_notes,
+          selection.selected_images,
           selection.created_at,
           selection.updated_at
         from ${TABLES.selections} selection
@@ -280,6 +318,7 @@ async function getItemById(
         current_selection.selected_source_url,
         current_selection.selected_cost_ex_vat,
         current_selection.selected_notes,
+        current_selection.selected_images,
         i.created_at::text as item_created_at,
         i.updated_at::text as item_updated_at,
         current_selection.created_at::text as selection_created_at,
@@ -296,6 +335,7 @@ async function getItemById(
           selection.selected_source_url,
           selection.selected_cost_ex_vat,
           selection.selected_notes,
+          selection.selected_images,
           selection.created_at,
           selection.updated_at
         from ${TABLES.selections} selection
@@ -367,6 +407,7 @@ export type UpdateFurnitureWorkspaceItemInput = {
   selectedSourceUrl?: string | null
   selectedCostExVat?: number | null
   selectedNotes?: string | null
+  selectedImages?: DecisionWorkspaceImage[]
 }
 
 export async function updateFurnitureWorkspaceItem(
@@ -386,6 +427,7 @@ export async function updateFurnitureWorkspaceItem(
 
   try {
     await client.query("begin")
+    const normalizedSelectedImages = mapSelectionImages(input.selectedImages)
 
     const existingResult = await client.query<{ baseline_budget_ex_vat: string | number }>(
       `select baseline_budget_ex_vat from ${TABLES.items} where id = $1 and is_active = true limit 1`,
@@ -417,9 +459,9 @@ export async function updateFurnitureWorkspaceItem(
         `
           insert into ${TABLES.selections} (
             id, item_id, status, selected_name, selected_source, selected_source_url,
-            selected_cost_ex_vat, selected_notes, is_current
+            selected_cost_ex_vat, selected_notes, selected_images, is_current
           )
-          values ($1,$2,$3,$4,$5,$6,$7,$8,true)
+          values ($1,$2,$3,$4,$5,$6,$7,$8,$9,true)
         `,
         [
           `sel-${randomUUID()}`,
@@ -430,6 +472,7 @@ export async function updateFurnitureWorkspaceItem(
           normalizedSelectedSourceUrl,
           resolvedCost,
           normalizedSelectedNotes,
+          JSON.stringify(normalizedSelectedImages),
         ],
       )
     }
@@ -584,9 +627,9 @@ export async function duplicateFurnitureWorkspaceItem(
         `
           insert into ${TABLES.selections} (
             id, item_id, status, selected_name, selected_source, selected_source_url,
-            selected_cost_ex_vat, selected_notes, is_current
+            selected_cost_ex_vat, selected_notes, selected_images, is_current
           )
-          values ($1,$2,$3,$4,$5,$6,$7,$8,true)
+          values ($1,$2,$3,$4,$5,$6,$7,$8,$9,true)
         `,
         [
           `sel-${randomUUID()}`,
@@ -597,6 +640,7 @@ export async function duplicateFurnitureWorkspaceItem(
           sourceItem.selectedSourceUrl ?? null,
           sourceItem.selectedCostExVat ?? null,
           sourceItem.selectedNotes ?? null,
+          JSON.stringify(sourceItem.selectedImages || []),
         ],
       )
     }

@@ -2071,10 +2071,16 @@ async function ensureNormalizedSchema(client) {
       selected_source_url text,
       selected_cost_ex_vat numeric(12,2),
       selected_notes text,
+      selected_images jsonb not null default '[]'::jsonb,
       is_current boolean not null default true,
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now()
     )
+  `)
+
+  await client.query(`
+    alter table decision_selections
+    add column if not exists selected_images jsonb not null default '[]'::jsonb
   `)
 
   await client.query(`
@@ -2182,9 +2188,10 @@ async function insertNormalizedDecisionData(client, items) {
             selected_source_url,
             selected_cost_ex_vat,
             selected_notes,
+            selected_images,
             is_current
           )
-          values ($1,$2,$3,$4,$5,$6,$7,$8,true)
+          values ($1,$2,$3,$4,$5,$6,$7,$8,$9,true)
         `,
         [
           `sel-${item.id}`,
@@ -2195,6 +2202,7 @@ async function insertNormalizedDecisionData(client, items) {
           item.selectedSourceUrl || null,
           item.selectedCostExVat ?? null,
           item.selectedNotes || null,
+          JSON.stringify(item.selectedImages || []),
         ],
       )
     }

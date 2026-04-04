@@ -81,6 +81,7 @@ export default async function FurniturePage({ searchParams }: FurniturePageProps
         clearHref="/furniture"
         searchPlaceholder="Search all furniture"
         saveSelectionLabel="Save furniture selection"
+        selectionImageFolder="files/furniture/selections"
         roomDialogDescription="Rooms drive the first column in the Finder-style furniture browser."
         categoryDialogDescription="Categories drive the second column when browsing furniture by room."
         itemDialogDescription="Create or update loose furniture items that sit outside the core build budget."

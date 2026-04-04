@@ -732,10 +732,16 @@ async function ensureFurnitureSchema(client) {
       selected_source_url text,
       selected_cost_ex_vat numeric(12,2),
       selected_notes text,
+      selected_images jsonb not null default '[]'::jsonb,
       is_current boolean not null default true,
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now()
     )
+  `)
+
+  await client.query(`
+    alter table furniture_selections
+    add column if not exists selected_images jsonb not null default '[]'::jsonb
   `)
 
   await client.query(`
