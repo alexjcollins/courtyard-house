@@ -373,6 +373,7 @@
       "id": "d-021",
       "title": "EV charging allowance",
       "categoryId": "utilities",
+      "room": "Garage / external",
       "options": [
         {
           "name": "Single standard charger",
@@ -387,6 +388,1393 @@
       "notes": "Useful to coordinate with phase 2 PV and battery ambitions.",
       "createdDate": "2026-02-28",
       "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "d-022",
+      "title": "Site welfare and storage setup",
+      "categoryId": "prelims",
+      "room": "Site-wide",
+      "options": [
+        {
+          "name": "Baseline welfare cabin and compact secure storage",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Expanded welfare, drying room, and larger secure storage",
+          "costDeltaExVat": 3500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Upgrade above the current prelims allowance if site occupation becomes more demanding.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-023",
+      "title": "Temporary access and hardstanding strategy",
+      "categoryId": "prelims",
+      "room": "Site access",
+      "options": [
+        {
+          "name": "Baseline stone access track and simple contractor hardstanding",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Extended temporary hardstanding and reusable trackway system",
+          "costDeltaExVat": 5000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Only needed if ground conditions or vehicle frequency require a more robust temporary setup.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-024",
+      "title": "Below-ground service entry coordination",
+      "categoryId": "groundworks",
+      "room": "Plant / service entry zone",
+      "options": [
+        {
+          "name": "Baseline consolidated service entries and standard sleeves",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced future-proofing with additional sleeves and segregated entries",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Affects later M&E flexibility rather than the initial buildability of the slab.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-025",
+      "title": "Rainwater attenuation and chamber strategy",
+      "categoryId": "groundworks",
+      "room": "External drainage",
+      "options": [
+        {
+          "name": "Baseline attenuation and standard chamber layout",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Oversized attenuation with extra access chambers and maintenance points",
+          "costDeltaExVat": 4500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Relevant if drainage coordination tightens around the courtyard and glazing thresholds.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-026",
+      "title": "Secondary timber infill strategy",
+      "categoryId": "structure",
+      "room": "Whole house",
+      "options": [
+        {
+          "name": "Baseline timber infill and conventional secondary framing",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded pre-insulated or faster-install secondary framing package",
+          "costDeltaExVat": 6000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Potential time/certainty upgrade rather than a design-led upgrade.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-027",
+      "title": "Rainwater goods visibility",
+      "categoryId": "roofs",
+      "room": "Whole house",
+      "options": [
+        {
+          "name": "Baseline exposed PPC rainwater goods",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Concealed rainwater goods and cleaner roof-edge detailing",
+          "costDeltaExVat": 3500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "A visual upgrade that needs early coordination with roof and cladding interfaces.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-028",
+      "title": "Flat link roof build-up refinement",
+      "categoryId": "roofs",
+      "room": "Flat roof links",
+      "options": [
+        {
+          "name": "Baseline warm roof build-up",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Higher-performance tapered insulation and refined edge build-up",
+          "costDeltaExVat": 4000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Useful if the final roof edges and parapet heights need tightening.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-029",
+      "title": "External soffit and reveal finish",
+      "categoryId": "envelope",
+      "room": "Whole house",
+      "options": [
+        {
+          "name": "Baseline painted board / standard lining to soffits and reveals",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Timber-lined soffits and upgraded reveal detailing",
+          "costDeltaExVat": 4500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is a visual uplift above the current envelope allowance.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-030",
+      "title": "Plinth and low-level wall finish",
+      "categoryId": "envelope",
+      "room": "Perimeter base detail",
+      "options": [
+        {
+          "name": "Baseline robust plain plinth finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Refined masonry/render plinth detail",
+          "costDeltaExVat": 3500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Affects the perceived quality of the base detail around the house and garage.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-031",
+      "title": "Courtyard wall lining and detail package",
+      "categoryId": "envelope",
+      "room": "Courtyard",
+      "options": [
+        {
+          "name": "Baseline cladding continuation and straightforward courtyard interfaces",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced courtyard lining, trims, and refined junction detailing",
+          "costDeltaExVat": 6000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is the main envelope-area upgrade that would sharpen the courtyard finish without touching long-term paving budgets.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-032",
+      "title": "Entrance door set",
+      "categoryId": "windows",
+      "room": "Entrance",
+      "options": [
+        {
+          "name": "Baseline aluminium entrance door",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Feature entrance door with higher-spec ironmongery and detailing",
+          "costDeltaExVat": 5000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Upgrade above the current glazing allowance if the entrance becomes a more expressive feature.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-033",
+      "title": "Garage door type",
+      "categoryId": "windows",
+      "room": "Garage",
+      "options": [
+        {
+          "name": "Baseline insulated sectional garage door",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Higher-finish concealed or upgraded garage door",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Included here because it sits within the external openings package.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-034",
+      "title": "Glazing ironmongery and threshold detail",
+      "categoryId": "windows",
+      "room": "Whole house",
+      "options": [
+        {
+          "name": "Baseline handles, thresholds, and standard glazing interfaces",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded hardware and refined threshold/interface package",
+          "costDeltaExVat": 3000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "A small but noticeable finish-led upgrade across the openings package.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-035",
+      "title": "Heating controls and zoning",
+      "categoryId": "mech_elec",
+      "room": "Whole house",
+      "options": [
+        {
+          "name": "Baseline zoning and standard room controls",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced smart zoning and control package",
+          "costDeltaExVat": 4000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Useful to decide alongside the final room-by-room heating and lighting expectations.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-036",
+      "title": "Hot water cylinder and plant fit-out",
+      "categoryId": "mech_elec",
+      "room": "Plant room",
+      "options": [
+        {
+          "name": "Baseline cylinder and straightforward plant-room fit-out",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Space-optimised and acoustically improved plant-room package",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is a coordination and usability upgrade rather than a must-have.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-037",
+      "title": "External lighting package",
+      "categoryId": "mech_elec",
+      "room": "External",
+      "options": [
+        {
+          "name": "Baseline task and safety external lighting",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Architectural exterior lighting package",
+          "costDeltaExVat": 3500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is above the baseline electrical allowance currently carried in the budget.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-038",
+      "title": "Data, Wi-Fi, and AV backbone",
+      "categoryId": "mech_elec",
+      "room": "Whole house",
+      "options": [
+        {
+          "name": "Baseline essential data points and standard Wi-Fi setup",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced whole-house data, Wi-Fi, and AV-prep package",
+          "costDeltaExVat": 4500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Worth locking down before first-fix if you want cleaner infrastructure later.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-039",
+      "title": "Partition acoustic build-up",
+      "categoryId": "internal_buildup",
+      "room": "Bedrooms / study",
+      "options": [
+        {
+          "name": "Baseline acoustic build-up",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced acoustic partitions to key rooms",
+          "costDeltaExVat": 4000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Primarily affects bedroom privacy and the study/snug acoustic separation.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-040",
+      "title": "Stair substrate and construction approach",
+      "categoryId": "internal_buildup",
+      "room": "Stair / circulation",
+      "options": [
+        {
+          "name": "Baseline paint-grade stair substrate",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Bespoke stair structure and upgraded substrate allowance",
+          "costDeltaExVat": 7000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "The finish decision for balustrade and final appearance sits later in joinery, but this captures the structural allowance uplift.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-041",
+      "title": "Kitchen island finish and detailing",
+      "categoryId": "kitchen_utility",
+      "room": "Kitchen",
+      "options": [
+        {
+          "name": "Baseline island finish within current Vermland allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded island finish, detailing, and end-panel treatment",
+          "costDeltaExVat": 6000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This sits above the current cabinetry baseline rather than replacing the main kitchen supplier decision.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-042",
+      "title": "Kitchen splashback",
+      "categoryId": "kitchen_utility",
+      "room": "Kitchen",
+      "options": [
+        {
+          "name": "Baseline simple splashback treatment",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Stone or slab splashback upgrade",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Kept separate from worktops because this often moves independently.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-043",
+      "title": "Kitchen sink and tap",
+      "categoryId": "kitchen_utility",
+      "room": "Kitchen",
+      "options": [
+        {
+          "name": "Baseline undermount sink and standard mixer",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded sink, filtered water, and higher-spec tap package",
+          "costDeltaExVat": 1800
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is deliberately broken out so you can decide it independently of the cabinetry supplier.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-044",
+      "title": "Utility cabinetry",
+      "categoryId": "kitchen_utility",
+      "room": "Utility",
+      "options": [
+        {
+          "name": "Baseline essential utility storage",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Full-height utility cabinetry and concealed storage",
+          "costDeltaExVat": 4500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is a separate upgrade above the current combined kitchen/utility budget allowance.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-045",
+      "title": "Utility sink and tap",
+      "categoryId": "kitchen_utility",
+      "room": "Utility",
+      "options": [
+        {
+          "name": "Baseline utility sink and tap",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded utility sink, tap, and accessories",
+          "costDeltaExVat": 900
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Useful to separate from the main kitchen sink decision if the utility is more workhorse-oriented.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-046",
+      "title": "Pantry shelving and storage fit-out",
+      "categoryId": "kitchen_utility",
+      "room": "Pantry",
+      "options": [
+        {
+          "name": "Baseline simple shelving fit-out",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Bespoke pantry shelving and internal storage package",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Only relevant if the pantry remains part of the final room arrangement.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-047",
+      "title": "Family bathroom WC",
+      "categoryId": "bathrooms",
+      "room": "Family bathroom",
+      "options": [
+        {
+          "name": "Baseline WC within current bathroom allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded wall-hung WC",
+          "costDeltaExVat": 900
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Local upgrade above the current bathroom package allowance.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-048",
+      "title": "Family bathroom basin",
+      "categoryId": "bathrooms",
+      "room": "Family bathroom",
+      "options": [
+        {
+          "name": "Baseline basin within current bathroom allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded designer basin",
+          "costDeltaExVat": 900
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This refines the family bathroom selection beyond the broader basin package decision.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-049",
+      "title": "Family bathroom shower fittings",
+      "categoryId": "bathrooms",
+      "room": "Family bathroom",
+      "options": [
+        {
+          "name": "Baseline concealed thermostatic shower set",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded shower valve, head, and rail package",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "One of the three shower decisions, separated by room so you can mix priorities.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-050",
+      "title": "Master ensuite WC",
+      "categoryId": "bathrooms",
+      "room": "Master ensuite",
+      "options": [
+        {
+          "name": "Baseline WC within current bathroom allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded wall-hung WC",
+          "costDeltaExVat": 900
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Use this if the principal ensuite is carrying a slightly higher spec than the other bathrooms.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-051",
+      "title": "Master ensuite basin",
+      "categoryId": "bathrooms",
+      "room": "Master ensuite",
+      "options": [
+        {
+          "name": "Baseline basin within current bathroom allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded basin and vanity detail",
+          "costDeltaExVat": 1200
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is the most likely basin upgrade if one bathroom is going to step above the others.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-052",
+      "title": "Master ensuite shower fittings",
+      "categoryId": "bathrooms",
+      "room": "Master ensuite",
+      "options": [
+        {
+          "name": "Baseline concealed thermostatic shower set",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded shower valve, head, and handset package",
+          "costDeltaExVat": 1800
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Separate from the family bathroom and ensuite 2 so the principal room can be prioritised if needed.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-053",
+      "title": "Ensuite 2 WC",
+      "categoryId": "bathrooms",
+      "room": "Ensuite 2",
+      "options": [
+        {
+          "name": "Baseline WC within current bathroom allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded wall-hung WC",
+          "costDeltaExVat": 900
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Keeps the second ensuite independent from the master ensuite specification.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-054",
+      "title": "Ensuite 2 basin",
+      "categoryId": "bathrooms",
+      "room": "Ensuite 2",
+      "options": [
+        {
+          "name": "Baseline basin within current bathroom allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded basin and vanity detail",
+          "costDeltaExVat": 900
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "A smaller upgrade option if ensuite 2 needs more finish quality than the baseline.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-055",
+      "title": "Ensuite 2 shower fittings",
+      "categoryId": "bathrooms",
+      "room": "Ensuite 2",
+      "options": [
+        {
+          "name": "Baseline concealed thermostatic shower set",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded shower valve, head, and handset package",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Third of the shower decisions, split out so you can cost each room honestly.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-056",
+      "title": "Powder room WC",
+      "categoryId": "bathrooms",
+      "room": "Powder room",
+      "options": [
+        {
+          "name": "Baseline compact WC within current allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded wall-hung compact WC",
+          "costDeltaExVat": 900
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Small change individually, but it affects how polished the powder room feels.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-057",
+      "title": "Powder room basin",
+      "categoryId": "bathrooms",
+      "room": "Powder room",
+      "options": [
+        {
+          "name": "Baseline compact basin within current allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded statement basin and tap package",
+          "costDeltaExVat": 900
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is often where a small spec uplift has a disproportionate visual return.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-058",
+      "title": "Master ensuite wall finish",
+      "categoryId": "bathrooms",
+      "room": "Master ensuite",
+      "options": [
+        {
+          "name": "Baseline wet-area tiling only",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Full-height premium tile or stone wall finish",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "A finish-led upgrade above the current bathroom wall allowance.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-059",
+      "title": "Ensuite 2 wall finish",
+      "categoryId": "bathrooms",
+      "room": "Ensuite 2",
+      "options": [
+        {
+          "name": "Baseline wet-area tiling only",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Full-height upgraded tile package",
+          "costDeltaExVat": 2000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Independent from the master ensuite so the rooms can diverge if needed.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-060",
+      "title": "Powder room wall finish",
+      "categoryId": "bathrooms",
+      "room": "Powder room",
+      "options": [
+        {
+          "name": "Baseline paint and local splashback only",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Decorative full-wall finish package",
+          "costDeltaExVat": 1800
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Useful if the powder room is being treated as a more expressive small room.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-061",
+      "title": "Principal bedroom wardrobes",
+      "categoryId": "joinery",
+      "room": "Principal bedroom",
+      "options": [
+        {
+          "name": "Baseline fitted wardrobes within current allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced internal fit-out and wardrobe package",
+          "costDeltaExVat": 5000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Most likely place to push wardrobe quality if not all bedrooms get the same spec.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-062",
+      "title": "Bedroom 2 wardrobes",
+      "categoryId": "joinery",
+      "room": "Bedroom 2",
+      "options": [
+        {
+          "name": "Baseline freestanding storage / no bespoke wardrobes",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Fitted wardrobe package",
+          "costDeltaExVat": 3500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Allows bedroom 2 to stay leaner if the budget needs holding.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-063",
+      "title": "Bedroom 3 wardrobes",
+      "categoryId": "joinery",
+      "room": "Bedroom 3",
+      "options": [
+        {
+          "name": "Baseline freestanding storage / no bespoke wardrobes",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Fitted wardrobe package",
+          "costDeltaExVat": 3500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Mirrors bedroom 2 so both secondary bedrooms can be treated consistently or differently.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-064",
+      "title": "Stair balustrade and handrail finish",
+      "categoryId": "joinery",
+      "room": "Stair / circulation",
+      "options": [
+        {
+          "name": "Baseline paint-grade balustrade and handrail",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Bespoke timber/metal balustrade upgrade",
+          "costDeltaExVat": 4500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Separate from the stair structure decision so finish can be judged later.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-065",
+      "title": "Media or living-room joinery",
+      "categoryId": "joinery",
+      "room": "Living / dining",
+      "options": [
+        {
+          "name": "No bespoke media joinery in current allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Integrated media and storage joinery package",
+          "costDeltaExVat": 5000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Explicitly separated so it does not quietly creep into the joinery budget later.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-066",
+      "title": "Utility and boot-room bench joinery",
+      "categoryId": "joinery",
+      "room": "Utility / entrance support zone",
+      "options": [
+        {
+          "name": "Baseline open shelving only",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Bench, coat storage, and closed utility joinery package",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is optional convenience joinery above the current baseline.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-067",
+      "title": "Security, alarm, and entry package",
+      "categoryId": "utilities",
+      "room": "Whole house",
+      "options": [
+        {
+          "name": "Baseline alarm and doorbell provision only",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Enhanced alarm, access control, and CCTV-ready package",
+          "costDeltaExVat": 3500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Captured here rather than hidden in electrical extras later.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-068",
+      "title": "Water softener and filtration",
+      "categoryId": "utilities",
+      "room": "Plant room / kitchen",
+      "options": [
+        {
+          "name": "No additional treatment beyond baseline plumbing scope",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Whole-house water softener and filtration package",
+          "costDeltaExVat": 1800
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Useful to decide now if plant-room and kitchen provisions are needed.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-069",
+      "title": "PV and battery future-proofing",
+      "categoryId": "utilities",
+      "room": "Whole house",
+      "options": [
+        {
+          "name": "Baseline passive allowance only",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Additional conduits, plant space, and cabling for phase-2 PV/battery",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This does not install PV or batteries, it just reduces friction for the later phase.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-070",
+      "title": "Entrance hall floor finish",
+      "categoryId": "finishes",
+      "room": "Entrance hall",
+      "options": [
+        {
+          "name": "Baseline terrazzo allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Premium terrazzo pattern or inlay upgrade",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is room-specific uplift above the whole-house flooring baseline.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-071",
+      "title": "Kitchen floor finish",
+      "categoryId": "finishes",
+      "room": "Kitchen",
+      "options": [
+        {
+          "name": "Baseline terrazzo allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Premium terrazzo or stone floor upgrade",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Kept separate from living/dining so the kitchen can be weighted differently if needed.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-072",
+      "title": "Pantry and utility floor finish",
+      "categoryId": "finishes",
+      "room": "Pantry / utility",
+      "options": [
+        {
+          "name": "Baseline hardwearing tile / terrazzo continuation",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded tile finish",
+          "costDeltaExVat": 1800
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "These back-of-house areas do not need to match the public rooms exactly.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-073",
+      "title": "Living and dining floor finish",
+      "categoryId": "finishes",
+      "room": "Living / dining",
+      "options": [
+        {
+          "name": "Baseline terrazzo allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Premium terrazzo detail upgrade",
+          "costDeltaExVat": 3500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Most visible floor area, so this is where a terrazzo uplift is likely to land if any does.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-074",
+      "title": "Study or snug floor finish",
+      "categoryId": "finishes",
+      "room": "Study / snug",
+      "options": [
+        {
+          "name": "Baseline engineered oak allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded oak board and finish package",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Broken out separately because this room can read differently from the bedrooms.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-075",
+      "title": "Principal bedroom floor finish",
+      "categoryId": "finishes",
+      "room": "Principal bedroom",
+      "options": [
+        {
+          "name": "Baseline engineered oak allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded oak board and finish package",
+          "costDeltaExVat": 1800
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Lets the principal bedroom be treated above the other bedrooms if desired.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-076",
+      "title": "Bedroom 2 floor finish",
+      "categoryId": "finishes",
+      "room": "Bedroom 2",
+      "options": [
+        {
+          "name": "Baseline engineered oak allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded oak board and finish package",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Keep as baseline unless the bedroom spec is being pushed upward deliberately.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-077",
+      "title": "Bedroom 3 floor finish",
+      "categoryId": "finishes",
+      "room": "Bedroom 3",
+      "options": [
+        {
+          "name": "Baseline engineered oak allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded oak board and finish package",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Mirrors bedroom 2 so the secondary bedrooms can be compared like for like.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-078",
+      "title": "Landing and circulation floor finish",
+      "categoryId": "finishes",
+      "room": "Landing / corridor",
+      "options": [
+        {
+          "name": "Baseline engineered oak allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Upgraded oak board and finish package",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Useful if the circulation spaces need a calmer or more durable spec than the bedrooms.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-079",
+      "title": "Family bathroom floor finish",
+      "categoryId": "finishes",
+      "room": "Family bathroom",
+      "options": [
+        {
+          "name": "Baseline porcelain tile allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Large-format tile or stone floor upgrade",
+          "costDeltaExVat": 1200
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "A finish-led upgrade above the baseline bathroom floor allowance.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-080",
+      "title": "Master ensuite floor finish",
+      "categoryId": "finishes",
+      "room": "Master ensuite",
+      "options": [
+        {
+          "name": "Baseline porcelain tile allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Large-format tile or stone floor upgrade",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is the room most likely to get the higher-spec floor if one bathroom is prioritised.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-081",
+      "title": "Ensuite 2 floor finish",
+      "categoryId": "finishes",
+      "room": "Ensuite 2",
+      "options": [
+        {
+          "name": "Baseline porcelain tile allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Large-format tile upgrade",
+          "costDeltaExVat": 1200
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Matches the family bathroom logic but for the second ensuite.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-082",
+      "title": "Powder room floor finish",
+      "categoryId": "finishes",
+      "room": "Powder room",
+      "options": [
+        {
+          "name": "Baseline porcelain tile allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Decorative tile or stone floor upgrade",
+          "costDeltaExVat": 1000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "A small uplift, but a room where it can read strongly.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-083",
+      "title": "Garage floor finish",
+      "categoryId": "finishes",
+      "room": "Garage",
+      "options": [
+        {
+          "name": "Baseline power-floated concrete allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Sealed or resin-coated garage floor upgrade",
+          "costDeltaExVat": 3000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This sits above the current minimal garage finish assumption.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-084",
+      "title": "Entrance hall wall finish",
+      "categoryId": "finishes",
+      "room": "Entrance hall",
+      "options": [
+        {
+          "name": "Baseline paint finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Specialist paint or limewash upgrade",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "A modest upgrade that materially changes first impression quality.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-085",
+      "title": "Kitchen wall finish",
+      "categoryId": "finishes",
+      "room": "Kitchen",
+      "options": [
+        {
+          "name": "Baseline paint plus standard splashback zones",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Specialist paint or microcement feature finish",
+          "costDeltaExVat": 1800
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is above the splashback decision and captures wider wall finish upgrades.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-086",
+      "title": "Living and dining wall finish",
+      "categoryId": "finishes",
+      "room": "Living / dining",
+      "options": [
+        {
+          "name": "Baseline paint finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Specialist paint or feature-wall finish package",
+          "costDeltaExVat": 2500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Potentially one of the largest visible wall-finish upgrades in the project.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-087",
+      "title": "Study or snug wall finish",
+      "categoryId": "finishes",
+      "room": "Study / snug",
+      "options": [
+        {
+          "name": "Baseline paint finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Feature wall finish or specialist paint package",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Useful if this room is taking on a more characterful or darker finish palette.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-088",
+      "title": "Principal bedroom wall finish",
+      "categoryId": "finishes",
+      "room": "Principal bedroom",
+      "options": [
+        {
+          "name": "Baseline paint finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Specialist paint or feature wall finish",
+          "costDeltaExVat": 1500
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Lets the principal bedroom separate from the other bedrooms if that matters to you.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-089",
+      "title": "Bedroom 2 wall finish",
+      "categoryId": "finishes",
+      "room": "Bedroom 2",
+      "options": [
+        {
+          "name": "Baseline paint finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Feature wall finish",
+          "costDeltaExVat": 1000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Held low because this is likely to stay close to baseline unless the design brief changes.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-090",
+      "title": "Bedroom 3 wall finish",
+      "categoryId": "finishes",
+      "room": "Bedroom 3",
+      "options": [
+        {
+          "name": "Baseline paint finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Feature wall finish",
+          "costDeltaExVat": 1000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Mirrors bedroom 2 to keep comparisons straightforward.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-091",
+      "title": "Utility wall finish",
+      "categoryId": "finishes",
+      "room": "Utility",
+      "options": [
+        {
+          "name": "Baseline paint finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Washable high-durability finish upgrade",
+          "costDeltaExVat": 800
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This is a practical rather than aesthetic upgrade.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-092",
+      "title": "Garage wall finish",
+      "categoryId": "finishes",
+      "room": "Garage",
+      "options": [
+        {
+          "name": "Baseline taped and plastered utility finish",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Painted upgraded garage wall finish",
+          "costDeltaExVat": 2000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This pushes the garage beyond the current minimal assumption.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-093",
+      "title": "Courtyard paving strategy",
+      "categoryId": "courtyard_finish_longterm",
+      "room": "Courtyard",
+      "options": [
+        {
+          "name": "No current fit-out beyond long-term placeholder",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Starter paving package if courtyard works advance into this phase",
+          "costDeltaExVat": 12000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "This remains outside the active build baseline unless you consciously bring it forward.",
+      "createdDate": "2026-04-04"
+    },
+    {
+      "id": "d-094",
+      "title": "Courtyard benching and joinery",
+      "categoryId": "courtyard_finish_longterm",
+      "room": "Courtyard",
+      "options": [
+        {
+          "name": "No current courtyard joinery allowance",
+          "costDeltaExVat": 0
+        },
+        {
+          "name": "Built-in benching and courtyard joinery package",
+          "costDeltaExVat": 6000
+        }
+      ],
+      "selectedOptionIndex": null,
+      "notes": "Separate from paving so the courtyard can be phased more intentionally.",
+      "createdDate": "2026-04-04"
     }
   ]
 }

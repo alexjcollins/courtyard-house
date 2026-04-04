@@ -8,6 +8,7 @@ import {
   writeDataFileText,
   type StorageStatus,
 } from "@/lib/storage"
+import { getLegacyDecisionsFileFromDatabase } from "@/lib/decisions-db"
 
 export const DATA_FILE_NAMES = [
   "project.json",
@@ -193,6 +194,7 @@ export type Decision = {
   id: string
   title: string
   categoryId: string
+  room?: string
   options: Array<{
     name: string
     costDeltaExVat: number
@@ -1179,7 +1181,7 @@ export async function getTasksRegisterData(): Promise<{
 }> {
   const [tasksFile, decisionsFile, timelineFile, categoriesFile] = await Promise.all([
     readJsonFile<TasksFile>("tasks.json"),
-    readJsonFile<DecisionsFile>("decisions.json"),
+    getLegacyDecisionsFileFromDatabase(),
     readJsonFile<TimelineFile>("timeline.json"),
     readJsonFile<CategoriesFile>("categories.json"),
   ])
@@ -1219,7 +1221,7 @@ export async function getTasksRegisterData(): Promise<{
 export async function saveTask(input: SaveTaskInput): Promise<Task> {
   const [tasksFile, decisionsFile, timelineFile, categoriesFile] = await Promise.all([
     readJsonFile<TasksFile>("tasks.json"),
-    readJsonFile<DecisionsFile>("decisions.json"),
+    getLegacyDecisionsFileFromDatabase(),
     readJsonFile<TimelineFile>("timeline.json"),
     readJsonFile<CategoriesFile>("categories.json"),
   ])
@@ -1600,38 +1602,12 @@ export async function updateDecisionSelection(
   decisionId: string,
   selectedOptionIndex: number | null,
 ): Promise<Decision> {
-  const decisionsFile = await readJsonFile<DecisionsFile>("decisions.json")
-  const decisionIndex = decisionsFile.decisions.findIndex(
-    (decision) => decision.id === decisionId,
+  void decisionId
+  void selectedOptionIndex
+
+  throw new Error(
+    "Legacy JSON decision updates are no longer supported. Use the database-backed decisions API instead.",
   )
-
-  if (decisionIndex === -1) {
-    throw new Error("Decision not found.")
-  }
-
-  const decision = decisionsFile.decisions[decisionIndex]
-
-  if (!decision) {
-    throw new Error("Decision not found.")
-  }
-
-  if (
-    selectedOptionIndex !== null &&
-    (selectedOptionIndex < 0 || selectedOptionIndex >= decision.options.length)
-  ) {
-    throw new Error("Invalid option index.")
-  }
-
-  const nextDecision: Decision = {
-    ...decision,
-    selectedOptionIndex,
-    updatedDate: new Date().toISOString().slice(0, 10),
-  }
-
-  decisionsFile.decisions[decisionIndex] = nextDecision
-  await writeDataFileText("decisions.json", formatJson(decisionsFile))
-
-  return nextDecision
 }
 
 export function getStorageStatus(): StorageStatus {
@@ -1681,7 +1657,7 @@ export async function getProjectData(): Promise<ProjectData> {
     readJsonFile<{ lineItems: LineItem[] }>("lineItems.json"),
     readJsonFile<ProcurementFile>("procurement.json"),
     readJsonFile<PaymentsFile>("payments.json"),
-    readJsonFile<DecisionsFile>("decisions.json"),
+    getLegacyDecisionsFileFromDatabase(),
     readJsonFile<IdeasFile>("ideas.json"),
     readJsonFile<TimelineFile>("timeline.json"),
     readJsonFile<FundingModelFile>("fundingModel.json"),

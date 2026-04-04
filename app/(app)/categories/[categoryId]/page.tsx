@@ -1,6 +1,6 @@
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { CategoryIdeasBoard } from "@/components/category-ideas-board"
-import { CategoryDecisionList } from "@/components/category-decision-list"
 import { StatusBadge } from "@/components/status-badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -133,19 +133,55 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
         <Card className="border-border/70 py-0">
           <CardHeader className="px-5 pt-5">
-            <CardTitle className="text-2xl font-medium tracking-tight">
-              Decisions
-            </CardTitle>
+            <div className="flex items-center justify-between gap-4">
+              <CardTitle className="text-2xl font-medium tracking-tight">
+                Decisions
+              </CardTitle>
+              <Link
+                href={`/decisions/${category.id}`}
+                className="text-sm text-muted-foreground transition hover:text-foreground"
+              >
+                Open full register
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4 px-5 pb-5">
             {category.decisions.length === 0 ? (
               <p className="text-sm text-muted-foreground">No linked decisions.</p>
             ) : (
-              <CategoryDecisionList
-                decisions={category.decisions}
-                canEdit={viewer.role === "admin"}
-                showCosts={showCosts}
-              />
+              <>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  This category now uses the multi-column decision workspace. Open the full register
+                  to browse by room or by build system, then drill into the exact placeholder items
+                  for this category.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="border border-border/70 bg-secondary/30 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Items
+                    </p>
+                    <p className="mt-3 text-2xl font-medium tracking-tight text-foreground">
+                      {category.decisions.length}
+                    </p>
+                  </div>
+                  <div className="border border-border/70 bg-secondary/30 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Open
+                    </p>
+                    <p className="mt-3 text-2xl font-medium tracking-tight text-foreground">
+                      {category.decisions.filter((decision) => decision.selectedOptionIndex === null).length}
+                    </p>
+                  </div>
+                  <div className="border border-border/70 bg-secondary/30 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Selected
+                    </p>
+                    <p className="mt-3 text-2xl font-medium tracking-tight text-foreground">
+                      {category.decisions.filter((decision) => decision.selectedOptionIndex !== null).length}
+                    </p>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

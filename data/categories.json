@@ -1,13 +1,13 @@
 {
   "categories": [
     { "id": "prelims", "name": "Prelims & site setup", "budgetExVat": 30000, "vatRate": 0.0, "notes": "Temporary works, site welfare, setup, access, and general contractor overheads before the main build flow starts." },
-    { "id": "fees", "name": "Professional fees & statutory", "budgetExVat": 77230, "vatRate": 0.2, "reportingBucket": "soft_cost", "notes": "Architect, structural engineer, topographical study, ecological study, arboricultural study, pre-planning application, consultants, approvals, and other non-construction professional costs." },
+    { "id": "fees", "name": "Professional fees & statutory", "budgetExVat": 82330, "vatRate": 0.2, "reportingBucket": "soft_cost", "notes": "Architect, structural engineer, topographical study, ecological study, arboricultural study, pre-planning application, site investigation, consultants, approvals, and other non-construction professional costs." },
     { "id": "groundworks", "name": "Groundworks, drainage & foundations", "budgetExVat": 110000, "vatRate": 0.0, "notes": "Excavation, below-ground drainage, services entries, raft slab works, demolition of the existing Nissen hut, removal of old foundations, and external ground formation tied to the building." },
     { "id": "structure", "name": "Superstructure (steel frame + structural works)", "budgetExVat": 90000, "vatRate": 0.0, "notes": "Primary frame, structural carpentry, and other key load-bearing elements that take the build out of the ground." },
     { "id": "roofs", "name": "Roofs (pitched + warm roof links)", "budgetExVat": 35000, "vatRate": 0.0, "notes": "Pitched roof build-ups, flat link roofs, waterproofing, and associated trims and rainwater interfaces." },
     { "id": "envelope", "name": "Envelope (walls/insulation/cladding/airtightness + courtyard interface)", "budgetExVat": 90000, "vatRate": 0.0, "notes": "External wall build-up, insulation, membranes, cladding, and the critical detailing around the courtyard edge." },
-    { "id": "windows", "name": "Windows & external doors (incl large sliders)", "budgetExVat": 70000, "vatRate": 0.0, "notes": "All glazed openings, external doors, and the major slider packages that define the courtyard and living elevations." },
-    { "id": "mech_elec", "name": "M&E (ASHP, UFH, MVHR, electrical, plumbing)", "budgetExVat": 80000, "vatRate": 0.0, "notes": "Heating, ventilation, plumbing, consumer systems, wiring, controls, and core electrical installation." },
+    { "id": "windows", "name": "Windows & external doors (incl large sliders)", "budgetExVat": 80000, "vatRate": 0.0, "notes": "All glazed openings, external doors, and the major slider packages that define the courtyard and living elevations." },
+    { "id": "mech_elec", "name": "M&E (ASHP, UFH, MVHR, electrical, plumbing)", "budgetExVat": 82500, "vatRate": 0.0, "notes": "Heating, ventilation, plumbing, consumer systems, wiring, controls, core electrical installation, and a specific allowance for recessed ceiling spotlights across the main living area, bedrooms, and office." },
     { "id": "internal_buildup", "name": "Internal build-up (partitions/plaster/screed)", "budgetExVat": 40000, "vatRate": 0.0, "notes": "Stud partitions, linings, screeds, plastering, and the work needed to turn the shell into usable internal rooms." },
     { "id": "kitchen_utility", "name": "Kitchen, utility & appliances", "budgetExVat": 39000, "vatRate": 0.2, "notes": "Cabinetry, worktops, utility room fittings, and integrated appliances where they sit outside the main M&E package. Current working assumption: Vermland cabinetry/worktops at £24k plus £15k appliance allowance." },
     { "id": "bathrooms", "name": "Bathrooms (ensuites + powder)", "budgetExVat": 40000, "vatRate": 0.2, "notes": "Sanitaryware, showers, bath, basins, bathroom brassware, and associated finish allowances for all bathroom spaces." },
@@ -23,8 +23,8 @@
     "rules": "Global pot; allocate via decisions or manual transfers later."
   },
   "totals": {
-    "baselineBuildBudgetExVat": 772730,
+    "baselineBuildBudgetExVat": 790330,
     "contingencyExVat": 100000,
-    "envelopeExVat": 872730
+    "envelopeExVat": 890330
   }
 }

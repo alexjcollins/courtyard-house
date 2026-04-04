@@ -35,6 +35,18 @@
       "name": "Vermland",
       "trade": "Kitchen cabinetry & worktops",
       "notes": "Current kitchen supplier for cabinetry and worktops."
+    },
+    {
+      "id": "sup-integrum-site-services",
+      "name": "Integrum Site Services Ltd",
+      "trade": "Site investigation",
+      "notes": "Ground investigation, infiltration testing, factual reporting, and interpretative geotechnical reporting."
+    },
+    {
+      "id": "sup-compass-glass",
+      "name": "Compass Glass",
+      "trade": "Glazing",
+      "notes": "Current glazing supplier for the main windows and external doors package."
     }
   ],
   "quotes": [
@@ -51,6 +63,34 @@
       "createdDate": "2026-02-28",
       "updatedDate": "2026-02-28",
       "notes": "Vermland quote for all kitchen cabinetry and worktops."
+    },
+    {
+      "id": "q-002",
+      "supplierId": "sup-compass-glass",
+      "categoryId": "windows",
+      "title": "Main glazing package",
+      "amountExVat": 80000,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "status": "received",
+      "quoteDate": "2026-04-04",
+      "createdDate": "2026-04-04",
+      "updatedDate": "2026-04-04",
+      "notes": "Compass Glass quote for the main glazing package."
+    },
+    {
+      "id": "q-003",
+      "supplierId": "sup-integrum-site-services",
+      "categoryId": "fees",
+      "title": "Site investigation and interpretative report",
+      "amountExVat": 5100,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "received",
+      "quoteDate": "2026-03-11",
+      "createdDate": "2026-04-04",
+      "updatedDate": "2026-04-04",
+      "notes": "Integrum quote covering boreholes, infiltration testing, factual reporting, and interpretative reporting. Planned funding source: Ether."
     }
   ],
   "purchaseOrders": [

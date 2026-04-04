@@ -49,6 +49,14 @@
       "status": "budgeted"
     },
     {
+      "id": "fees-integrum-site-investigation",
+      "categoryId": "fees",
+      "name": "Integrum site investigation and interpretative report",
+      "budgetExVat": 5100,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
       "id": "gw-raft-slab",
       "categoryId": "groundworks",
       "name": "Raft slab foundations (incl reinforcement, pour, standard insulation where required)",
@@ -108,8 +116,8 @@
     {
       "id": "win-big-sliders",
       "categoryId": "windows",
-      "name": "Two large aluminium sliders (5.5m + 6.5m, ~2.4m height), standard sliding",
-      "budgetExVat": 38000,
+      "name": "Main glazing package (including two large aluminium sliders, remaining windows, and external doors)",
+      "budgetExVat": 80000,
       "vatRate": 0.0,
       "status": "budgeted",
       "meta": { "widths_m": [5.5, 6.5], "height_m": 2.4 }
@@ -129,6 +137,22 @@
       "budgetExVat": 9000,
       "vatRate": 0.0,
       "status": "budgeted"
+    },
+    {
+      "id": "mep-ceiling-spotlights",
+      "categoryId": "mech_elec",
+      "name": "Recessed ceiling spotlight provision to living area, bedrooms, and office",
+      "budgetExVat": 2500,
+      "vatRate": 0.0,
+      "status": "budgeted",
+      "meta": {
+        "allowance": {
+          "livingArea": 8,
+          "bedrooms": 6,
+          "office": 4
+        },
+        "totalSpotlights": 18
+      }
     },
     {
       "id": "gar-min-insul-plaster",

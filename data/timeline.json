@@ -1,7 +1,7 @@
 {
   "timezone": "Europe/London",
   "milestones": [
-    { "id": "m-planning", "name": "Planning permission received", "plannedDate": "2026-04-10", "status": "planned" },
+    { "id": "m-planning", "name": "Planning permission received", "plannedDate": "2026-05-01", "status": "planned" },
     { "id": "m-structural-signoff", "name": "Final structural engineer sign-off", "plannedDate": "2026-05-22", "status": "planned" },
     { "id": "m-tech-freeze", "name": "Technical design freeze / client sign-off", "plannedDate": "2026-05-29", "status": "planned" },
     { "id": "m-tender-issue", "name": "Tender issued", "plannedDate": "2026-06-05", "status": "planned" },
