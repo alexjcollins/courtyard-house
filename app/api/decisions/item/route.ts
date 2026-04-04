@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { authorizeApi } from "@/lib/auth"
-import { duplicateDecisionWorkspaceItem, saveDecisionWorkspaceItem } from "@/lib/decisions-db"
+import {
+  deleteDecisionWorkspaceItem,
+  duplicateDecisionWorkspaceItem,
+  saveDecisionWorkspaceItem,
+} from "@/lib/decisions-db"
 
 const ALLOWED_DECISION_STAGES = new Set(["now", "later"])
 const ALLOWED_PRIORITIES = new Set(["high", "medium", "low"])
@@ -13,6 +17,7 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as {
+      deleteItemId?: string
       duplicateItemId?: string
       itemId?: string
       title?: string
@@ -29,6 +34,11 @@ export async function POST(request: Request) {
       priority?: "high" | "medium" | "low"
       description?: string | null
       architectNote?: string | null
+    }
+
+    if (typeof body.deleteItemId === "string" && body.deleteItemId.trim()) {
+      await deleteDecisionWorkspaceItem(body.deleteItemId)
+      return NextResponse.json({ ok: true, deletedItemId: body.deleteItemId })
     }
 
     if (typeof body.duplicateItemId === "string" && body.duplicateItemId.trim()) {

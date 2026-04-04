@@ -656,6 +656,47 @@ export async function duplicateFurnitureWorkspaceItem(
   }
 }
 
+export async function deleteFurnitureWorkspaceItem(itemId: string): Promise<void> {
+  const pool = getPool()
+  const normalizedItemId = itemId.trim()
+
+  if (!normalizedItemId) {
+    throw new Error("Furniture item is required.")
+  }
+
+  const client = await pool.connect()
+  try {
+    const result = await client.query<{ id: string }>(
+      `
+        update ${TABLES.items}
+        set is_active = false,
+            updated_at = now()
+        where id = $1
+          and is_active = true
+        returning id
+      `,
+      [normalizedItemId],
+    )
+
+    if (!result.rows[0]) {
+      throw new Error("Furniture item not found.")
+    }
+
+    await client.query(
+      `
+        update ${TABLES.selections}
+        set is_current = false,
+            updated_at = now()
+        where item_id = $1
+          and is_current = true
+      `,
+      [normalizedItemId],
+    )
+  } finally {
+    client.release()
+  }
+}
+
 export async function saveFurnitureWorkspaceItem(input: {
   itemId?: string
   title: string

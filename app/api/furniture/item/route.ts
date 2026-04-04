@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { authorizeApi } from "@/lib/auth"
 import {
+  deleteFurnitureWorkspaceItem,
   duplicateFurnitureWorkspaceItem,
   saveFurnitureWorkspaceItem,
 } from "@/lib/furniture-db"
@@ -16,6 +17,7 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as {
+      deleteItemId?: string
       duplicateItemId?: string
       itemId?: string
       title?: string
@@ -32,6 +34,11 @@ export async function POST(request: Request) {
       priority?: "high" | "medium" | "low"
       description?: string | null
       architectNote?: string | null
+    }
+
+    if (typeof body.deleteItemId === "string" && body.deleteItemId.trim()) {
+      await deleteFurnitureWorkspaceItem(body.deleteItemId)
+      return NextResponse.json({ ok: true, deletedItemId: body.deleteItemId })
     }
 
     if (typeof body.duplicateItemId === "string" && body.duplicateItemId.trim()) {

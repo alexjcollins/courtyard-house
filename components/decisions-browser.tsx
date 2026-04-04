@@ -523,6 +523,41 @@ export function DecisionsBrowser({
     })
   }
 
+  async function deleteItem() {
+    if (!selectedItem) return
+
+    const confirmed = window.confirm(`Delete "${selectedItem.title}"?`)
+    if (!confirmed) return
+
+    setError(null)
+
+    startTransition(async () => {
+      try {
+        const response = await fetch(`${apiBasePath}/item`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            deleteItemId: selectedItem.id,
+          }),
+        })
+
+        const payload = await response.json()
+        if (!response.ok) {
+          throw new Error(payload.error || "Could not delete item.")
+        }
+
+        setLocalItems((current) =>
+          current.filter((item) => item.id !== payload.deletedItemId),
+        )
+        setSelectedItemId(null)
+        setIsItemDialogOpen(false)
+        withRefresh()
+      } catch (deleteError) {
+        setError(deleteError instanceof Error ? deleteError.message : "Could not delete item.")
+      }
+    })
+  }
+
   async function saveDecisionSelection() {
     if (!selectedItem || !formState) return
 
@@ -860,6 +895,11 @@ export function DecisionsBrowser({
             <Button type="button" variant="outline" onClick={() => void duplicateItem()}>
               <Copy className="size-4" />
               Duplicate item
+            </Button>
+          ) : null}
+          {selectedItem ? (
+            <Button type="button" variant="outline" onClick={() => void deleteItem()}>
+              Delete item
             </Button>
           ) : null}
         </div>
@@ -1640,12 +1680,28 @@ export function DecisionsBrowser({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsItemDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={() => void saveItem()} disabled={isPending}>
-              {isPending ? "Saving..." : itemForm.itemId ? "Save item" : "Create item"}
-            </Button>
+            <div className="flex w-full items-center justify-between gap-3">
+              <div>
+                {itemForm.itemId ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => void deleteItem()}
+                    disabled={isPending}
+                  >
+                    Delete
+                  </Button>
+                ) : null}
+              </div>
+              <div className="flex items-center gap-3">
+                <Button type="button" variant="outline" onClick={() => setIsItemDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="button" onClick={() => void saveItem()} disabled={isPending}>
+                  {isPending ? "Saving..." : itemForm.itemId ? "Save item" : "Create item"}
+                </Button>
+              </div>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

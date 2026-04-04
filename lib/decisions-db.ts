@@ -845,6 +845,48 @@ export async function duplicateDecisionWorkspaceItem(
   }
 }
 
+export async function deleteDecisionWorkspaceItem(itemId: string): Promise<void> {
+  const pool = getPool()
+  const normalizedItemId = itemId.trim()
+
+  if (!normalizedItemId) {
+    throw new Error("Decision item is required.")
+  }
+
+  const client = await pool.connect()
+
+  try {
+    const result = await client.query<{ id: string }>(
+      `
+        update decision_items
+        set is_active = false,
+            updated_at = now()
+        where id = $1
+          and is_active = true
+        returning id
+      `,
+      [normalizedItemId],
+    )
+
+    if (!result.rows[0]) {
+      throw new Error("Decision item not found.")
+    }
+
+    await client.query(
+      `
+        update decision_selections
+        set is_current = false,
+            updated_at = now()
+        where item_id = $1
+          and is_current = true
+      `,
+      [normalizedItemId],
+    )
+  } finally {
+    client.release()
+  }
+}
+
 export async function saveDecisionWorkspaceItem(
   input: SaveDecisionWorkspaceItemInput,
 ): Promise<DecisionWorkspaceItem> {
