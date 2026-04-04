@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Filter, FolderTree, Layers3, Pencil, Plus, Search, Sparkles } from "lucide-react"
+import { Copy, Filter, FolderTree, Layers3, Pencil, Plus, Search, Sparkles } from "lucide-react"
 import { StatusBadge } from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -54,6 +54,13 @@ type DecisionsBrowserProps = {
   initialBrowseMode?: DecisionBrowseMode
   categoryFilter?: string
   categoryNameById: Record<string, string>
+  apiBasePath?: string
+  clearHref?: string
+  searchPlaceholder?: string
+  saveSelectionLabel?: string
+  roomDialogDescription?: string
+  categoryDialogDescription?: string
+  itemDialogDescription?: string
 }
 
 type DecisionFormState = {
@@ -220,6 +227,13 @@ export function DecisionsBrowser({
   initialBrowseMode = "room",
   categoryFilter,
   categoryNameById,
+  apiBasePath = "/api/decisions",
+  clearHref = "/decisions",
+  searchPlaceholder = "Search all decisions",
+  saveSelectionLabel = "Save decision",
+  roomDialogDescription = "Rooms drive the first column in the Finder-style decisions browser.",
+  categoryDialogDescription = "Categories drive the second column when browsing decisions by room.",
+  itemDialogDescription = "Create or update the core decision items that feed the workspace and budget rollup.",
 }: DecisionsBrowserProps) {
   const router = useRouter()
   const [browseMode, setBrowseMode] = useState<DecisionBrowseMode>(initialBrowseMode)
@@ -463,6 +477,37 @@ export function DecisionsBrowser({
     setIsItemDialogOpen(true)
   }
 
+  async function duplicateItem() {
+    if (!selectedItem) return
+
+    setError(null)
+
+    startTransition(async () => {
+      try {
+        const response = await fetch(`${apiBasePath}/item`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            duplicateItemId: selectedItem.id,
+          }),
+        })
+
+        const payload = await response.json()
+        if (!response.ok) {
+          throw new Error(payload.error || "Could not duplicate decision item.")
+        }
+
+        setLocalItems((current) => [...current, payload.item])
+        setSelectedItemId(payload.item.id)
+        withRefresh()
+      } catch (saveError) {
+        setError(
+          saveError instanceof Error ? saveError.message : "Could not duplicate decision item.",
+        )
+      }
+    })
+  }
+
   async function saveDecisionSelection() {
     if (!selectedItem || !formState) return
 
@@ -470,7 +515,7 @@ export function DecisionsBrowser({
 
     startTransition(async () => {
       try {
-        const response = await fetch("/api/decisions/selection", {
+        const response = await fetch(`${apiBasePath}/selection`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -509,7 +554,7 @@ export function DecisionsBrowser({
 
     startTransition(async () => {
       try {
-        const response = await fetch("/api/decisions/room", {
+        const response = await fetch(`${apiBasePath}/room`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -551,7 +596,7 @@ export function DecisionsBrowser({
 
     startTransition(async () => {
       try {
-        const response = await fetch("/api/decisions/category", {
+        const response = await fetch(`${apiBasePath}/category`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -602,7 +647,7 @@ export function DecisionsBrowser({
 
     startTransition(async () => {
       try {
-        const response = await fetch("/api/decisions/item", {
+        const response = await fetch(`${apiBasePath}/item`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -684,7 +729,7 @@ export function DecisionsBrowser({
             <div className="inline-flex h-10 items-center gap-2 border border-border px-4 text-sm text-muted-foreground">
               <Filter className="size-4" />
               Filtered to {categoryNameById[categoryFilter] || categoryFilter}
-              <Link href="/decisions" className="text-foreground transition hover:text-[color:var(--accent)]">
+              <Link href={clearHref} className="text-foreground transition hover:text-[color:var(--accent)]">
                 Clear
               </Link>
             </div>
@@ -694,7 +739,7 @@ export function DecisionsBrowser({
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search all decisions"
+              placeholder={searchPlaceholder}
               className="pl-9"
             />
           </div>
@@ -731,6 +776,12 @@ export function DecisionsBrowser({
             <Button type="button" variant="outline" onClick={openEditItemDialog}>
               <Pencil className="size-4" />
               Edit item
+            </Button>
+          ) : null}
+          {selectedItem ? (
+            <Button type="button" variant="outline" onClick={() => void duplicateItem()}>
+              <Copy className="size-4" />
+              Duplicate item
             </Button>
           ) : null}
         </div>
@@ -1099,7 +1150,7 @@ export function DecisionsBrowser({
                               onClick={() => void saveDecisionSelection()}
                               disabled={isPending}
                             >
-                              {isPending ? "Saving..." : "Save decision"}
+                              {isPending ? "Saving..." : saveSelectionLabel}
                             </Button>
                           </div>
                         </div>
@@ -1122,7 +1173,7 @@ export function DecisionsBrowser({
           <DialogHeader>
             <DialogTitle>{roomForm.roomId ? "Edit room" : "Add room"}</DialogTitle>
             <DialogDescription>
-              Rooms drive the first column in the Finder-style decisions browser.
+              {roomDialogDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
@@ -1168,7 +1219,7 @@ export function DecisionsBrowser({
           <DialogHeader>
             <DialogTitle>{categoryForm.categoryId ? "Edit category" : "Add category"}</DialogTitle>
             <DialogDescription>
-              Categories drive the second column when browsing decisions by room.
+              {categoryDialogDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4">
@@ -1218,7 +1269,7 @@ export function DecisionsBrowser({
           <DialogHeader>
             <DialogTitle>{itemForm.itemId ? "Edit item" : "Add item"}</DialogTitle>
             <DialogDescription>
-              Create or update the core decision items that feed the workspace and budget rollup.
+              {itemDialogDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 md:grid-cols-2">

@@ -2,14 +2,12 @@ import "server-only"
 
 import { randomUUID } from "node:crypto"
 import { Pool, type PoolClient, type QueryResultRow } from "pg"
-import type { Decision, DecisionsFile } from "@/lib/data"
-import {
-  type DecisionWorkspaceCategory,
-  type DecisionWorkspaceItem,
-  type DecisionWorkspaceRoom,
-  type DecisionWorkspaceSelection,
-  type DecisionWorkspaceStatus,
-  getDecisionSelectedDeltaExVat,
+import type {
+  DecisionWorkspaceCategory,
+  DecisionWorkspaceItem,
+  DecisionWorkspaceRoom,
+  DecisionWorkspaceSelection,
+  DecisionWorkspaceStatus,
 } from "@/lib/decision-workspace"
 
 declare global {
@@ -17,46 +15,36 @@ declare global {
   var __courtyardHousePgPool: Pool | undefined
 }
 
-function requireDatabaseUrl(): string {
-  const databaseUrl = process.env.DATABASE_URL?.trim()
+const TABLES = {
+  rooms: "furniture_rooms",
+  categories: "furniture_categories",
+  items: "furniture_items",
+  selections: "furniture_selections",
+} as const
 
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required for the decisions database.")
-  }
+export const FURNITURE_BUDGET_CATEGORIES = [
+  { id: "furniture_living", name: "Living furniture" },
+  { id: "furniture_dining", name: "Dining furniture" },
+  { id: "furniture_bedrooms", name: "Bedroom furniture" },
+  { id: "furniture_office", name: "Office furniture" },
+  { id: "furniture_storage", name: "Storage & utility furniture" },
+  { id: "furniture_lighting", name: "Loose lighting" },
+  { id: "furniture_soft", name: "Soft furnishings & rugs" },
+  { id: "furniture_outdoor", name: "Outdoor furniture" },
+  { id: "furniture_decor", name: "Art & decor" },
+] as const
 
-  return databaseUrl
-}
-
-function getPool(): Pool {
-  if (!global.__courtyardHousePgPool) {
-    global.__courtyardHousePgPool = new Pool({
-      connectionString: requireDatabaseUrl(),
-      max: 5,
-      ssl:
-        process.env.DATABASE_URL?.includes("sslmode=require") ||
-        process.env.POSTGRES_URL?.includes("sslmode=require")
-          ? { rejectUnauthorized: false }
-          : undefined,
-    })
-  }
-
-  return global.__courtyardHousePgPool
-}
-
-type DecisionWorkspaceRow = QueryResultRow & {
+type FurnitureWorkspaceRow = QueryResultRow & {
   id: string
   code: string
   title: string
   budget_category_id: string
   room_id: string
   room_name: string
-  room_sort_order: number
   decision_category_id: string
   decision_category_name: string
-  decision_category_sort_order: number
   type_group: string
   type_section: string
-  item_order: number
   baseline_spec: string
   baseline_budget_ex_vat: string | number
   quantity: string | number | null
@@ -78,25 +66,41 @@ type DecisionWorkspaceRow = QueryResultRow & {
   selection_updated_at: string | null
 }
 
-type DecisionRoomRow = QueryResultRow & {
+type FurnitureRoomRow = QueryResultRow & {
   id: string
   name: string
   sort_order: number
 }
 
-type DecisionCategoryRow = QueryResultRow & {
+type FurnitureCategoryRow = QueryResultRow & {
   id: string
   name: string
   sort_order: number
 }
 
-function toNumber(value: string | number | null | undefined): number | null {
-  if (value === null || value === undefined) {
-    return null
+function requireDatabaseUrl(): string {
+  const databaseUrl = process.env.DATABASE_URL?.trim()
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required for the furniture database.")
   }
 
-  const numericValue = Number(value)
-  return Number.isFinite(numericValue) ? numericValue : null
+  return databaseUrl
+}
+
+function getPool(): Pool {
+  if (!global.__courtyardHousePgPool) {
+    global.__courtyardHousePgPool = new Pool({
+      connectionString: requireDatabaseUrl(),
+      max: 5,
+      ssl:
+        process.env.DATABASE_URL?.includes("sslmode=require") ||
+        process.env.POSTGRES_URL?.includes("sslmode=require")
+          ? { rejectUnauthorized: false }
+          : undefined,
+    })
+  }
+
+  return global.__courtyardHousePgPool
 }
 
 function slugify(value: string): string {
@@ -112,7 +116,16 @@ function createRecordId(prefix: string, seed: string): string {
   return `${prefix}-${slug}-${randomUUID().slice(0, 8)}`
 }
 
-function mapDecisionSelection(row: DecisionWorkspaceRow): DecisionWorkspaceSelection | null {
+function toNumber(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined) {
+    return null
+  }
+
+  const numericValue = Number(value)
+  return Number.isFinite(numericValue) ? numericValue : null
+}
+
+function mapSelection(row: FurnitureWorkspaceRow): DecisionWorkspaceSelection | null {
   if (!row.current_selection_id || !row.status) {
     return null
   }
@@ -130,8 +143,8 @@ function mapDecisionSelection(row: DecisionWorkspaceRow): DecisionWorkspaceSelec
   }
 }
 
-function mapDecisionItemRow(row: DecisionWorkspaceRow): DecisionWorkspaceItem {
-  const selection = mapDecisionSelection(row)
+function mapItem(row: FurnitureWorkspaceRow): DecisionWorkspaceItem {
+  const selection = mapSelection(row)
 
   return {
     id: row.id,
@@ -166,26 +179,16 @@ function mapDecisionItemRow(row: DecisionWorkspaceRow): DecisionWorkspaceItem {
   }
 }
 
-function mapDecisionRoomRow(row: DecisionRoomRow): DecisionWorkspaceRoom {
-  return {
-    id: row.id,
-    name: row.name,
-    sortOrder: Number(row.sort_order || 0),
-  }
+function mapRoom(row: FurnitureRoomRow): DecisionWorkspaceRoom {
+  return { id: row.id, name: row.name, sortOrder: Number(row.sort_order || 0) }
 }
 
-function mapDecisionCategoryRow(row: DecisionCategoryRow): DecisionWorkspaceCategory {
-  return {
-    id: row.id,
-    name: row.name,
-    sortOrder: Number(row.sort_order || 0),
-  }
+function mapCategory(row: FurnitureCategoryRow): DecisionWorkspaceCategory {
+  return { id: row.id, name: row.name, sortOrder: Number(row.sort_order || 0) }
 }
 
-async function getJoinedDecisionWorkspaceItems(
-  client: Pool | PoolClient,
-): Promise<DecisionWorkspaceItem[]> {
-  const result = await client.query<DecisionWorkspaceRow>(
+async function getJoinedItems(client: Pool | PoolClient): Promise<DecisionWorkspaceItem[]> {
+  const result = await client.query<FurnitureWorkspaceRow>(
     `
       select
         i.id,
@@ -194,13 +197,10 @@ async function getJoinedDecisionWorkspaceItems(
         i.budget_category_id,
         r.id as room_id,
         r.name as room_name,
-        r.sort_order as room_sort_order,
         c.id as decision_category_id,
         c.name as decision_category_name,
-        c.sort_order as decision_category_sort_order,
         i.type_group,
         i.type_section,
-        i.item_order,
         i.baseline_spec,
         i.baseline_budget_ex_vat,
         i.quantity,
@@ -220,9 +220,9 @@ async function getJoinedDecisionWorkspaceItems(
         i.updated_at::text as item_updated_at,
         current_selection.created_at::text as selection_created_at,
         current_selection.updated_at::text as selection_updated_at
-      from decision_items i
-      join decision_rooms r on r.id = i.room_id and r.is_active = true
-      join decision_categories c on c.id = i.decision_category_id and c.is_active = true
+      from ${TABLES.items} i
+      join ${TABLES.rooms} r on r.id = i.room_id and r.is_active = true
+      join ${TABLES.categories} c on c.id = i.decision_category_id and c.is_active = true
       left join lateral (
         select
           selection.id,
@@ -234,31 +234,25 @@ async function getJoinedDecisionWorkspaceItems(
           selection.selected_notes,
           selection.created_at,
           selection.updated_at
-        from decision_selections selection
+        from ${TABLES.selections} selection
         where selection.item_id = i.id
           and selection.is_current = true
         order by selection.updated_at desc, selection.created_at desc
         limit 1
       ) current_selection on true
       where i.is_active = true
-      order by
-        r.sort_order,
-        r.name,
-        c.sort_order,
-        c.name,
-        i.item_order,
-        i.title
+      order by r.sort_order, r.name, c.sort_order, c.name, i.item_order, i.title
     `,
   )
 
-  return result.rows.map(mapDecisionItemRow)
+  return result.rows.map(mapItem)
 }
 
-async function getDecisionWorkspaceItemById(
+async function getItemById(
   client: Pool | PoolClient,
   itemId: string,
 ): Promise<DecisionWorkspaceItem> {
-  const result = await client.query<DecisionWorkspaceRow>(
+  const result = await client.query<FurnitureWorkspaceRow>(
     `
       select
         i.id,
@@ -267,13 +261,10 @@ async function getDecisionWorkspaceItemById(
         i.budget_category_id,
         r.id as room_id,
         r.name as room_name,
-        r.sort_order as room_sort_order,
         c.id as decision_category_id,
         c.name as decision_category_name,
-        c.sort_order as decision_category_sort_order,
         i.type_group,
         i.type_section,
-        i.item_order,
         i.baseline_spec,
         i.baseline_budget_ex_vat,
         i.quantity,
@@ -293,9 +284,9 @@ async function getDecisionWorkspaceItemById(
         i.updated_at::text as item_updated_at,
         current_selection.created_at::text as selection_created_at,
         current_selection.updated_at::text as selection_updated_at
-      from decision_items i
-      join decision_rooms r on r.id = i.room_id and r.is_active = true
-      join decision_categories c on c.id = i.decision_category_id and c.is_active = true
+      from ${TABLES.items} i
+      join ${TABLES.rooms} r on r.id = i.room_id and r.is_active = true
+      join ${TABLES.categories} c on c.id = i.decision_category_id and c.is_active = true
       left join lateral (
         select
           selection.id,
@@ -307,7 +298,7 @@ async function getDecisionWorkspaceItemById(
           selection.selected_notes,
           selection.created_at,
           selection.updated_at
-        from decision_selections selection
+        from ${TABLES.selections} selection
         where selection.item_id = i.id
           and selection.is_current = true
         order by selection.updated_at desc, selection.created_at desc
@@ -322,125 +313,53 @@ async function getDecisionWorkspaceItemById(
 
   const row = result.rows[0]
   if (!row) {
-    throw new Error("Decision item not found.")
+    throw new Error("Furniture item not found.")
   }
 
-  return mapDecisionItemRow(row)
+  return mapItem(row)
 }
 
 async function getNextSortOrder(
   client: Pool | PoolClient,
-  tableName: "decision_rooms" | "decision_categories",
+  tableName: typeof TABLES.rooms | typeof TABLES.categories,
 ): Promise<number> {
   const result = await client.query<{ next_sort_order: string | number }>(
     `select coalesce(max(sort_order), 0) + 10 as next_sort_order from ${tableName}`,
   )
-
   return Number(result.rows[0]?.next_sort_order || 10)
 }
 
 async function getNextItemOrder(client: Pool | PoolClient): Promise<number> {
   const result = await client.query<{ next_item_order: string | number }>(
-    `select coalesce(max(item_order), 0) + 1 as next_item_order from decision_items`,
+    `select coalesce(max(item_order), 0) + 1 as next_item_order from ${TABLES.items}`,
   )
-
   return Number(result.rows[0]?.next_item_order || 1)
 }
 
-export async function getDecisionWorkspaceItems(): Promise<DecisionWorkspaceItem[]> {
-  return getJoinedDecisionWorkspaceItems(getPool())
-}
-
-export async function getDecisionWorkspaceRooms(): Promise<DecisionWorkspaceRoom[]> {
-  const result = await getPool().query<DecisionRoomRow>(
-    `
-      select id, name, sort_order
-      from decision_rooms
-      where is_active = true
-      order by sort_order, name
-    `,
-  )
-
-  return result.rows.map(mapDecisionRoomRow)
-}
-
-export async function getDecisionWorkspaceCategories(): Promise<DecisionWorkspaceCategory[]> {
-  const result = await getPool().query<DecisionCategoryRow>(
-    `
-      select id, name, sort_order
-      from decision_categories
-      where is_active = true
-      order by sort_order, name
-    `,
-  )
-
-  return result.rows.map(mapDecisionCategoryRow)
-}
-
-export async function getDecisionWorkspaceData(): Promise<{
+export async function getFurnitureWorkspaceData(): Promise<{
   rooms: DecisionWorkspaceRoom[]
   categories: DecisionWorkspaceCategory[]
   items: DecisionWorkspaceItem[]
 }> {
-  const [rooms, categories, items] = await Promise.all([
-    getDecisionWorkspaceRooms(),
-    getDecisionWorkspaceCategories(),
-    getDecisionWorkspaceItems(),
+  const pool = getPool()
+  const [roomsResult, categoriesResult, items] = await Promise.all([
+    pool.query<FurnitureRoomRow>(
+      `select id, name, sort_order from ${TABLES.rooms} where is_active = true order by sort_order, name`,
+    ),
+    pool.query<FurnitureCategoryRow>(
+      `select id, name, sort_order from ${TABLES.categories} where is_active = true order by sort_order, name`,
+    ),
+    getJoinedItems(pool),
   ])
 
-  return { rooms, categories, items }
-}
-
-function mapWorkspaceItemToLegacyDecision(item: DecisionWorkspaceItem): Decision {
-  const hasSelection =
-    item.selectedCostExVat !== null &&
-    item.selectedCostExVat !== undefined &&
-    item.status === "selected"
-
-  const selectedDeltaExVat = hasSelection ? getDecisionSelectedDeltaExVat(item) : 0
-
-  const options = [
-    {
-      name: item.baselineSpec,
-      costDeltaExVat: 0,
-    },
-    ...(hasSelection
-      ? [
-          {
-            name: item.selectedName || item.baselineSpec,
-            costDeltaExVat: selectedDeltaExVat,
-          },
-        ]
-      : []),
-  ]
-
-  const selectedOptionIndex = hasSelection
-    ? selectedDeltaExVat === 0
-      ? 0
-      : 1
-    : null
-
   return {
-    id: item.id,
-    title: item.title,
-    categoryId: item.categoryId,
-    room: item.roomName || item.roomGroup,
-    options,
-    selectedOptionIndex,
-    notes: item.description || item.architectNote || "",
-    createdDate: item.createdAt?.slice(0, 10),
-    updatedDate: item.updatedAt?.slice(0, 10),
+    rooms: roomsResult.rows.map(mapRoom),
+    categories: categoriesResult.rows.map(mapCategory),
+    items,
   }
 }
 
-export async function getLegacyDecisionsFileFromDatabase(): Promise<DecisionsFile> {
-  const items = await getDecisionWorkspaceItems()
-  return {
-    decisions: items.map(mapWorkspaceItemToLegacyDecision),
-  }
-}
-
-export type UpdateDecisionWorkspaceItemInput = {
+export type UpdateFurnitureWorkspaceItemInput = {
   itemId: string
   status: DecisionWorkspaceStatus
   selectedName?: string | null
@@ -450,24 +369,17 @@ export type UpdateDecisionWorkspaceItemInput = {
   selectedNotes?: string | null
 }
 
-export async function updateDecisionWorkspaceItem(
-  input: UpdateDecisionWorkspaceItemInput,
+export async function updateFurnitureWorkspaceItem(
+  input: UpdateFurnitureWorkspaceItemInput,
 ): Promise<DecisionWorkspaceItem> {
   const pool = getPool()
-  const normalizedSelectedName = input.selectedName?.trim() || null
-  const normalizedSelectedSource = input.selectedSource?.trim() || null
-  const normalizedSelectedSourceUrl = input.selectedSourceUrl?.trim() || null
-  const normalizedSelectedNotes = input.selectedNotes?.trim() || null
-  const requestedSelectedCost =
+  const selectedCost =
     input.selectedCostExVat === null || input.selectedCostExVat === undefined
       ? null
       : Number(input.selectedCostExVat)
 
-  if (
-    requestedSelectedCost !== null &&
-    (!Number.isFinite(requestedSelectedCost) || requestedSelectedCost < 0)
-  ) {
-    throw new Error("Selected cost must be a positive number.")
+  if (selectedCost !== null && (!Number.isFinite(selectedCost) || selectedCost < 0)) {
+    throw new Error("Selected cost must be zero or greater.")
   }
 
   const client = await pool.connect()
@@ -475,35 +387,17 @@ export async function updateDecisionWorkspaceItem(
   try {
     await client.query("begin")
 
-    const itemResult = await client.query<{
-      id: string
-      baseline_budget_ex_vat: string | number
-    }>(
-      `
-        select id, baseline_budget_ex_vat
-        from decision_items
-        where id = $1
-          and is_active = true
-        limit 1
-      `,
+    const existingResult = await client.query<{ baseline_budget_ex_vat: string | number }>(
+      `select baseline_budget_ex_vat from ${TABLES.items} where id = $1 and is_active = true limit 1`,
       [input.itemId],
     )
-
-    const existing = itemResult.rows[0]
-
+    const existing = existingResult.rows[0]
     if (!existing) {
-      throw new Error("Decision item not found.")
+      throw new Error("Furniture item not found.")
     }
 
     await client.query(
-      `
-        update decision_selections
-        set
-          is_current = false,
-          updated_at = now()
-        where item_id = $1
-          and is_current = true
-      `,
+      `update ${TABLES.selections} set is_current = false, updated_at = now() where item_id = $1 and is_current = true`,
       [input.itemId],
     )
 
@@ -511,25 +405,19 @@ export async function updateDecisionWorkspaceItem(
       const baselineBudgetExVat = Number(existing.baseline_budget_ex_vat || 0)
       const selectedName =
         input.status === "selected"
-          ? normalizedSelectedName || "Baseline allowance"
-          : normalizedSelectedName
-      const selectedCostExVat =
-        input.status === "selected"
-          ? requestedSelectedCost ?? baselineBudgetExVat
-          : requestedSelectedCost
+          ? input.selectedName?.trim() || "Baseline allowance"
+          : input.selectedName?.trim() || null
+      const normalizedSelectedSource = input.selectedSource?.trim() || null
+      const normalizedSelectedSourceUrl = input.selectedSourceUrl?.trim() || null
+      const normalizedSelectedNotes = input.selectedNotes?.trim() || null
+      const resolvedCost =
+        input.status === "selected" ? selectedCost ?? baselineBudgetExVat : selectedCost
 
       await client.query(
         `
-          insert into decision_selections (
-            id,
-            item_id,
-            status,
-            selected_name,
-            selected_source,
-            selected_source_url,
-            selected_cost_ex_vat,
-            selected_notes,
-            is_current
+          insert into ${TABLES.selections} (
+            id, item_id, status, selected_name, selected_source, selected_source_url,
+            selected_cost_ex_vat, selected_notes, is_current
           )
           values ($1,$2,$3,$4,$5,$6,$7,$8,true)
         `,
@@ -540,22 +428,14 @@ export async function updateDecisionWorkspaceItem(
           selectedName,
           normalizedSelectedSource,
           normalizedSelectedSourceUrl,
-          selectedCostExVat,
+          resolvedCost,
           normalizedSelectedNotes,
         ],
       )
     }
 
-    await client.query(
-      `
-        update decision_items
-        set updated_at = now()
-        where id = $1
-      `,
-      [input.itemId],
-    )
-
-    const item = await getDecisionWorkspaceItemById(client, input.itemId)
+    await client.query(`update ${TABLES.items} set updated_at = now() where id = $1`, [input.itemId])
+    const item = await getItemById(client, input.itemId)
     await client.query("commit")
     return item
   } catch (error) {
@@ -566,177 +446,117 @@ export async function updateDecisionWorkspaceItem(
   }
 }
 
-export type SaveDecisionWorkspaceRoomInput = {
+export async function saveFurnitureWorkspaceRoom(input: {
   roomId?: string
   name: string
   sortOrder?: number | null
-}
-
-export async function saveDecisionWorkspaceRoom(
-  input: SaveDecisionWorkspaceRoomInput,
-): Promise<DecisionWorkspaceRoom> {
+}): Promise<DecisionWorkspaceRoom> {
   const pool = getPool()
   const normalizedName = input.name.trim()
-
-  if (!normalizedName) {
-    throw new Error("Room name is required.")
-  }
+  if (!normalizedName) throw new Error("Room name is required.")
 
   const client = await pool.connect()
-
   try {
     const sortOrder =
       input.sortOrder === null || input.sortOrder === undefined
         ? input.roomId
           ? null
-          : await getNextSortOrder(client, "decision_rooms")
+          : await getNextSortOrder(client, TABLES.rooms)
         : Number(input.sortOrder)
 
     if (sortOrder !== null && !Number.isFinite(sortOrder)) {
       throw new Error("Room sort order must be a number.")
     }
 
-    const roomId = input.roomId || createRecordId("room", normalizedName)
-
-    const result = await client.query<DecisionRoomRow>(
+    const roomId = input.roomId || createRecordId("furniture-room", normalizedName)
+    const result = await client.query<FurnitureRoomRow>(
       `
-        insert into decision_rooms (id, name, sort_order, is_active)
+        insert into ${TABLES.rooms} (id, name, sort_order, is_active)
         values ($1, $2, coalesce($3, 10), true)
         on conflict (id) do update
-        set
-          name = excluded.name,
-          sort_order = coalesce($3, decision_rooms.sort_order),
-          is_active = true,
-          updated_at = now()
+        set name = excluded.name,
+            sort_order = coalesce($3, ${TABLES.rooms}.sort_order),
+            is_active = true,
+            updated_at = now()
         returning id, name, sort_order
       `,
       [roomId, normalizedName, sortOrder],
     )
-
-    return mapDecisionRoomRow(result.rows[0])
+    return mapRoom(result.rows[0])
   } finally {
     client.release()
   }
 }
 
-export type SaveDecisionWorkspaceCategoryInput = {
+export async function saveFurnitureWorkspaceCategory(input: {
   categoryId?: string
   name: string
   sortOrder?: number | null
-}
-
-export async function saveDecisionWorkspaceCategory(
-  input: SaveDecisionWorkspaceCategoryInput,
-): Promise<DecisionWorkspaceCategory> {
+}): Promise<DecisionWorkspaceCategory> {
   const pool = getPool()
   const normalizedName = input.name.trim()
-
-  if (!normalizedName) {
-    throw new Error("Category name is required.")
-  }
+  if (!normalizedName) throw new Error("Category name is required.")
 
   const client = await pool.connect()
-
   try {
     const sortOrder =
       input.sortOrder === null || input.sortOrder === undefined
         ? input.categoryId
           ? null
-          : await getNextSortOrder(client, "decision_categories")
+          : await getNextSortOrder(client, TABLES.categories)
         : Number(input.sortOrder)
 
     if (sortOrder !== null && !Number.isFinite(sortOrder)) {
       throw new Error("Category sort order must be a number.")
     }
 
-    const categoryId = input.categoryId || createRecordId("dec-cat", normalizedName)
-
-    const result = await client.query<DecisionCategoryRow>(
+    const categoryId = input.categoryId || createRecordId("furniture-cat", normalizedName)
+    const result = await client.query<FurnitureCategoryRow>(
       `
-        insert into decision_categories (id, name, sort_order, is_active)
+        insert into ${TABLES.categories} (id, name, sort_order, is_active)
         values ($1, $2, coalesce($3, 10), true)
         on conflict (id) do update
-        set
-          name = excluded.name,
-          sort_order = coalesce($3, decision_categories.sort_order),
-          is_active = true,
-          updated_at = now()
+        set name = excluded.name,
+            sort_order = coalesce($3, ${TABLES.categories}.sort_order),
+            is_active = true,
+            updated_at = now()
         returning id, name, sort_order
       `,
       [categoryId, normalizedName, sortOrder],
     )
-
-    return mapDecisionCategoryRow(result.rows[0])
+    return mapCategory(result.rows[0])
   } finally {
     client.release()
   }
 }
 
-export type SaveDecisionWorkspaceItemInput = {
-  itemId?: string
-  title: string
-  categoryId: string
-  roomId: string
-  decisionCategoryId: string
-  typeGroup: string
-  typeSection: string
-  baselineSpec: string
-  baselineBudgetExVat: number
-  quantity?: number | null
-  unit?: string | null
-  decisionStage: "now" | "later"
-  priority: "high" | "medium" | "low"
-  description?: string | null
-  architectNote?: string | null
-}
-
-export async function duplicateDecisionWorkspaceItem(
+export async function duplicateFurnitureWorkspaceItem(
   itemId: string,
 ): Promise<DecisionWorkspaceItem> {
   const pool = getPool()
   const normalizedItemId = itemId.trim()
-
   if (!normalizedItemId) {
-    throw new Error("Decision item is required.")
+    throw new Error("Furniture item is required.")
   }
 
   const client = await pool.connect()
-
   try {
     await client.query("begin")
-
-    const sourceItem = await getDecisionWorkspaceItemById(client, normalizedItemId)
+    const sourceItem = await getItemById(client, normalizedItemId)
     const duplicatedTitle = `${sourceItem.title} copy`
-    const duplicatedItemId = createRecordId("dec-item", duplicatedTitle)
-    const duplicatedCodeBase = slugify(duplicatedTitle).replace(/-/g, "_").toUpperCase() || "DECISION"
-    const duplicatedCode = `${duplicatedCodeBase}_${duplicatedItemId.slice(-6).replace(/-/g, "").toUpperCase()}`
+    const duplicatedItemId = createRecordId("furniture-item", duplicatedTitle)
+    const codeBase = slugify(duplicatedTitle).replace(/-/g, "_").toUpperCase() || "FURNITURE"
+    const duplicatedCode = `${codeBase}_${duplicatedItemId.slice(-6).replace(/-/g, "").toUpperCase()}`
     const duplicatedItemOrder = await getNextItemOrder(client)
 
     await client.query(
       `
-        insert into decision_items (
-          id,
-          code,
-          title,
-          budget_category_id,
-          room_id,
-          decision_category_id,
-          type_group,
-          type_section,
-          item_order,
-          baseline_spec,
-          baseline_budget_ex_vat,
-          quantity,
-          unit,
-          decision_stage,
-          priority,
-          description,
-          architect_note,
-          is_active
+        insert into ${TABLES.items} (
+          id, code, title, budget_category_id, room_id, decision_category_id, type_group,
+          type_section, item_order, baseline_spec, baseline_budget_ex_vat, quantity, unit,
+          decision_stage, priority, description, architect_note, is_active
         )
-        values (
-          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,true
-        )
+        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,true)
       `,
       [
         duplicatedItemId,
@@ -762,16 +582,9 @@ export async function duplicateDecisionWorkspaceItem(
     if (sourceItem.currentSelectionId && sourceItem.status !== "open") {
       await client.query(
         `
-          insert into decision_selections (
-            id,
-            item_id,
-            status,
-            selected_name,
-            selected_source,
-            selected_source_url,
-            selected_cost_ex_vat,
-            selected_notes,
-            is_current
+          insert into ${TABLES.selections} (
+            id, item_id, status, selected_name, selected_source, selected_source_url,
+            selected_cost_ex_vat, selected_notes, is_current
           )
           values ($1,$2,$3,$4,$5,$6,$7,$8,true)
         `,
@@ -788,7 +601,7 @@ export async function duplicateDecisionWorkspaceItem(
       )
     }
 
-    const duplicatedItem = await getDecisionWorkspaceItemById(client, duplicatedItemId)
+    const duplicatedItem = await getItemById(client, duplicatedItemId)
     await client.query("commit")
     return duplicatedItem
   } catch (error) {
@@ -799,10 +612,23 @@ export async function duplicateDecisionWorkspaceItem(
   }
 }
 
-export async function saveDecisionWorkspaceItem(
-  input: SaveDecisionWorkspaceItemInput,
-): Promise<DecisionWorkspaceItem> {
-  const pool = getPool()
+export async function saveFurnitureWorkspaceItem(input: {
+  itemId?: string
+  title: string
+  categoryId: string
+  roomId: string
+  decisionCategoryId: string
+  typeGroup: string
+  typeSection: string
+  baselineSpec: string
+  baselineBudgetExVat: number
+  quantity?: number | null
+  unit?: string | null
+  decisionStage: "now" | "later"
+  priority: "high" | "medium" | "low"
+  description?: string | null
+  architectNote?: string | null
+}): Promise<DecisionWorkspaceItem> {
   const normalizedTitle = input.title.trim()
   const normalizedTypeGroup = input.typeGroup.trim()
   const normalizedTypeSection = input.typeSection.trim()
@@ -816,43 +642,25 @@ export async function saveDecisionWorkspaceItem(
       ? null
       : Number(input.quantity)
 
-  if (!normalizedTitle) {
-    throw new Error("Item title is required.")
-  }
-
-  if (!input.categoryId.trim()) {
-    throw new Error("Budget category is required.")
-  }
-
-  if (!input.roomId.trim()) {
-    throw new Error("Room is required.")
-  }
-
-  if (!input.decisionCategoryId.trim()) {
-    throw new Error("Decision category is required.")
-  }
-
+  if (!normalizedTitle) throw new Error("Item title is required.")
+  if (!input.categoryId.trim()) throw new Error("Budget category is required.")
+  if (!input.roomId.trim()) throw new Error("Room is required.")
+  if (!input.decisionCategoryId.trim()) throw new Error("Decision category is required.")
   if (!normalizedTypeGroup || !normalizedTypeSection) {
     throw new Error("Type group and type section are required.")
   }
-
-  if (!normalizedBaselineSpec) {
-    throw new Error("Baseline allowance description is required.")
-  }
-
+  if (!normalizedBaselineSpec) throw new Error("Baseline allowance description is required.")
   if (!Number.isFinite(baselineBudgetExVat) || baselineBudgetExVat < 0) {
     throw new Error("Baseline budget must be zero or greater.")
   }
-
   if (quantity !== null && (!Number.isFinite(quantity) || quantity < 0)) {
     throw new Error("Quantity must be zero or greater.")
   }
 
-  const client = await pool.connect()
-
+  const client = await getPool().connect()
   try {
-    const itemId = input.itemId || createRecordId("dec-item", normalizedTitle)
-    const codeBase = slugify(normalizedTitle).replace(/-/g, "_").toUpperCase() || "DECISION"
+    const itemId = input.itemId || createRecordId("furniture-item", normalizedTitle)
+    const codeBase = slugify(normalizedTitle).replace(/-/g, "_").toUpperCase() || "FURNITURE"
     const code = input.itemId
       ? codeBase
       : `${codeBase}_${itemId.slice(-6).replace(/-/g, "").toUpperCase()}`
@@ -860,47 +668,29 @@ export async function saveDecisionWorkspaceItem(
 
     await client.query(
       `
-        insert into decision_items (
-          id,
-          code,
-          title,
-          budget_category_id,
-          room_id,
-          decision_category_id,
-          type_group,
-          type_section,
-          item_order,
-          baseline_spec,
-          baseline_budget_ex_vat,
-          quantity,
-          unit,
-          decision_stage,
-          priority,
-          description,
-          architect_note,
-          is_active
+        insert into ${TABLES.items} (
+          id, code, title, budget_category_id, room_id, decision_category_id, type_group,
+          type_section, item_order, baseline_spec, baseline_budget_ex_vat, quantity, unit,
+          decision_stage, priority, description, architect_note, is_active
         )
-        values (
-          $1,$2,$3,$4,$5,$6,$7,$8,coalesce($9, 1),$10,$11,$12,$13,$14,$15,$16,$17,true
-        )
+        values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9, 1),$10,$11,$12,$13,$14,$15,$16,$17,true)
         on conflict (id) do update
-        set
-          title = excluded.title,
-          budget_category_id = excluded.budget_category_id,
-          room_id = excluded.room_id,
-          decision_category_id = excluded.decision_category_id,
-          type_group = excluded.type_group,
-          type_section = excluded.type_section,
-          baseline_spec = excluded.baseline_spec,
-          baseline_budget_ex_vat = excluded.baseline_budget_ex_vat,
-          quantity = excluded.quantity,
-          unit = excluded.unit,
-          decision_stage = excluded.decision_stage,
-          priority = excluded.priority,
-          description = excluded.description,
-          architect_note = excluded.architect_note,
-          is_active = true,
-          updated_at = now()
+        set title = excluded.title,
+            budget_category_id = excluded.budget_category_id,
+            room_id = excluded.room_id,
+            decision_category_id = excluded.decision_category_id,
+            type_group = excluded.type_group,
+            type_section = excluded.type_section,
+            baseline_spec = excluded.baseline_spec,
+            baseline_budget_ex_vat = excluded.baseline_budget_ex_vat,
+            quantity = excluded.quantity,
+            unit = excluded.unit,
+            decision_stage = excluded.decision_stage,
+            priority = excluded.priority,
+            description = excluded.description,
+            architect_note = excluded.architect_note,
+            is_active = true,
+            updated_at = now()
       `,
       [
         itemId,
@@ -923,7 +713,7 @@ export async function saveDecisionWorkspaceItem(
       ],
     )
 
-    return getDecisionWorkspaceItemById(client, itemId)
+    return getItemById(client, itemId)
   } finally {
     client.release()
   }

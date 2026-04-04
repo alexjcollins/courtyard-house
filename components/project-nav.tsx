@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, FolderKanban, ShoppingCart, GitBranch, Settings2, Wallet, Images, ListTodo } from "lucide-react"
+import { Armchair, Home, FolderKanban, ShoppingCart, GitBranch, Settings2, Wallet, Images, ListTodo } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const iconMap = {
@@ -10,6 +10,7 @@ const iconMap = {
   "/categories": FolderKanban,
   "/procurement": ShoppingCart,
   "/decisions": Settings2,
+  "/furniture": Armchair,
   "/tasks": ListTodo,
   "/inspiration": Images,
   "/funding": Wallet,

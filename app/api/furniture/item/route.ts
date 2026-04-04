@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { authorizeApi } from "@/lib/auth"
-import { duplicateDecisionWorkspaceItem, saveDecisionWorkspaceItem } from "@/lib/decisions-db"
+import {
+  duplicateFurnitureWorkspaceItem,
+  saveFurnitureWorkspaceItem,
+} from "@/lib/furniture-db"
 
 const ALLOWED_DECISION_STAGES = new Set(["now", "later"])
 const ALLOWED_PRIORITIES = new Set(["high", "medium", "low"])
@@ -32,7 +35,7 @@ export async function POST(request: Request) {
     }
 
     if (typeof body.duplicateItemId === "string" && body.duplicateItemId.trim()) {
-      const item = await duplicateDecisionWorkspaceItem(body.duplicateItemId)
+      const item = await duplicateFurnitureWorkspaceItem(body.duplicateItemId)
       return NextResponse.json({ ok: true, item })
     }
 
@@ -45,7 +48,7 @@ export async function POST(request: Request) {
       typeof body.typeSection !== "string" ||
       typeof body.baselineSpec !== "string" ||
       typeof body.baselineBudgetExVat !== "number" ||
-      !ALLOWED_DECISION_STAGES.has(body.decisionStage ?? "now") ||
+      !ALLOWED_DECISION_STAGES.has(body.decisionStage ?? "later") ||
       !ALLOWED_PRIORITIES.has(body.priority ?? "medium")
     ) {
       return NextResponse.json({ error: "Invalid payload." }, { status: 400 })
@@ -61,7 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid quantity." }, { status: 400 })
     }
 
-    const item = await saveDecisionWorkspaceItem({
+    const item = await saveFurnitureWorkspaceItem({
       itemId: body.itemId,
       title: body.title,
       categoryId: body.categoryId,
@@ -73,7 +76,7 @@ export async function POST(request: Request) {
       baselineBudgetExVat: body.baselineBudgetExVat,
       quantity: body.quantity,
       unit: body.unit,
-      decisionStage: body.decisionStage ?? "now",
+      decisionStage: body.decisionStage ?? "later",
       priority: body.priority ?? "medium",
       description: body.description,
       architectNote: body.architectNote,
@@ -84,7 +87,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          error instanceof Error ? error.message : "Could not save decision item.",
+          error instanceof Error ? error.message : "Could not save furniture item.",
       },
       { status: 400 },
     )

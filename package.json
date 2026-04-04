@@ -10,7 +10,8 @@
     "validate:data": "node scripts/validate-data.mjs",
     "seed:data": "node scripts/seed-spaces-data.mjs",
     "export:decisions": "node scripts/export-decisions-csv.mjs",
-    "setup:decisions-db": "node scripts/setup-decisions-db.mjs"
+    "setup:decisions-db": "node scripts/setup-decisions-db.mjs",
+    "setup:furniture-db": "node scripts/setup-furniture-db.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
