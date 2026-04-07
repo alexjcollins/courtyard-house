@@ -829,9 +829,21 @@ function buildSeedItems() {
     roomSection: "Electrical backbone",
     typeGroup: "Electrical, lighting & data",
     typeSection: "Core electrical install",
-    baselineSpec: "Full-house wiring and switching within the control budget.",
-    baselineBudgetExVat: 20000,
-    description: "Main electrical labor and standard accessory allowance.",
+    baselineSpec: "Full-house wiring, containment, and core first/second-fix electrical install excluding the separately tracked switch and dimmer plate package.",
+    baselineBudgetExVat: 18000,
+    description: "Main electrical labour and core installation allowance before the visible switch hardware selection.",
+  })
+  addItem({
+    id: "physical-switches-and-dimmer-plates",
+    title: "Physical switches and dimmer plates",
+    categoryId: "mech_elec",
+    roomGroup: "General / whole project",
+    roomSection: "Electrical backbone",
+    typeGroup: "Electrical, lighting & data",
+    typeSection: "Lighting controls",
+    baselineSpec: "Controlled whole-house allowance for physical light switches, dimmers, and switch plate finish family.",
+    baselineBudgetExVat: 2000,
+    description: "Split out so plate finish, dimmer count, and hardware quality can be chosen deliberately without hiding inside the general electrical install.",
   })
   addItem({
     id: "consumer-unit-and-main-board",
