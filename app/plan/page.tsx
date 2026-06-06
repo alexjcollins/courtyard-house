@@ -31,7 +31,7 @@ export default async function PlanPage() {
     return <PlanPasswordGate passwordConfigured={isPlanPasswordConfigured()} />
   }
 
-  const [{ config, zones }, items] = await Promise.all([
+  const [{ config, layers, zones }, items] = await Promise.all([
     getPlanData(),
     getDecisionWorkspaceItems(),
   ])
@@ -81,6 +81,7 @@ export default async function PlanPage() {
           canEdit={canEdit}
           gridCols={config.gridCols}
           gridRows={config.gridRows}
+          layers={layers}
           zones={zones}
           decisions={decisions}
           planImageUrl={planImageUrl}

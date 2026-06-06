@@ -14,8 +14,15 @@ export type PlanConfig = {
   gridRows: number
 }
 
+export type PlanLayer = {
+  id: string
+  name: string
+  sortOrder: number
+}
+
 export type PlanZone = {
   id: string
+  layerId: string | null
   name: string
   color: string
   description: string | null
@@ -32,8 +39,15 @@ type PlanConfigRow = QueryResultRow & {
   grid_rows: number
 }
 
+type PlanLayerRow = QueryResultRow & {
+  id: string
+  name: string
+  sort_order: number
+}
+
 type PlanZoneRow = QueryResultRow & {
   id: string
+  layer_id: string | null
   name: string
   color: string
   description: string | null
@@ -67,9 +81,18 @@ function mapConfigRow(row: PlanConfigRow): PlanConfig {
   }
 }
 
+function mapLayerRow(row: PlanLayerRow): PlanLayer {
+  return {
+    id: row.id,
+    name: row.name,
+    sortOrder: Number(row.sort_order) || 0,
+  }
+}
+
 function mapZoneRow(row: PlanZoneRow): PlanZone {
   return {
     id: row.id,
+    layerId: row.layer_id ?? null,
     name: row.name,
     color: row.color,
     description: row.description ?? null,
@@ -90,10 +113,22 @@ export async function getPlanConfig(): Promise<PlanConfig> {
   return mapConfigRow(result.rows[0])
 }
 
+export async function getPlanLayers(): Promise<PlanLayer[]> {
+  const pool = getPool()
+  const result = await pool.query<PlanLayerRow>(
+    `SELECT id, name, sort_order
+     FROM plan_layers
+     WHERE plan_slug = $1 AND is_active = true
+     ORDER BY sort_order ASC, created_at ASC`,
+    [PLAN_SLUG],
+  )
+  return result.rows.map(mapLayerRow)
+}
+
 export async function getPlanZones(): Promise<PlanZone[]> {
   const pool = getPool()
   const result = await pool.query<PlanZoneRow>(
-    `SELECT id, name, color, description, squares, decision_item_ids, sort_order
+    `SELECT id, layer_id, name, color, description, squares, decision_item_ids, sort_order
      FROM plan_zones
      WHERE plan_slug = $1 AND is_active = true
      ORDER BY sort_order ASC, created_at ASC`,
@@ -104,14 +139,61 @@ export async function getPlanZones(): Promise<PlanZone[]> {
 
 export async function getPlanData(): Promise<{
   config: PlanConfig
+  layers: PlanLayer[]
   zones: PlanZone[]
 }> {
-  const [config, zones] = await Promise.all([getPlanConfig(), getPlanZones()])
-  return { config, zones }
+  const [config, layers, zones] = await Promise.all([
+    getPlanConfig(),
+    getPlanLayers(),
+    getPlanZones(),
+  ])
+  return { config, layers, zones }
+}
+
+export async function savePlanLayer(input: {
+  layerId?: string | null
+  name: string
+}): Promise<PlanLayer> {
+  const pool = getPool()
+  const name = input.name.trim()
+  const id = input.layerId?.trim() || `plan-layer-${randomUUID().slice(0, 12)}`
+
+  const result = await pool.query<PlanLayerRow>(
+    `INSERT INTO plan_layers (id, plan_slug, name, sort_order)
+     VALUES ($1, $2, $3, COALESCE((SELECT MAX(sort_order) + 1 FROM plan_layers WHERE plan_slug = $2), 0))
+     ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, is_active = true, updated_at = now()
+     RETURNING id, name, sort_order`,
+    [id, PLAN_SLUG, name],
+  )
+  return mapLayerRow(result.rows[0])
+}
+
+export async function deletePlanLayer(layerId: string): Promise<void> {
+  const pool = getPool()
+  const client = await pool.connect()
+  try {
+    await client.query("BEGIN")
+    await client.query(
+      `UPDATE plan_zones SET is_active = false, updated_at = now() WHERE layer_id = $1`,
+      [layerId],
+    )
+    await client.query(
+      `UPDATE plan_layers SET is_active = false, updated_at = now()
+       WHERE id = $1 AND plan_slug = $2`,
+      [layerId, PLAN_SLUG],
+    )
+    await client.query("COMMIT")
+  } catch (error) {
+    await client.query("ROLLBACK")
+    throw error
+  } finally {
+    client.release()
+  }
 }
 
 export type SavePlanZoneInput = {
   zoneId?: string | null
+  layerId: string
   name: string
   color: string
   description?: string | null
@@ -134,11 +216,13 @@ export async function savePlanZone(input: SavePlanZoneInput): Promise<PlanZone> 
 
     const id =
       input.zoneId?.trim() || `plan-zone-${randomUUID().slice(0, 12)}`
+    const layerId = input.layerId.trim()
 
     await client.query(
-      `INSERT INTO plan_zones (id, plan_slug, name, color, description, squares, decision_item_ids, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, now())
+      `INSERT INTO plan_zones (id, plan_slug, layer_id, name, color, description, squares, decision_item_ids, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, now())
        ON CONFLICT (id) DO UPDATE SET
+         layer_id = EXCLUDED.layer_id,
          name = EXCLUDED.name,
          color = EXCLUDED.color,
          description = EXCLUDED.description,
@@ -149,6 +233,7 @@ export async function savePlanZone(input: SavePlanZoneInput): Promise<PlanZone> 
       [
         id,
         PLAN_SLUG,
+        layerId,
         name,
         color,
         description,
@@ -157,12 +242,13 @@ export async function savePlanZone(input: SavePlanZoneInput): Promise<PlanZone> 
       ],
     )
 
-    // Enforce one-zone-per-square: strip these squares out of every other zone.
+    // Enforce one-zone-per-square *within the same plan/layer*: strip these squares
+    // out of every other zone on this layer (other layers are independent).
     if (squares.length > 0) {
       const others = await client.query<PlanZoneRow & { id: string }>(
         `SELECT id, squares FROM plan_zones
-         WHERE plan_slug = $1 AND is_active = true AND id <> $2`,
-        [PLAN_SLUG, id],
+         WHERE plan_slug = $1 AND is_active = true AND layer_id = $2 AND id <> $3`,
+        [PLAN_SLUG, layerId, id],
       )
 
       const taken = new Set(squares)
@@ -179,7 +265,7 @@ export async function savePlanZone(input: SavePlanZoneInput): Promise<PlanZone> 
     }
 
     const saved = await client.query<PlanZoneRow>(
-      `SELECT id, name, color, description, squares, decision_item_ids, sort_order
+      `SELECT id, layer_id, name, color, description, squares, decision_item_ids, sort_order
        FROM plan_zones WHERE id = $1`,
       [id],
     )

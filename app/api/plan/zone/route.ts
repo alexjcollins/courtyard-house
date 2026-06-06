@@ -12,6 +12,7 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       deleteZoneId?: string
       zoneId?: string
+      layerId?: unknown
       name?: unknown
       color?: unknown
       description?: unknown
@@ -22,6 +23,10 @@ export async function POST(request: Request) {
     if (typeof body.deleteZoneId === "string" && body.deleteZoneId.trim()) {
       await deletePlanZone(body.deleteZoneId.trim())
       return NextResponse.json({ ok: true, deletedZoneId: body.deleteZoneId.trim() })
+    }
+
+    if (typeof body.layerId !== "string" || !body.layerId.trim()) {
+      return NextResponse.json({ error: "A plan is required." }, { status: 400 })
     }
 
     if (typeof body.name !== "string" || !body.name.trim()) {
@@ -41,6 +46,7 @@ export async function POST(request: Request) {
 
     const zone = await savePlanZone({
       zoneId: typeof body.zoneId === "string" ? body.zoneId : null,
+      layerId: body.layerId,
       name: body.name,
       color: body.color,
       description: typeof body.description === "string" ? body.description : null,

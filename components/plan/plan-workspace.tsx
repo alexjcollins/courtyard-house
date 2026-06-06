@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { MousePointer2, Hand, Plus, Trash2, Upload, X } from "lucide-react"
+import { MousePointer2, Hand, Plus, Pencil, Trash2, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -28,8 +28,15 @@ export type PlanDecisionLite = {
   imageUrl: string | null
 }
 
+export type PlanLayerClient = {
+  id: string
+  name: string
+  sortOrder: number
+}
+
 export type PlanZoneClient = {
   id: string
+  layerId: string | null
   name: string
   color: string
   description: string | null
@@ -42,6 +49,7 @@ type PlanWorkspaceProps = {
   canEdit: boolean
   gridCols: number
   gridRows: number
+  layers: PlanLayerClient[]
   zones: PlanZoneClient[]
   decisions: PlanDecisionLite[]
   planImageUrl: string | null
@@ -80,6 +88,7 @@ export function PlanWorkspace({
   canEdit,
   gridCols,
   gridRows,
+  layers,
   zones,
   decisions,
   planImageUrl,
@@ -107,6 +116,42 @@ export function PlanWorkspace({
   const [draft, setDraft] = useState<Set<number>>(new Set())
   const [preview, setPreview] = useState<number[]>([])
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
+  // When set, the Select tool edits this existing zone's footprint live on the canvas.
+  const [squareEditZoneId, setSquareEditZoneId] = useState<string | null>(null)
+  // True while the remove modifier (Alt/Option) is held — Select then subtracts squares.
+  const [removeMode, setRemoveMode] = useState(false)
+  const [activeLayerId, setActiveLayerId] = useState<string | null>(
+    layers[0]?.id ?? null,
+  )
+
+  // Keep the active layer valid as layers change (e.g. after deletes/creates).
+  useEffect(() => {
+    if (activeLayerId && layers.some((layer) => layer.id === activeLayerId)) return
+    setActiveLayerId(layers[0]?.id ?? null)
+  }, [layers, activeLayerId])
+
+  // Switching plans clears the current selection/draft and any square-edit session.
+  useEffect(() => {
+    setSelectedZoneId(null)
+    setSquareEditZoneId(null)
+    setDraft(new Set())
+    setPreview([])
+  }, [activeLayerId])
+
+  // Track the remove modifier (Alt/Option) for cursor + preview hints.
+  useEffect(() => {
+    if (!canEdit) return
+    const sync = (event: KeyboardEvent) => setRemoveMode(event.altKey)
+    const clear = () => setRemoveMode(false)
+    window.addEventListener("keydown", sync)
+    window.addEventListener("keyup", sync)
+    window.addEventListener("blur", clear)
+    return () => {
+      window.removeEventListener("keydown", sync)
+      window.removeEventListener("keyup", sync)
+      window.removeEventListener("blur", clear)
+    }
+  }, [canEdit])
 
   const dragRef = useRef<
     | null
@@ -118,8 +163,19 @@ export function PlanWorkspace({
         moved: boolean
         kind: "pan" | "select"
         anchorCell: number | null
+        remove: boolean
       }
   >(null)
+
+  const activeLayer = useMemo(
+    () => layers.find((layer) => layer.id === activeLayerId) ?? null,
+    [layers, activeLayerId],
+  )
+
+  const layerZones = useMemo(
+    () => zones.filter((zone) => zone.layerId === activeLayerId),
+    [zones, activeLayerId],
+  )
 
   const decisionsById = useMemo(() => {
     const map = new Map<string, PlanDecisionLite>()
@@ -127,17 +183,28 @@ export function PlanWorkspace({
     return map
   }, [decisions])
 
-  const cellToZone = useMemo(() => {
-    const map = new Map<number, PlanZoneClient>()
-    for (const zone of zones) {
-      for (const cell of zone.squares) map.set(cell, zone)
-    }
+  const zoneById = useMemo(() => {
+    const map = new Map<string, PlanZoneClient>()
+    for (const zone of zones) map.set(zone.id, zone)
     return map
   }, [zones])
 
+  const cellToZone = useMemo(() => {
+    const map = new Map<number, PlanZoneClient>()
+    for (const zone of layerZones) {
+      for (const cell of zone.squares) map.set(cell, zone)
+    }
+    return map
+  }, [layerZones])
+
   const selectedZone = useMemo(
-    () => zones.find((zone) => zone.id === selectedZoneId) ?? null,
-    [zones, selectedZoneId],
+    () => layerZones.find((zone) => zone.id === selectedZoneId) ?? null,
+    [layerZones, selectedZoneId],
+  )
+
+  const squareEditZone = useMemo(
+    () => (squareEditZoneId ? zoneById.get(squareEditZoneId) ?? null : null),
+    [squareEditZoneId, zoneById],
   )
 
   // Fit the plan to the viewport on first mount.
@@ -219,7 +286,7 @@ export function PlanWorkspace({
   const onPointerDown = (event: React.PointerEvent) => {
     if (event.button !== 0) return
     event.currentTarget.setPointerCapture(event.pointerId)
-    const selecting = canEdit && tool === "select"
+    const selecting = canEdit && tool === "select" && Boolean(activeLayerId)
     dragRef.current = {
       startX: event.clientX,
       startY: event.clientY,
@@ -228,6 +295,7 @@ export function PlanWorkspace({
       moved: false,
       kind: selecting ? "select" : "pan",
       anchorCell: selecting ? cellFromEvent(event.clientX, event.clientY) : null,
+      remove: event.altKey,
     }
   }
 
@@ -263,17 +331,22 @@ export function PlanWorkspace({
 
     if (drag.kind === "select") {
       if (!drag.moved && drag.anchorCell != null) {
-        // click toggles a single cell
+        // Click: remove if the modifier is held, otherwise toggle.
         setDraft((prev) => {
           const next = new Set(prev)
-          if (next.has(drag.anchorCell!)) next.delete(drag.anchorCell!)
+          if (drag.remove) next.delete(drag.anchorCell!)
+          else if (next.has(drag.anchorCell!)) next.delete(drag.anchorCell!)
           else next.add(drag.anchorCell!)
           return next
         })
       } else if (preview.length > 0) {
+        // Drag rectangle: subtract when removing, add otherwise.
         setDraft((prev) => {
           const next = new Set(prev)
-          for (const cell of preview) next.add(cell)
+          for (const cell of preview) {
+            if (drag.remove) next.delete(cell)
+            else next.add(cell)
+          }
           return next
         })
       }
@@ -324,7 +397,9 @@ export function PlanWorkspace({
     [gridCols, gridRows, setView],
   )
 
-  // ---- Editor dialog state ----
+  const refresh = () => startTransition(() => router.refresh())
+
+  // ---- Zone editor dialog state ----
   const [editorOpen, setEditorOpen] = useState(false)
   const [editorZoneId, setEditorZoneId] = useState<string | null>(null)
   const [form, setForm] = useState({
@@ -338,6 +413,10 @@ export function PlanWorkspace({
   const [error, setError] = useState<string | null>(null)
 
   const openNewZone = () => {
+    if (!activeLayerId) {
+      setError("Create a plan first.")
+      return
+    }
     if (draft.size === 0) {
       setError("Select one or more squares first.")
       return
@@ -346,7 +425,7 @@ export function PlanWorkspace({
     setEditorZoneId(null)
     setForm({
       name: "",
-      color: ZONE_PALETTE[zones.length % ZONE_PALETTE.length],
+      color: ZONE_PALETTE[layerZones.length % ZONE_PALETTE.length],
       description: "",
       decisionItemIds: [],
     })
@@ -354,10 +433,10 @@ export function PlanWorkspace({
     setEditorOpen(true)
   }
 
-  const openEditZone = (zone: PlanZoneClient) => {
+  // Opens the metadata dialog only — does NOT touch the zone's footprint.
+  const openZoneDetails = (zone: PlanZoneClient) => {
     setError(null)
     setSelectedZoneId(zone.id)
-    setDraft(new Set(zone.squares))
     setEditorZoneId(zone.id)
     setForm({
       name: zone.name,
@@ -369,14 +448,79 @@ export function PlanWorkspace({
     setEditorOpen(true)
   }
 
-  const refresh = () => startTransition(() => router.refresh())
+  // Loads a zone's squares onto the canvas for live add/remove editing.
+  const enterSquareEdit = (zone: PlanZoneClient) => {
+    setError(null)
+    setSelectedZoneId(zone.id)
+    setSquareEditZoneId(zone.id)
+    setDraft(new Set(zone.squares))
+    setPreview([])
+    setTool("select")
+  }
+
+  const cancelSquareEdit = () => {
+    setSquareEditZoneId(null)
+    setDraft(new Set())
+    setPreview([])
+  }
+
+  const saveSquareEdit = async () => {
+    if (!squareEditZoneId || !activeLayerId) return
+    const zone = zoneById.get(squareEditZoneId)
+    if (!zone) return
+    if (draft.size === 0) {
+      setError("A zone needs at least one square. Use Delete to remove it entirely.")
+      return
+    }
+    setIsSaving(true)
+    setError(null)
+    try {
+      const response = await fetch("/api/plan/zone", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          zoneId: zone.id,
+          layerId: activeLayerId,
+          name: zone.name,
+          color: zone.color,
+          description: zone.description,
+          squares: [...draft],
+          decisionItemIds: zone.decisionItemIds,
+        }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setError(payload.error || "Could not update the zone.")
+        return
+      }
+      setSquareEditZoneId(null)
+      setDraft(new Set())
+      refresh()
+    } catch {
+      setError("Something went wrong while saving.")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Squares persisted by the details dialog: a new zone uses the canvas draft, an
+  // existing zone keeps its current footprint (edited separately via square-edit mode).
+  const editorSquares = useMemo(
+    () =>
+      editorZoneId ? (zoneById.get(editorZoneId)?.squares ?? []) : [...draft],
+    [editorZoneId, zoneById, draft],
+  )
 
   const saveZone = async () => {
+    if (!activeLayerId) {
+      setError("Create a plan first.")
+      return
+    }
     if (!form.name.trim()) {
       setError("A zone name is required.")
       return
     }
-    if (draft.size === 0) {
+    if (editorSquares.length === 0) {
       setError("Select one or more squares for this zone.")
       return
     }
@@ -388,10 +532,11 @@ export function PlanWorkspace({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           zoneId: editorZoneId,
+          layerId: activeLayerId,
           name: form.name,
           color: form.color,
           description: form.description,
-          squares: [...draft],
+          squares: editorSquares,
           decisionItemIds: form.decisionItemIds,
         }),
       })
@@ -401,7 +546,7 @@ export function PlanWorkspace({
         return
       }
       setEditorOpen(false)
-      setDraft(new Set())
+      if (!editorZoneId) setDraft(new Set())
       refresh()
     } catch {
       setError("Something went wrong while saving.")
@@ -433,6 +578,83 @@ export function PlanWorkspace({
       setError("Something went wrong while deleting.")
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  // ---- Plan (layer) editor dialog ----
+  const [layerDialogOpen, setLayerDialogOpen] = useState(false)
+  const [layerEditorId, setLayerEditorId] = useState<string | null>(null)
+  const [layerName, setLayerName] = useState("")
+  const [layerError, setLayerError] = useState<string | null>(null)
+  const [isSavingLayer, setIsSavingLayer] = useState(false)
+
+  const openNewLayer = () => {
+    setLayerEditorId(null)
+    setLayerName("")
+    setLayerError(null)
+    setLayerDialogOpen(true)
+  }
+
+  const openRenameLayer = () => {
+    if (!activeLayer) return
+    setLayerEditorId(activeLayer.id)
+    setLayerName(activeLayer.name)
+    setLayerError(null)
+    setLayerDialogOpen(true)
+  }
+
+  const saveLayer = async () => {
+    if (!layerName.trim()) {
+      setLayerError("A plan name is required.")
+      return
+    }
+    setIsSavingLayer(true)
+    setLayerError(null)
+    try {
+      const response = await fetch("/api/plan/layer", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ layerId: layerEditorId, name: layerName }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setLayerError(payload.error || "Could not save the plan.")
+        return
+      }
+      if (!layerEditorId && payload.layer?.id) {
+        setActiveLayerId(payload.layer.id)
+      }
+      setLayerDialogOpen(false)
+      refresh()
+    } catch {
+      setLayerError("Something went wrong while saving.")
+    } finally {
+      setIsSavingLayer(false)
+    }
+  }
+
+  const deleteLayer = async () => {
+    if (!layerEditorId) return
+    setIsSavingLayer(true)
+    setLayerError(null)
+    try {
+      const response = await fetch("/api/plan/layer", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ deleteLayerId: layerEditorId }),
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        setLayerError(payload.error || "Could not delete the plan.")
+        return
+      }
+      setLayerDialogOpen(false)
+      setActiveLayerId(null)
+      refresh()
+    } catch {
+      setLayerError("Something went wrong while deleting.")
+    } finally {
+      setIsSavingLayer(false)
     }
   }
 
@@ -494,309 +716,439 @@ export function PlanWorkspace({
   }
 
   const draftCells = useMemo(() => [...draft], [draft])
+  const draftFill = squareEditZone?.color ?? "#111827"
   const transform = `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`
   const isSelecting = canEdit && tool === "select"
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar */}
-      <aside className="flex w-80 shrink-0 flex-col border-r border-border/80 bg-card">
-        <div className="flex-1 space-y-6 overflow-y-auto p-5">
-          {canEdit ? (
-            <section className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                Edit
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant={tool === "select" ? "default" : "outline"}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setTool("select")}
-                >
-                  <MousePointer2 className="size-4" /> Select
-                </Button>
-                <Button
-                  type="button"
-                  variant={tool === "pan" ? "default" : "outline"}
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => setTool("pan")}
-                >
-                  <Hand className="size-4" /> Pan
-                </Button>
-              </div>
+    <div className="flex h-full flex-col">
+      {/* Plan (layer) tab bar */}
+      <div className="flex items-center gap-2 overflow-x-auto border-b border-border/80 bg-card px-4 py-2.5">
+        <span className="shrink-0 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+          Plans
+        </span>
+        {layers.map((layer) => (
+          <button
+            key={layer.id}
+            type="button"
+            onClick={() => setActiveLayerId(layer.id)}
+            className={cn(
+              "shrink-0 rounded-full border px-3.5 py-1.5 text-sm transition-colors",
+              activeLayerId === layer.id
+                ? "border-foreground bg-foreground text-background"
+                : "border-border bg-card text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {layer.name}
+          </button>
+        ))}
+        {canEdit ? (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={openNewLayer}
+            >
+              <Plus className="size-4" /> Add plan
+            </Button>
+            {activeLayer ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="shrink-0"
+                onClick={openRenameLayer}
+                aria-label="Edit plan"
+              >
+                <Pencil className="size-4" />
+              </Button>
+            ) : null}
+          </>
+        ) : null}
+      </div>
 
-              <div className="rounded-xl border border-border/70 bg-background p-3 text-sm">
-                <p className="text-muted-foreground">
-                  {draft.size} square{draft.size === 1 ? "" : "s"} selected
+      <div className="flex min-h-0 flex-1">
+        {/* Sidebar */}
+        <aside className="flex w-80 shrink-0 flex-col border-r border-border/80 bg-card">
+          <div className="flex-1 space-y-6 overflow-y-auto p-5">
+            {canEdit ? (
+              <section className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Edit
                 </p>
-                <div className="mt-3 flex gap-2">
+                <div className="flex gap-2">
                   <Button
                     type="button"
+                    variant={tool === "select" ? "default" : "outline"}
                     size="sm"
                     className="flex-1"
-                    onClick={openNewZone}
-                    disabled={draft.size === 0}
+                    onClick={() => setTool("select")}
                   >
-                    <Plus className="size-4" /> New zone
+                    <MousePointer2 className="size-4" /> Select
                   </Button>
                   <Button
                     type="button"
+                    variant={tool === "pan" ? "default" : "outline"}
                     size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setDraft(new Set())
-                      setPreview([])
-                    }}
-                    disabled={draft.size === 0}
+                    className="flex-1"
+                    onClick={() => setTool("pan")}
                   >
-                    Clear
+                    <Hand className="size-4" /> Pan
                   </Button>
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  With the Select tool, click squares or drag a box. Drag with Pan to move the plan.
-                </p>
-              </div>
 
-              <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={(event) => {
-                    const file = event.target.files?.[0]
-                    if (file) void uploadPlanImage(file)
-                    event.target.value = ""
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  disabled={isUploading}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="size-4" />
-                  {isUploading ? "Uploading…" : "Replace plan image"}
-                </Button>
-              </div>
-            </section>
-          ) : null}
-
-          {/* Zones list */}
-          <section className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Zones
-            </p>
-            {zones.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {canEdit
-                  ? "No zones yet. Select squares and create one."
-                  : "No zones have been added yet."}
-              </p>
-            ) : (
-              <ul className="space-y-1.5">
-                {zones.map((zone) => (
-                  <li key={zone.id}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedZoneId(zone.id)
-                        focusZone(zone)
-                      }}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
-                        selectedZoneId === zone.id
-                          ? "border-foreground/40 bg-secondary/60"
-                          : "border-border/70 hover:bg-secondary/30",
-                      )}
-                    >
+                {squareEditZone ? (
+                  <div className="rounded-xl border border-foreground/30 bg-background p-3 text-sm">
+                    <p className="flex items-center gap-2">
                       <span
-                        className="size-3.5 shrink-0 rounded-sm"
-                        style={{ backgroundColor: zone.color }}
+                        className="size-3 rounded-sm"
+                        style={{ backgroundColor: squareEditZone.color }}
                       />
-                      <span className="flex-1 truncate">{zone.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {zone.squares.length}
+                      <span className="text-foreground">
+                        Editing squares · {squareEditZone.name}
                       </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+                    </p>
+                    <p className="mt-1 text-muted-foreground">
+                      {draft.size} square{draft.size === 1 ? "" : "s"}
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="flex-1"
+                        onClick={saveSquareEdit}
+                        disabled={isSaving || draft.size === 0}
+                      >
+                        {isSaving ? "Saving…" : "Save"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={cancelSquareEdit}
+                        disabled={isSaving}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Click or drag to add. Hold{" "}
+                      <kbd className="rounded border border-border px-1">Alt</kbd> to
+                      remove.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-border/70 bg-background p-3 text-sm">
+                    <p className="text-muted-foreground">
+                      {draft.size} square{draft.size === 1 ? "" : "s"} selected
+                      {activeLayer ? (
+                        <>
+                          {" "}
+                          on <span className="text-foreground">{activeLayer.name}</span>
+                        </>
+                      ) : null}
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="flex-1"
+                        onClick={openNewZone}
+                        disabled={draft.size === 0 || !activeLayerId}
+                      >
+                        <Plus className="size-4" /> New zone
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setDraft(new Set())
+                          setPreview([])
+                        }}
+                        disabled={draft.size === 0}
+                      >
+                        Clear
+                      </Button>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Click or drag to select. Hold{" "}
+                      <kbd className="rounded border border-border px-1">Alt</kbd> to
+                      remove squares. Each plan’s zones are independent.
+                    </p>
+                  </div>
+                )}
 
-          {/* Selected zone detail */}
-          {selectedZone ? (
-            <section className="space-y-3 border-t border-border/70 pt-5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="size-3.5 rounded-sm"
-                    style={{ backgroundColor: selectedZone.color }}
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(event) => {
+                      const file = event.target.files?.[0]
+                      if (file) void uploadPlanImage(file)
+                      event.target.value = ""
+                    }}
                   />
-                  <h2 className="text-base font-medium">{selectedZone.name}</h2>
-                </div>
-                {canEdit ? (
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => openEditZone(selectedZone)}
+                    className="w-full"
+                    disabled={isUploading}
+                    onClick={() => fileInputRef.current?.click()}
                   >
-                    Edit
+                    <Upload className="size-4" />
+                    {isUploading ? "Uploading…" : "Replace plan image"}
                   </Button>
-                ) : null}
-              </div>
-              {selectedZone.description ? (
-                <p className="text-sm leading-6 text-muted-foreground">
-                  {selectedZone.description}
-                </p>
-              ) : null}
-
-              {selectedZone.decisionItemIds.length > 0 ? (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                    Linked decisions
-                  </p>
-                  {selectedZone.decisionItemIds.map((id) => {
-                    const decision = decisionsById.get(id)
-                    if (!decision) return null
-                    return (
-                      <div
-                        key={id}
-                        className="flex gap-3 rounded-lg border border-border/70 p-2.5"
-                      >
-                        {decision.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={decision.imageUrl}
-                            alt={decision.title}
-                            className="size-12 shrink-0 rounded-md object-cover"
-                          />
-                        ) : null}
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{decision.title}</p>
-                          <p className="truncate text-xs text-muted-foreground">
-                            {decision.roomName ? `${decision.roomName} · ` : ""}
-                            {STATUS_LABEL[decision.status]}
-                          </p>
-                          {decision.selectedName ? (
-                            <p className="truncate text-xs text-muted-foreground">
-                              {decision.selectedName}
-                            </p>
-                          ) : null}
-                        </div>
-                      </div>
-                    )
-                  })}
                 </div>
+              </section>
+            ) : null}
+
+            {/* Zones list */}
+            <section className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                {activeLayer ? `${activeLayer.name} zones` : "Zones"}
+              </p>
+              {layers.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {canEdit
+                    ? "No plans yet. Add one above to get started."
+                    : "No plans have been added yet."}
+                </p>
+              ) : layerZones.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  {canEdit
+                    ? "No zones on this plan yet. Select squares and create one."
+                    : "No zones on this plan yet."}
+                </p>
               ) : (
-                <p className="text-xs text-muted-foreground">No decisions linked.</p>
+                <ul className="space-y-1.5">
+                  {layerZones.map((zone) => (
+                    <li key={zone.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedZoneId(zone.id)
+                          focusZone(zone)
+                        }}
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+                          selectedZoneId === zone.id
+                            ? "border-foreground/40 bg-secondary/60"
+                            : "border-border/70 hover:bg-secondary/30",
+                        )}
+                      >
+                        <span
+                          className="size-3.5 shrink-0 rounded-sm"
+                          style={{ backgroundColor: zone.color }}
+                        />
+                        <span className="flex-1 truncate">{zone.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {zone.squares.length}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </section>
-          ) : null}
-        </div>
-      </aside>
 
-      {/* Canvas */}
-      <div
-        ref={viewportRef}
-        className="relative min-w-0 flex-1 overflow-hidden bg-secondary/30"
-      >
+            {/* Selected zone detail */}
+            {selectedZone ? (
+              <section className="space-y-3 border-t border-border/70 pt-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="size-3.5 rounded-sm"
+                      style={{ backgroundColor: selectedZone.color }}
+                    />
+                    <h2 className="text-base font-medium">{selectedZone.name}</h2>
+                  </div>
+                  {canEdit ? (
+                    <div className="flex shrink-0 gap-1.5">
+                      <Button
+                        type="button"
+                        variant={
+                          squareEditZoneId === selectedZone.id ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => enterSquareEdit(selectedZone)}
+                      >
+                        Squares
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openZoneDetails(selectedZone)}
+                      >
+                        Details
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+                {selectedZone.description ? (
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    {selectedZone.description}
+                  </p>
+                ) : null}
+
+                {selectedZone.decisionItemIds.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      Linked decisions
+                    </p>
+                    {selectedZone.decisionItemIds.map((id) => {
+                      const decision = decisionsById.get(id)
+                      if (!decision) return null
+                      return (
+                        <div
+                          key={id}
+                          className="flex gap-3 rounded-lg border border-border/70 p-2.5"
+                        >
+                          {decision.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={decision.imageUrl}
+                              alt={decision.title}
+                              className="size-12 shrink-0 rounded-md object-cover"
+                            />
+                          ) : null}
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{decision.title}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {decision.roomName ? `${decision.roomName} · ` : ""}
+                              {STATUS_LABEL[decision.status]}
+                            </p>
+                            {decision.selectedName ? (
+                              <p className="truncate text-xs text-muted-foreground">
+                                {decision.selectedName}
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No decisions linked.</p>
+                )}
+              </section>
+            ) : null}
+          </div>
+        </aside>
+
+        {/* Canvas */}
         <div
-          ref={stageRef}
-          className="absolute left-0 top-0 origin-top-left"
-          style={{ width: stageW, height: stageH, transform }}
+          ref={viewportRef}
+          className="relative min-w-0 flex-1 overflow-hidden bg-secondary/30"
         >
-          {planImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={planImageUrl}
-              alt="House plan"
-              draggable={false}
-              className="absolute inset-0 h-full w-full select-none object-contain"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-muted text-sm text-muted-foreground">
-              No plan image uploaded yet.
-            </div>
-          )}
-
-          {/* Grid lines */}
           <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              backgroundImage: `repeating-linear-gradient(to right, rgba(0,0,0,0.10) 0, rgba(0,0,0,0.10) 1px, transparent 1px, transparent ${CELL}px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.10) 0, rgba(0,0,0,0.10) 1px, transparent 1px, transparent ${CELL}px)`,
-            }}
-          />
-
-          {/* Zone fills + selection */}
-          <svg
-            className="pointer-events-none absolute inset-0"
-            width={stageW}
-            height={stageH}
-            viewBox={`0 0 ${gridCols} ${gridRows}`}
-            shapeRendering="crispEdges"
+            ref={stageRef}
+            className="absolute left-0 top-0 origin-top-left"
+            style={{ width: stageW, height: stageH, transform }}
           >
-            {zones.map((zone) =>
-              zone.squares.map((cell) => (
+            {planImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={planImageUrl}
+                alt="House plan"
+                draggable={false}
+                className="absolute inset-0 h-full w-full select-none object-contain"
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted text-sm text-muted-foreground">
+                No plan image uploaded yet.
+              </div>
+            )}
+
+            {/* Grid lines */}
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{
+                backgroundImage: `repeating-linear-gradient(to right, rgba(0,0,0,0.10) 0, rgba(0,0,0,0.10) 1px, transparent 1px, transparent ${CELL}px), repeating-linear-gradient(to bottom, rgba(0,0,0,0.10) 0, rgba(0,0,0,0.10) 1px, transparent 1px, transparent ${CELL}px)`,
+              }}
+            />
+
+            {/* Zone fills + selection (active plan only) */}
+            <svg
+              className="pointer-events-none absolute inset-0"
+              width={stageW}
+              height={stageH}
+              viewBox={`0 0 ${gridCols} ${gridRows}`}
+              shapeRendering="crispEdges"
+            >
+              {layerZones
+                .filter((zone) => zone.id !== squareEditZoneId)
+                .map((zone) =>
+                  zone.squares.map((cell) => (
+                    <rect
+                      key={`${zone.id}-${cell}`}
+                      x={cell % gridCols}
+                      y={Math.floor(cell / gridCols)}
+                      width={1}
+                      height={1}
+                      fill={zone.color}
+                      fillOpacity={selectedZoneId === zone.id ? 0.6 : 0.4}
+                    />
+                  )),
+                )}
+              {draftCells.map((cell) => (
                 <rect
-                  key={`${zone.id}-${cell}`}
+                  key={`draft-${cell}`}
                   x={cell % gridCols}
                   y={Math.floor(cell / gridCols)}
                   width={1}
                   height={1}
-                  fill={zone.color}
-                  fillOpacity={selectedZoneId === zone.id ? 0.6 : 0.4}
+                  fill={draftFill}
+                  fillOpacity={0.45}
+                  stroke={draftFill}
+                  strokeWidth={0.05}
                 />
-              )),
-            )}
-            {draftCells.map((cell) => (
-              <rect
-                key={`draft-${cell}`}
-                x={cell % gridCols}
-                y={Math.floor(cell / gridCols)}
-                width={1}
-                height={1}
-                fill="#111827"
-                fillOpacity={0.35}
-                stroke="#111827"
-                strokeWidth={0.05}
-              />
-            ))}
-            {preview.map((cell) => (
-              <rect
-                key={`preview-${cell}`}
-                x={cell % gridCols}
-                y={Math.floor(cell / gridCols)}
-                width={1}
-                height={1}
-                fill="#2563eb"
-                fillOpacity={0.3}
-              />
-            ))}
-          </svg>
+              ))}
+              {preview.map((cell) => (
+                <rect
+                  key={`preview-${cell}`}
+                  x={cell % gridCols}
+                  y={Math.floor(cell / gridCols)}
+                  width={1}
+                  height={1}
+                  fill={removeMode ? "#dc2626" : "#2563eb"}
+                  fillOpacity={0.3}
+                />
+              ))}
+            </svg>
 
-          {/* Interaction layer */}
-          <div
-            className="absolute inset-0"
-            style={{ cursor: isSelecting ? "crosshair" : "grab", touchAction: "none" }}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-          />
-        </div>
+            {/* Interaction layer */}
+            <div
+              className="absolute inset-0"
+              style={{
+                cursor: isSelecting ? "crosshair" : "grab",
+                touchAction: "none",
+              }}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+            />
+          </div>
 
-        {/* Floating controls */}
-        <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={fitView}>
-            Fit
-          </Button>
+          {/* Remove-mode indicator */}
+          {canEdit && isSelecting && removeMode ? (
+            <div className="pointer-events-none absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-destructive px-3 py-1 text-xs font-medium text-white shadow">
+              Remove mode
+            </div>
+          ) : null}
+
+          {/* Floating controls */}
+          <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={fitView}>
+              Fit
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -806,8 +1158,12 @@ export function PlanWorkspace({
           <DialogHeader>
             <DialogTitle>{editorZoneId ? "Edit zone" : "New zone"}</DialogTitle>
             <DialogDescription>
-              {draft.size} square{draft.size === 1 ? "" : "s"} selected. Assign a name,
-              colour, description and link decisions.
+              {editorSquares.length} square{editorSquares.length === 1 ? "" : "s"}
+              {activeLayer ? ` on ${activeLayer.name}` : ""}. Assign a name, colour,
+              description and link decisions.
+              {editorZoneId
+                ? " Use Squares mode on the canvas to change the footprint."
+                : ""}
             </DialogDescription>
           </DialogHeader>
 
@@ -935,6 +1291,64 @@ export function PlanWorkspace({
               </Button>
               <Button type="button" onClick={saveZone} disabled={isSaving}>
                 {isSaving ? "Saving…" : "Save zone"}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Plan (layer) editor dialog */}
+      <Dialog open={layerDialogOpen} onOpenChange={setLayerDialogOpen}>
+        <DialogContent className="max-w-md border-border/70">
+          <DialogHeader>
+            <DialogTitle>{layerEditorId ? "Edit plan" : "New plan"}</DialogTitle>
+            <DialogDescription>
+              {layerEditorId
+                ? "Rename this plan, or delete it and all of its zones."
+                : "Create a new plan (e.g. Flooring, Plumbing, Electrics)."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Plan name
+            </label>
+            <Input
+              value={layerName}
+              onChange={(event) => setLayerName(event.target.value)}
+              placeholder="e.g. Flooring"
+              autoFocus
+            />
+            {layerError ? (
+              <p className="text-sm text-destructive">{layerError}</p>
+            ) : null}
+          </div>
+
+          <DialogFooter className="flex items-center justify-between gap-2 sm:justify-between">
+            {layerEditorId ? (
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-destructive hover:text-destructive"
+                onClick={deleteLayer}
+                disabled={isSavingLayer}
+              >
+                <Trash2 className="size-4" /> Delete plan
+              </Button>
+            ) : (
+              <span />
+            )}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setLayerDialogOpen(false)}
+                disabled={isSavingLayer}
+              >
+                Cancel
+              </Button>
+              <Button type="button" onClick={saveLayer} disabled={isSavingLayer}>
+                {isSavingLayer ? "Saving…" : "Save plan"}
               </Button>
             </div>
           </DialogFooter>
