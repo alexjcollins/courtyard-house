@@ -18,12 +18,14 @@ export const APP_PERMISSIONS = [
   "procurement:view",
   "funding:view",
   "admin:view",
+  "plan:view",
   "tasks:edit",
   "decisions:edit",
   "ideas:edit",
   "inspiration:edit",
   "funding:edit",
   "admin:edit",
+  "plan:edit",
 ] as const
 
 export type AppPermission = (typeof APP_PERMISSIONS)[number]
@@ -38,6 +40,7 @@ const ROLE_PERMISSIONS: Record<AppRole, AppPermission[]> = {
     "tasks:view",
     "tasks:edit",
     "timeline:view",
+    "plan:view",
   ],
 }
 

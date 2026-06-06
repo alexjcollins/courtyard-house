@@ -21,6 +21,7 @@ export default async function ProtectedLayout({
     { href: "/inspiration", label: "Inspiration" },
     { href: "/funding", label: "Funding" },
     { href: "/timeline", label: "Timeline" },
+    { href: "/plan", label: "Plan" },
   ] satisfies ProjectNavItem[]
   const navigationItems = allNavigationItems.filter((item) => {
     const permissionMap = {
@@ -33,6 +34,7 @@ export default async function ProtectedLayout({
       "/inspiration": "inspiration:view",
       "/funding": "funding:view",
       "/timeline": "timeline:view",
+      "/plan": "plan:view",
     } as const
 
     return hasPermission(viewer, permissionMap[item.href as keyof typeof permissionMap])

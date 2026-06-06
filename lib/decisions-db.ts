@@ -29,7 +29,7 @@ function requireDatabaseUrl(): string {
   return databaseUrl
 }
 
-function getPool(): Pool {
+export function getPool(): Pool {
   if (!global.__courtyardHousePgPool) {
     global.__courtyardHousePgPool = new Pool({
       connectionString: requireDatabaseUrl(),
