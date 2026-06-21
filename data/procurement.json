@@ -47,6 +47,18 @@
       "name": "Compass Glass",
       "trade": "Glazing",
       "notes": "Current glazing supplier for the main windows and external doors package."
+    },
+    {
+      "id": "sup-glideline",
+      "name": "Glideline",
+      "trade": "Glazing",
+      "notes": "Alternative glazing supplier for the main windows and external doors package."
+    },
+    {
+      "id": "sup-south-east-water",
+      "name": "South East Water",
+      "trade": "Utility connection",
+      "notes": "Water authority charges for new mains connection works."
     }
   ],
   "quotes": [
@@ -86,11 +98,26 @@
       "amountExVat": 5100,
       "vatRate": 0.2,
       "vatIncluded": false,
-      "status": "received",
+      "status": "accepted",
       "quoteDate": "2026-03-11",
+      "convertedToPurchaseOrderId": "po-integrum-site-investigation",
       "createdDate": "2026-04-04",
-      "updatedDate": "2026-04-04",
+      "updatedDate": "2026-06-19",
       "notes": "Integrum quote covering boreholes, infiltration testing, factual reporting, and interpretative reporting. Planned funding source: Ether."
+    },
+    {
+      "id": "q-004",
+      "supplierId": "sup-glideline",
+      "categoryId": "windows",
+      "title": "Main glazing package",
+      "amountExVat": 61000,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "status": "received",
+      "quoteDate": "2026-06-19",
+      "createdDate": "2026-06-19",
+      "updatedDate": "2026-06-19",
+      "notes": "Glideline quote for the main glazing package, received as an alternative to Compass Glass."
     }
   ],
   "purchaseOrders": [
@@ -158,6 +185,33 @@
       "issuedDate": "2026-03-01",
       "updatedDate": "2026-03-01",
       "notes": "Arboricultural study and associated reporting."
+    },
+    {
+      "id": "po-new-mains-water-connection",
+      "supplierId": "sup-south-east-water",
+      "categoryId": "utilities",
+      "title": "New mains water connection",
+      "amountExVat": 2150,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-06-19",
+      "updatedDate": "2026-06-19",
+      "notes": "South East Water charge for the new mains connection."
+    },
+    {
+      "id": "po-integrum-site-investigation",
+      "supplierId": "sup-integrum-site-services",
+      "categoryId": "fees",
+      "quoteId": "q-003",
+      "title": "Site investigation and interpretative report",
+      "amountExVat": 5100,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-06-19",
+      "updatedDate": "2026-06-19",
+      "notes": "Integrum appointment for boreholes, infiltration testing, factual reporting, and interpretative geotechnical reporting."
     }
   ],
   "invoices": [
@@ -250,6 +304,36 @@
       "notes": "Arboricultural study payment recorded in full.",
       "createdDate": "2026-03-01",
       "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-south-east-water-001",
+      "purchaseOrderId": "po-new-mains-water-connection",
+      "supplierId": "sup-south-east-water",
+      "number": "SEW-001",
+      "amountExVat": 2150,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "issueDate": "2026-06-19",
+      "dueDate": "2026-06-19",
+      "status": "paid",
+      "notes": "South East Water charge for the new mains connection.",
+      "createdDate": "2026-06-19",
+      "updatedDate": "2026-06-19"
+    },
+    {
+      "id": "inv-integrum-001",
+      "purchaseOrderId": "po-integrum-site-investigation",
+      "supplierId": "sup-integrum-site-services",
+      "number": "INT-001",
+      "amountExVat": 5100,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-06-19",
+      "dueDate": "2026-06-19",
+      "status": "paid",
+      "notes": "Integrum site investigation and interpretative report paid in full.",
+      "createdDate": "2026-06-19",
+      "updatedDate": "2026-06-19"
     }
   ]
 }

@@ -892,6 +892,104 @@ function createFundingEntryId(description: string): string {
   return createShortId("fund-entry", description || "entry")
 }
 
+function createSupplierId(name: string): string {
+  return createShortId("sup", name)
+}
+
+function createQuoteId(title: string): string {
+  return createShortId("q", title)
+}
+
+function createPurchaseOrderId(title: string): string {
+  return createShortId("po", title)
+}
+
+function createInvoiceId(numberOrTitle: string): string {
+  return createShortId("inv", numberOrTitle || "invoice")
+}
+
+function createPaymentId(referenceOrInvoiceId: string): string {
+  return createShortId("pay", referenceOrInvoiceId || "payment")
+}
+
+function createStagePaymentId(title: string): string {
+  return createShortId("stage", title || "stage")
+}
+
+function isValidVatRate(value: number | undefined): boolean {
+  return value === undefined || [0, 0.05, 0.2].includes(value)
+}
+
+function isDatePast(date: string | undefined): boolean {
+  if (!date) {
+    return false
+  }
+
+  return date < new Date().toISOString().slice(0, 10)
+}
+
+function getInvoiceStatusFromPayments(
+  invoice: Invoice,
+  payments: Payment[],
+  fallbackStatus: string,
+): string {
+  const paidAmount = payments.reduce((sum, payment) => sum + Number(payment.amountExVat || 0), 0)
+
+  if (paidAmount >= Number(invoice.amountExVat || 0) && Number(invoice.amountExVat || 0) > 0) {
+    return "paid"
+  }
+
+  if (isDatePast(invoice.dueDate)) {
+    return "overdue"
+  }
+
+  if (fallbackStatus === "paid" || fallbackStatus === "overdue") {
+    return "received"
+  }
+
+  return fallbackStatus || "received"
+}
+
+function syncInvoiceStatuses(
+  procurementFile: ProcurementFile,
+  paymentsFile: PaymentsFile,
+): void {
+  procurementFile.invoices = procurementFile.invoices.map((invoice) => ({
+    ...invoice,
+    status: getInvoiceStatusFromPayments(
+      invoice,
+      paymentsFile.payments.filter((payment) => payment.invoiceId === invoice.id),
+      invoice.status,
+    ),
+  }))
+}
+
+function syncQuoteConversion(
+  procurementFile: ProcurementFile,
+  purchaseOrderId: string,
+  quoteId?: string,
+): void {
+  procurementFile.quotes = procurementFile.quotes.map((quote) => {
+    if (quote.convertedToPurchaseOrderId === purchaseOrderId && quote.id !== quoteId) {
+      return {
+        ...quote,
+        convertedToPurchaseOrderId: undefined,
+        updatedDate: new Date().toISOString().slice(0, 10),
+      }
+    }
+
+    if (quote.id === quoteId) {
+      return {
+        ...quote,
+        convertedToPurchaseOrderId: purchaseOrderId,
+        updatedDate: new Date().toISOString().slice(0, 10),
+      }
+    }
+
+    return quote
+  })
+}
+
 function hasFundingLedger(
   source: Pick<FundingModelFile["sources"][number], "accounts" | "entries">,
 ): boolean {
@@ -1358,6 +1456,87 @@ export type UpdatePaymentFundingAllocationInput = {
   fundingAccountId?: string
 }
 
+export type SaveSupplierInput = {
+  supplierId?: string
+  name: string
+  trade?: string
+  email?: string
+  phone?: string
+  notes?: string
+}
+
+export type SaveQuoteInput = {
+  quoteId?: string
+  supplierId: string
+  categoryId?: string
+  title: string
+  amountExVat: number
+  vatRate?: VatRate
+  vatIncluded?: boolean
+  status: string
+  quoteDate?: string
+  expiryDate?: string
+  notes?: string
+}
+
+export type SaveStagePaymentInput = {
+  stagePaymentId?: string
+  title: string
+  type: "percent" | "fixed"
+  value: number
+  dueDate?: string
+  milestoneId?: string
+  notes?: string
+}
+
+export type SavePurchaseOrderInput = {
+  purchaseOrderId?: string
+  supplierId: string
+  categoryId?: string
+  quoteId?: string
+  title: string
+  amountExVat: number
+  vatRate?: VatRate
+  vatIncluded?: boolean
+  status: string
+  issuedDate?: string
+  notes?: string
+  stagePayments?: SaveStagePaymentInput[]
+}
+
+export type SaveInvoiceInput = {
+  invoiceId?: string
+  purchaseOrderId: string
+  supplierId?: string
+  stagePaymentId?: string
+  number?: string
+  amountExVat: number
+  vatRate?: VatRate
+  vatIncluded?: boolean
+  issueDate?: string
+  dueDate?: string
+  status: string
+  notes?: string
+}
+
+export type SavePaymentInput = {
+  paymentId?: string
+  invoiceId: string
+  amountExVat: number
+  paidDate: string
+  fundingSourceId?: string
+  fundingAccountId?: string
+  reference?: string
+  notes?: string
+}
+
+export type ProcurementEntityType =
+  | "supplier"
+  | "quote"
+  | "purchaseOrder"
+  | "invoice"
+  | "payment"
+
 export async function saveFundingSourceAccount(
   input: SaveFundingSourceAccountInput,
 ): Promise<FundingSourceAccount> {
@@ -1505,6 +1684,523 @@ export async function updatePaymentFundingAllocation(
   }
 
   await writeDataFileText("payments.json", formatJson(paymentsFile))
+}
+
+export async function getProcurementSnapshot(): Promise<{
+  procurementFile: ProcurementFile
+  paymentsFile: PaymentsFile
+}> {
+  const [procurementFile, paymentsFile] = await Promise.all([
+    readJsonFile<ProcurementFile>("procurement.json"),
+    readJsonFile<PaymentsFile>("payments.json"),
+  ])
+
+  return { procurementFile, paymentsFile }
+}
+
+export async function saveSupplier(input: SaveSupplierInput): Promise<Supplier> {
+  const procurementFile = await readJsonFile<ProcurementFile>("procurement.json")
+  const name = input.name.trim()
+
+  if (!name) {
+    throw new Error("Supplier name is required.")
+  }
+
+  const existingSupplier = input.supplierId
+    ? procurementFile.suppliers.find((supplier) => supplier.id === input.supplierId) || null
+    : null
+
+  if (input.supplierId && !existingSupplier) {
+    throw new Error("Supplier not found.")
+  }
+
+  const duplicate = procurementFile.suppliers.find(
+    (supplier) =>
+      supplier.id !== input.supplierId &&
+      supplier.name.trim().toLowerCase() === name.toLowerCase(),
+  )
+
+  if (duplicate) {
+    throw new Error("A supplier with that name already exists.")
+  }
+
+  const nextSupplier: Supplier = {
+    id: existingSupplier?.id || createSupplierId(name),
+    name,
+    trade: input.trade?.trim() || undefined,
+    email: input.email?.trim() || undefined,
+    phone: input.phone?.trim() || undefined,
+    notes: input.notes?.trim() || undefined,
+  }
+
+  if (existingSupplier) {
+    procurementFile.suppliers = procurementFile.suppliers.map((supplier) =>
+      supplier.id === existingSupplier.id ? nextSupplier : supplier,
+    )
+  } else {
+    procurementFile.suppliers.push(nextSupplier)
+  }
+
+  procurementFile.suppliers.sort((left, right) => left.name.localeCompare(right.name))
+  await writeDataFileText("procurement.json", formatJson(procurementFile))
+  return nextSupplier
+}
+
+export async function deleteSupplier(supplierId: string): Promise<void> {
+  const procurementFile = await readJsonFile<ProcurementFile>("procurement.json")
+  const currentSupplier = procurementFile.suppliers.find((supplier) => supplier.id === supplierId)
+
+  if (!currentSupplier) {
+    throw new Error("Supplier not found.")
+  }
+
+  const isReferenced = procurementFile.quotes.some((quote) => quote.supplierId === supplierId) ||
+    procurementFile.purchaseOrders.some((purchaseOrder) => purchaseOrder.supplierId === supplierId) ||
+    procurementFile.invoices.some((invoice) => invoice.supplierId === supplierId)
+
+  if (isReferenced) {
+    throw new Error("Supplier is linked to procurement records and cannot be deleted.")
+  }
+
+  procurementFile.suppliers = procurementFile.suppliers.filter(
+    (supplier) => supplier.id !== supplierId,
+  )
+
+  await writeDataFileText("procurement.json", formatJson(procurementFile))
+}
+
+export async function saveQuote(input: SaveQuoteInput): Promise<Quote> {
+  const [procurementFile, categoriesFile] = await Promise.all([
+    readJsonFile<ProcurementFile>("procurement.json"),
+    readJsonFile<CategoriesFile>("categories.json"),
+  ])
+
+  if (!procurementFile.suppliers.some((supplier) => supplier.id === input.supplierId)) {
+    throw new Error("Supplier not found.")
+  }
+
+  if (input.categoryId && !categoriesFile.categories.some((category) => category.id === input.categoryId)) {
+    throw new Error("Category not found.")
+  }
+
+  if (!input.title.trim()) {
+    throw new Error("Quote title is required.")
+  }
+
+  if (Number(input.amountExVat || 0) <= 0) {
+    throw new Error("Quote amount must be greater than zero.")
+  }
+
+  if (!isValidVatRate(input.vatRate)) {
+    throw new Error("VAT rate must be 0, 0.05, or 0.2.")
+  }
+
+  const existingQuote = input.quoteId
+    ? procurementFile.quotes.find((quote) => quote.id === input.quoteId) || null
+    : null
+
+  if (input.quoteId && !existingQuote) {
+    throw new Error("Quote not found.")
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const nextQuote: Quote = {
+    id: existingQuote?.id || createQuoteId(input.title),
+    supplierId: input.supplierId,
+    categoryId: input.categoryId || undefined,
+    title: input.title.trim(),
+    amountExVat: Number(input.amountExVat || 0),
+    vatRate: input.vatRate ?? existingQuote?.vatRate ?? 0,
+    vatIncluded: Boolean(input.vatIncluded),
+    status: input.status.trim() || "received",
+    quoteDate: input.quoteDate || undefined,
+    expiryDate: input.expiryDate || undefined,
+    convertedToPurchaseOrderId: existingQuote?.convertedToPurchaseOrderId,
+    notes: input.notes?.trim() || undefined,
+    createdDate: existingQuote?.createdDate || today,
+    updatedDate: today,
+  }
+
+  if (existingQuote) {
+    procurementFile.quotes = procurementFile.quotes.map((quote) =>
+      quote.id === existingQuote.id ? nextQuote : quote,
+    )
+  } else {
+    procurementFile.quotes.unshift(nextQuote)
+  }
+
+  await writeDataFileText("procurement.json", formatJson(procurementFile))
+  return nextQuote
+}
+
+export async function deleteQuote(quoteId: string): Promise<void> {
+  const procurementFile = await readJsonFile<ProcurementFile>("procurement.json")
+  const currentQuote = procurementFile.quotes.find((quote) => quote.id === quoteId)
+
+  if (!currentQuote) {
+    throw new Error("Quote not found.")
+  }
+
+  const isReferenced = procurementFile.purchaseOrders.some(
+    (purchaseOrder) => purchaseOrder.quoteId === quoteId,
+  )
+
+  if (isReferenced || currentQuote.convertedToPurchaseOrderId) {
+    throw new Error("Quote has already been linked to a purchase order and cannot be deleted.")
+  }
+
+  procurementFile.quotes = procurementFile.quotes.filter((quote) => quote.id !== quoteId)
+  await writeDataFileText("procurement.json", formatJson(procurementFile))
+}
+
+export async function savePurchaseOrder(
+  input: SavePurchaseOrderInput,
+): Promise<PurchaseOrder> {
+  const [procurementFile, categoriesFile] = await Promise.all([
+    readJsonFile<ProcurementFile>("procurement.json"),
+    readJsonFile<CategoriesFile>("categories.json"),
+  ])
+
+  if (!procurementFile.suppliers.some((supplier) => supplier.id === input.supplierId)) {
+    throw new Error("Supplier not found.")
+  }
+
+  if (input.categoryId && !categoriesFile.categories.some((category) => category.id === input.categoryId)) {
+    throw new Error("Category not found.")
+  }
+
+  const linkedQuote = input.quoteId
+    ? procurementFile.quotes.find((quote) => quote.id === input.quoteId) || null
+    : null
+
+  if (input.quoteId && !linkedQuote) {
+    throw new Error("Linked quote not found.")
+  }
+
+  if (linkedQuote && linkedQuote.supplierId !== input.supplierId) {
+    throw new Error("Purchase order supplier must match the linked quote supplier.")
+  }
+
+  if (!input.title.trim()) {
+    throw new Error("Purchase order title is required.")
+  }
+
+  if (Number(input.amountExVat || 0) <= 0) {
+    throw new Error("Purchase order amount must be greater than zero.")
+  }
+
+  if (!isValidVatRate(input.vatRate)) {
+    throw new Error("VAT rate must be 0, 0.05, or 0.2.")
+  }
+
+  const existingPurchaseOrder = input.purchaseOrderId
+    ? procurementFile.purchaseOrders.find(
+        (purchaseOrder) => purchaseOrder.id === input.purchaseOrderId,
+      ) || null
+    : null
+
+  if (input.purchaseOrderId && !existingPurchaseOrder) {
+    throw new Error("Purchase order not found.")
+  }
+
+  const existingStagePayments = existingPurchaseOrder?.stagePayments || []
+  const normalizedStagePayments = (input.stagePayments || [])
+    .map((stagePayment) => {
+      if (!stagePayment.title.trim()) {
+        throw new Error("Stage payment title is required.")
+      }
+
+      if (Number(stagePayment.value || 0) <= 0) {
+        throw new Error("Stage payment value must be greater than zero.")
+      }
+
+      const currentStage = stagePayment.stagePaymentId
+        ? existingStagePayments.find((entry) => entry.id === stagePayment.stagePaymentId) || null
+        : null
+
+      return {
+        id: currentStage?.id || createStagePaymentId(stagePayment.title),
+        title: stagePayment.title.trim(),
+        type: stagePayment.type,
+        value: Number(stagePayment.value || 0),
+        dueDate: stagePayment.dueDate || undefined,
+        milestoneId: stagePayment.milestoneId || undefined,
+        invoiceId: currentStage?.invoiceId,
+        notes: stagePayment.notes?.trim() || undefined,
+      } satisfies StagePayment
+    })
+
+  const today = new Date().toISOString().slice(0, 10)
+  const nextPurchaseOrder: PurchaseOrder = {
+    id: existingPurchaseOrder?.id || createPurchaseOrderId(input.title),
+    supplierId: input.supplierId,
+    categoryId: input.categoryId || linkedQuote?.categoryId || undefined,
+    quoteId: input.quoteId || undefined,
+    title: input.title.trim(),
+    amountExVat: Number(input.amountExVat || 0),
+    vatRate: input.vatRate ?? existingPurchaseOrder?.vatRate ?? linkedQuote?.vatRate ?? 0,
+    vatIncluded: Boolean(input.vatIncluded),
+    status: input.status.trim() || "issued",
+    issuedDate: input.issuedDate || undefined,
+    updatedDate: today,
+    notes: input.notes?.trim() || undefined,
+    stagePayments: normalizedStagePayments,
+  }
+
+  if (existingPurchaseOrder) {
+    procurementFile.purchaseOrders = procurementFile.purchaseOrders.map((purchaseOrder) =>
+      purchaseOrder.id === existingPurchaseOrder.id ? nextPurchaseOrder : purchaseOrder,
+    )
+  } else {
+    procurementFile.purchaseOrders.unshift(nextPurchaseOrder)
+  }
+
+  syncQuoteConversion(procurementFile, nextPurchaseOrder.id, nextPurchaseOrder.quoteId)
+
+  await writeDataFileText("procurement.json", formatJson(procurementFile))
+  return nextPurchaseOrder
+}
+
+export async function deletePurchaseOrder(purchaseOrderId: string): Promise<void> {
+  const procurementFile = await readJsonFile<ProcurementFile>("procurement.json")
+  const currentPurchaseOrder = procurementFile.purchaseOrders.find(
+    (purchaseOrder) => purchaseOrder.id === purchaseOrderId,
+  )
+
+  if (!currentPurchaseOrder) {
+    throw new Error("Purchase order not found.")
+  }
+
+  const hasInvoices = procurementFile.invoices.some(
+    (invoice) => invoice.purchaseOrderId === purchaseOrderId,
+  )
+
+  if (hasInvoices) {
+    throw new Error("Purchase order has linked invoices and cannot be deleted.")
+  }
+
+  procurementFile.purchaseOrders = procurementFile.purchaseOrders.filter(
+    (purchaseOrder) => purchaseOrder.id !== purchaseOrderId,
+  )
+  syncQuoteConversion(procurementFile, purchaseOrderId)
+  await writeDataFileText("procurement.json", formatJson(procurementFile))
+}
+
+export async function saveInvoice(input: SaveInvoiceInput): Promise<Invoice> {
+  const [procurementFile, paymentsFile] = await Promise.all([
+    readJsonFile<ProcurementFile>("procurement.json"),
+    readJsonFile<PaymentsFile>("payments.json"),
+  ])
+
+  const purchaseOrder = procurementFile.purchaseOrders.find(
+    (entry) => entry.id === input.purchaseOrderId,
+  )
+
+  if (!purchaseOrder) {
+    throw new Error("Purchase order not found.")
+  }
+
+  if (input.stagePaymentId) {
+    const stagePayment = (purchaseOrder.stagePayments || []).find(
+      (entry) => entry.id === input.stagePaymentId,
+    )
+
+    if (!stagePayment) {
+      throw new Error("Linked stage payment not found on that purchase order.")
+    }
+  }
+
+  if (Number(input.amountExVat || 0) <= 0) {
+    throw new Error("Invoice amount must be greater than zero.")
+  }
+
+  if (!isValidVatRate(input.vatRate)) {
+    throw new Error("VAT rate must be 0, 0.05, or 0.2.")
+  }
+
+  const existingInvoice = input.invoiceId
+    ? procurementFile.invoices.find((invoice) => invoice.id === input.invoiceId) || null
+    : null
+
+  if (input.invoiceId && !existingInvoice) {
+    throw new Error("Invoice not found.")
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const nextInvoice: Invoice = {
+    id: existingInvoice?.id || createInvoiceId(input.number || purchaseOrder.title),
+    purchaseOrderId: purchaseOrder.id,
+    supplierId: input.supplierId || purchaseOrder.supplierId,
+    stagePaymentId: input.stagePaymentId || undefined,
+    number: input.number?.trim() || undefined,
+    amountExVat: Number(input.amountExVat || 0),
+    vatRate: input.vatRate ?? existingInvoice?.vatRate ?? purchaseOrder.vatRate ?? 0,
+    vatIncluded: Boolean(input.vatIncluded),
+    issueDate: input.issueDate || undefined,
+    dueDate: input.dueDate || undefined,
+    status: input.status.trim() || "received",
+    notes: input.notes?.trim() || undefined,
+    createdDate: existingInvoice?.createdDate || today,
+    updatedDate: today,
+  }
+
+  if (existingInvoice) {
+    procurementFile.invoices = procurementFile.invoices.map((invoice) =>
+      invoice.id === existingInvoice.id ? nextInvoice : invoice,
+    )
+  } else {
+    procurementFile.invoices.unshift(nextInvoice)
+  }
+
+  if (nextInvoice.stagePaymentId) {
+    procurementFile.purchaseOrders = procurementFile.purchaseOrders.map((entry) => {
+      if (entry.id !== purchaseOrder.id) {
+        return entry
+      }
+
+      return {
+        ...entry,
+        stagePayments: (entry.stagePayments || []).map((stagePayment) =>
+          stagePayment.id === nextInvoice.stagePaymentId
+            ? { ...stagePayment, invoiceId: nextInvoice.id }
+            : stagePayment,
+        ),
+      }
+    })
+  }
+
+  syncInvoiceStatuses(procurementFile, paymentsFile)
+  await writeDataFileText("procurement.json", formatJson(procurementFile))
+  return procurementFile.invoices.find((invoice) => invoice.id === nextInvoice.id) || nextInvoice
+}
+
+export async function deleteInvoice(invoiceId: string): Promise<void> {
+  const [procurementFile, paymentsFile] = await Promise.all([
+    readJsonFile<ProcurementFile>("procurement.json"),
+    readJsonFile<PaymentsFile>("payments.json"),
+  ])
+
+  const currentInvoice = procurementFile.invoices.find((invoice) => invoice.id === invoiceId)
+
+  if (!currentInvoice) {
+    throw new Error("Invoice not found.")
+  }
+
+  const hasPayments = paymentsFile.payments.some((payment) => payment.invoiceId === invoiceId)
+
+  if (hasPayments) {
+    throw new Error("Invoice has linked payments and cannot be deleted.")
+  }
+
+  procurementFile.invoices = procurementFile.invoices.filter((invoice) => invoice.id !== invoiceId)
+  procurementFile.purchaseOrders = procurementFile.purchaseOrders.map((purchaseOrder) => ({
+    ...purchaseOrder,
+    stagePayments: (purchaseOrder.stagePayments || []).map((stagePayment) =>
+      stagePayment.invoiceId === invoiceId
+        ? { ...stagePayment, invoiceId: undefined }
+        : stagePayment,
+    ),
+  }))
+
+  await writeDataFileText("procurement.json", formatJson(procurementFile))
+}
+
+export async function savePayment(input: SavePaymentInput): Promise<Payment> {
+  const [procurementFile, paymentsFile, fundingModel] = await Promise.all([
+    readJsonFile<ProcurementFile>("procurement.json"),
+    readJsonFile<PaymentsFile>("payments.json"),
+    readJsonFile<FundingModelFile>("fundingModel.json"),
+  ])
+
+  const invoice = procurementFile.invoices.find((entry) => entry.id === input.invoiceId)
+  if (!invoice) {
+    throw new Error("Invoice not found.")
+  }
+
+  if (!input.paidDate) {
+    throw new Error("Paid date is required.")
+  }
+
+  if (Number(input.amountExVat || 0) <= 0) {
+    throw new Error("Payment amount must be greater than zero.")
+  }
+
+  const fundingSource = input.fundingSourceId
+    ? fundingModel.sources.find((source) => source.id === input.fundingSourceId)
+    : undefined
+
+  if (input.fundingSourceId && !fundingSource) {
+    throw new Error("Funding source not found.")
+  }
+
+  if (input.fundingAccountId) {
+    const accountBelongsToSource = (fundingSource?.accounts || []).some(
+      (account) => account.id === input.fundingAccountId,
+    )
+
+    if (!accountBelongsToSource) {
+      throw new Error("Savings pot does not belong to that funding source.")
+    }
+  }
+
+  const existingPayment = input.paymentId
+    ? paymentsFile.payments.find((payment) => payment.id === input.paymentId) || null
+    : null
+
+  if (input.paymentId && !existingPayment) {
+    throw new Error("Payment not found.")
+  }
+
+  const nextPayment: Payment = {
+    id: existingPayment?.id || createPaymentId(input.reference || input.invoiceId),
+    invoiceId: input.invoiceId,
+    amountExVat: Number(input.amountExVat || 0),
+    paidDate: input.paidDate,
+    fundingSourceId: input.fundingSourceId || undefined,
+    fundingAccountId:
+      input.fundingSourceId && input.fundingAccountId ? input.fundingAccountId : undefined,
+    reference: input.reference?.trim() || undefined,
+    notes: input.notes?.trim() || undefined,
+  }
+
+  if (existingPayment) {
+    paymentsFile.payments = paymentsFile.payments.map((payment) =>
+      payment.id === existingPayment.id ? nextPayment : payment,
+    )
+  } else {
+    paymentsFile.payments.unshift(nextPayment)
+  }
+
+  paymentsFile.payments.sort((left, right) => right.paidDate.localeCompare(left.paidDate))
+  syncInvoiceStatuses(procurementFile, paymentsFile)
+
+  await Promise.all([
+    writeDataFileText("payments.json", formatJson(paymentsFile)),
+    writeDataFileText("procurement.json", formatJson(procurementFile)),
+  ])
+
+  return nextPayment
+}
+
+export async function deletePayment(paymentId: string): Promise<void> {
+  const [procurementFile, paymentsFile] = await Promise.all([
+    readJsonFile<ProcurementFile>("procurement.json"),
+    readJsonFile<PaymentsFile>("payments.json"),
+  ])
+
+  const nextPayments = paymentsFile.payments.filter((payment) => payment.id !== paymentId)
+
+  if (nextPayments.length === paymentsFile.payments.length) {
+    throw new Error("Payment not found.")
+  }
+
+  paymentsFile.payments = nextPayments
+  syncInvoiceStatuses(procurementFile, paymentsFile)
+
+  await Promise.all([
+    writeDataFileText("payments.json", formatJson(paymentsFile)),
+    writeDataFileText("procurement.json", formatJson(procurementFile)),
+  ])
 }
 
 export async function saveIdea(input: SaveIdeaInput): Promise<Idea> {

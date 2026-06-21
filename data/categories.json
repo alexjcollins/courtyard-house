@@ -13,7 +13,7 @@
     { "id": "bathrooms", "name": "Bathrooms (ensuites + powder)", "budgetExVat": 40000, "vatRate": 0.2, "notes": "Sanitaryware, showers, bath, basins, bathroom brassware, and associated finish allowances for all bathroom spaces." },
     { "id": "joinery", "name": "Second-fix carpentry & joinery (doors/wardrobes)", "budgetExVat": 25000, "vatRate": 0.2, "notes": "Internal doors, skirtings, architraves, fitted wardrobes, and other bespoke second-fix timber elements." },
     { "id": "finishes", "name": "Finishes (flooring, decorating, tiling beyond baths)", "budgetExVat": 31500, "vatRate": 0.2, "notes": "Floor finishes now assume polished terrazzo to around 100 sqm, engineered oak to the remaining 110 sqm of the house, and a basic power-floated concrete garage floor rather than a high-spec polished finish." },
-    { "id": "utilities", "name": "Utilities & compliance (connections/testing/certs/EV)", "budgetExVat": 15000, "vatRate": 0.2, "notes": "Final connections, certification, testing, EV charger provision, and close-out items needed to make the project compliant and occupiable." },
+    { "id": "utilities", "name": "Utilities & compliance (connections/testing/certs/EV)", "budgetExVat": 17150, "vatRate": 0.2, "notes": "Final connections, certification, testing, EV charger provision, new mains water connection, and close-out items needed to make the project compliant and occupiable." },
     { "id": "courtyard_finish_longterm", "name": "Courtyard finishing (long-term)", "budgetExVat": 0, "vatRate": 0.2, "notes": "Separate long-term allowance for courtyard paving, joinery, and detailed finishing once the design is fixed." },
     { "id": "landscaping", "name": "Landscaping (excluded for now)", "budgetExVat": 0, "vatRate": 0.2, "notes": "External soft and hard landscaping beyond immediate building interfaces; currently excluded from the active build budget." }
   ],
@@ -23,8 +23,8 @@
     "rules": "Global pot; allocate via decisions or manual transfers later."
   },
   "totals": {
-    "baselineBuildBudgetExVat": 790330,
+    "baselineBuildBudgetExVat": 792480,
     "contingencyExVat": 100000,
-    "envelopeExVat": 890330
+    "envelopeExVat": 892480
   }
 }

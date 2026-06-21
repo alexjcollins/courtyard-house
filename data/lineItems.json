@@ -212,6 +212,14 @@
       "budgetExVat": 1200,
       "vatRate": 0.2,
       "status": "budgeted"
+    },
+    {
+      "id": "util-new-mains-water-connection",
+      "categoryId": "utilities",
+      "name": "New mains water connection",
+      "budgetExVat": 2150,
+      "vatRate": 0.0,
+      "status": "budgeted"
     }
   ]
 }

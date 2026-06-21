@@ -71,6 +71,23 @@
       "fundingSourceId": "src-ether",
       "reference": "ARB-PMT-001",
       "notes": "Arboricultural study payment made."
+    },
+    {
+      "id": "pay-south-east-water-001",
+      "invoiceId": "inv-south-east-water-001",
+      "amountExVat": 2150,
+      "paidDate": "2026-06-19",
+      "reference": "SEW-PMT-001",
+      "notes": "South East Water payment made for the new mains connection."
+    },
+    {
+      "id": "pay-integrum-001",
+      "invoiceId": "inv-integrum-001",
+      "amountExVat": 5100,
+      "paidDate": "2026-06-19",
+      "fundingSourceId": "src-ether",
+      "reference": "INT-PMT-001",
+      "notes": "Integrum site investigation and interpretative report paid from Ether."
     }
   ]
 }
