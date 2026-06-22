@@ -40,7 +40,7 @@
     {
       "id": "d-003",
       "title": "Steel frame finish",
-      "categoryId": "structure",
+      "categoryId": "steel_structure",
       "options": [
         {
           "name": "Standard intumescent coating where required",
@@ -148,20 +148,20 @@
     },
     {
       "id": "d-009",
-      "title": "MVHR confirmation",
+      "title": "Ventilation strategy",
       "categoryId": "mech_elec",
       "options": [
         {
-          "name": "Proceed with MVHR throughout",
+          "name": "Natural ventilation with local extract only",
           "costDeltaExVat": 0
         },
         {
-          "name": "Natural ventilation fallback with local extract only",
-          "costDeltaExVat": -9000
+          "name": "Upgrade back to whole-house MVHR later",
+          "costDeltaExVat": 9000
         }
       ],
       "selectedOptionIndex": null,
-      "notes": "Project assumptions currently treat MVHR as likely.",
+      "notes": "Baseline assumption now removes MVHR and keeps a simpler Part F style strategy with opening windows and local extract fans.",
       "createdDate": "2026-02-28"
     },
     {
@@ -179,7 +179,7 @@
         }
       ],
       "selectedOptionIndex": null,
-      "notes": "Needs coordination with kitchen, joinery, and external lighting decisions.",
+      "notes": "Baseline budget assumes a standard practical electrical package without heavy smart-home scenes or premium fitting upgrades.",
       "createdDate": "2026-02-28"
     },
     {
@@ -468,7 +468,7 @@
     {
       "id": "d-026",
       "title": "Secondary timber infill strategy",
-      "categoryId": "structure",
+      "categoryId": "timber_frame",
       "room": "Whole house",
       "options": [
         {

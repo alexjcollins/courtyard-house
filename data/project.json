@@ -53,7 +53,7 @@
     "services": {
       "gas": false,
       "heating": "ASHP + UFH",
-      "ventilation": "MVHR (likely)",
+      "ventilation": "Natural ventilation with local mechanical extract to wet rooms and kitchen",
       "evCharger": true,
       "solarPV": { "planned": true, "phase": 2 },
       "battery": { "planned": true, "phase": 2 },

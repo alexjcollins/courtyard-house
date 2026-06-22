@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import { BudgetScopeToggle } from "@/components/budget-scope-toggle"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -14,18 +15,37 @@ import { canViewCosts, requirePermission } from "@/lib/auth"
 import { getProjectData } from "@/lib/data"
 import { formatCurrency } from "@/lib/format"
 
-export default async function CategoriesPage() {
+type CategoriesPageProps = {
+  searchParams?: Promise<{
+    scope?: string
+  }>
+}
+
+export default async function CategoriesPage({ searchParams }: CategoriesPageProps) {
   const viewer = await requirePermission("categories:view")
   const data = await getProjectData()
   const showCosts = canViewCosts(viewer)
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const constructionOnly = resolvedSearchParams?.scope === "construction"
+  const visibleCategories = constructionOnly
+    ? data.categories.filter((category) => category.reportingBucket !== "soft_cost")
+    : data.categories
+  const activeTotals = constructionOnly ? data.totals.construction : data.totals
 
   return (
     <div className="space-y-6">
       <section>
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-          Categories
-        </p>
-        <h1 className="mt-3 text-4xl font-medium tracking-tight">Budget-led category tracking</h1>
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+              Categories
+            </p>
+            <h1 className="mt-3 text-4xl font-medium tracking-tight">
+              Budget-led category tracking
+            </h1>
+          </div>
+          {showCosts ? <BudgetScopeToggle constructionOnly={constructionOnly} /> : null}
+        </div>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
           Each category rolls up budget, committed, invoiced, paid, forecast, and
           decision impact. Line items are lightweight placeholders until full CRUD is
@@ -34,7 +54,7 @@ export default async function CategoriesPage() {
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {data.categories.slice(0, 4).map((category) => (
+        {visibleCategories.slice(0, 4).map((category) => (
           <Card key={category.id} className="border-border/70 py-0">
             <CardHeader className="px-5 pt-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
@@ -89,7 +109,7 @@ export default async function CategoriesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.categories.map((category) => (
+              {visibleCategories.map((category) => (
                 <TableRow key={category.id}>
                   <TableCell className="max-w-[28rem] whitespace-normal">
                     <p className="font-medium text-foreground">{category.name}</p>
@@ -128,13 +148,15 @@ export default async function CategoriesPage() {
             {showCosts ? (
               <TableFooter>
                 <TableRow>
-                  <TableCell className="font-medium">Total</TableCell>
-                  <TableCell>{formatCurrency(data.totals.budget.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(data.totals.committed.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(data.totals.invoiced.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(data.totals.paid.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(data.totals.forecast.exVat)}</TableCell>
-                  <TableCell>{formatCurrency(data.totals.variance.exVat)}</TableCell>
+                  <TableCell className="font-medium">
+                    {constructionOnly ? "Construction total" : "Total"}
+                  </TableCell>
+                  <TableCell>{formatCurrency(activeTotals.budget.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(activeTotals.committed.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(activeTotals.invoiced.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(activeTotals.paid.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(activeTotals.forecast.exVat)}</TableCell>
+                  <TableCell>{formatCurrency(activeTotals.variance.exVat)}</TableCell>
                   <TableCell />
                 </TableRow>
               </TableFooter>

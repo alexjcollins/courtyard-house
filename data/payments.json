@@ -81,6 +81,23 @@
       "notes": "South East Water payment made for the new mains connection."
     },
     {
+      "id": "pay-adam-watts-001",
+      "invoiceId": "inv-adam-watts-001",
+      "amountExVat": 160,
+      "paidDate": "2026-06-22",
+      "fundingSourceId": "src-savings",
+      "reference": "AW-PMT-001",
+      "notes": "Cash payment from personal savings for disconnecting power from the Nissen hut."
+    },
+    {
+      "id": "pay-mick-george-001",
+      "invoiceId": "inv-mick-george-001",
+      "amountExVat": 302.65,
+      "paidDate": "2026-06-05",
+      "reference": "MG-PMT-001",
+      "notes": "Skip hire payment on 5 June 2026, recorded from a gross amount of £363.18."
+    },
+    {
       "id": "pay-integrum-001",
       "invoiceId": "inv-integrum-001",
       "amountExVat": 5100,

@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import { BudgetScopeToggle } from "@/components/budget-scope-toggle"
 import { CategoryBarChart } from "@/components/category-bar-chart"
 import { StatCard } from "@/components/stat-card"
 import { TimelineStrip } from "@/components/timeline-strip"
@@ -14,19 +15,43 @@ import {
   formatShortDate,
 } from "@/lib/format"
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams?: Promise<{
+    scope?: string
+  }>
+}
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const viewer = await requirePermission("dashboard:view")
   const data = await getProjectData()
   const showCosts = canViewCosts(viewer)
+  const resolvedSearchParams = searchParams ? await searchParams : undefined
+  const constructionOnly = resolvedSearchParams?.scope === "construction"
+  const visibleCategories = constructionOnly
+    ? data.categories.filter((category) => category.reportingBucket !== "soft_cost")
+    : data.categories
+  const activeTotals = constructionOnly ? data.totals.construction : data.totals
+  const chartData = visibleCategories.map((category) => ({
+    name: category.name,
+    budget: category.metrics.budget.exVat,
+    committed: category.metrics.committed.exVat,
+    paid: category.metrics.paid.exVat,
+  }))
 
   return (
     <div className="space-y-8">
+      {showCosts ? (
+        <div className="flex justify-end">
+          <BudgetScopeToggle constructionOnly={constructionOnly} />
+        </div>
+      ) : null}
+
       <section className={`grid gap-6 md:grid-cols-2 ${showCosts ? "xl:grid-cols-3" : ""}`}>
         {showCosts ? (
           <StatCard
-            eyebrow="Construction budget"
-            value={formatCurrency(data.totals.construction.budget.exVat)}
-            detail={`${formatCurrency(data.totals.construction.budget.incVat)} inc VAT`}
+            eyebrow={constructionOnly ? "Construction budget" : "Project budget"}
+            value={formatCurrency(activeTotals.budget.exVat)}
+            detail={`${formatCurrency(activeTotals.budget.incVat)} inc VAT`}
           />
         ) : null}
         <StatCard
@@ -86,23 +111,23 @@ export default async function DashboardPage() {
           />
           <StatCard
             eyebrow="Committed"
-            value={formatCurrency(data.totals.construction.committed.exVat)}
-            detail={`${formatCurrency(data.totals.construction.committed.vat)} VAT`}
+            value={formatCurrency(activeTotals.committed.exVat)}
+            detail={`${formatCurrency(activeTotals.committed.vat)} VAT`}
           />
           <StatCard
             eyebrow="Invoiced"
-            value={formatCurrency(data.totals.construction.invoiced.exVat)}
-            detail={`${formatCurrency(data.totals.construction.invoiced.incVat)} inc VAT`}
+            value={formatCurrency(activeTotals.invoiced.exVat)}
+            detail={`${formatCurrency(activeTotals.invoiced.incVat)} inc VAT`}
           />
           <StatCard
             eyebrow="Paid"
-            value={formatCurrency(data.totals.construction.paid.exVat)}
-            detail={`${formatCurrency(data.totals.construction.paid.incVat)} inc VAT`}
+            value={formatCurrency(activeTotals.paid.exVat)}
+            detail={`${formatCurrency(activeTotals.paid.incVat)} inc VAT`}
           />
           <StatCard
             eyebrow="Remaining"
-            value={formatCurrency(data.totals.construction.remainingExVat)}
-            detail={`${formatCurrency(data.totals.construction.forecast.exVat)} forecast`}
+            value={formatCurrency(activeTotals.remainingExVat)}
+            detail={`${formatCurrency(activeTotals.forecast.exVat)} forecast`}
           />
         </section>
       ) : null}
@@ -128,7 +153,7 @@ export default async function DashboardPage() {
                   <ArrowRight className="size-4" />
                 </Link>
               </div>
-              <CategoryBarChart data={data.dashboard.categoryChart} />
+              <CategoryBarChart data={chartData} />
             </div>
           ) : null}
 
@@ -257,7 +282,7 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
-        {data.categories.slice(0, 3).map((category) => (
+        {visibleCategories.slice(0, 3).map((category) => (
           <Card key={category.id} className="border-border/70 py-0">
             <CardHeader className="px-5 pt-5">
               <div className="flex items-start justify-between gap-4">

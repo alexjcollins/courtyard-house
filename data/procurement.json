@@ -55,6 +55,18 @@
       "notes": "Alternative glazing supplier for the main windows and external doors package."
     },
     {
+      "id": "sup-adam-watts",
+      "name": "Adam Watts",
+      "trade": "Electrical disconnect / enabling works",
+      "notes": "Disconnect power from the existing Nissen hut ahead of demolition and site enabling works."
+    },
+    {
+      "id": "sup-mick-george",
+      "name": "Mick George",
+      "trade": "Skip hire",
+      "notes": "Skip hire and waste removal support during early enabling and site setup works."
+    },
+    {
       "id": "sup-south-east-water",
       "name": "South East Water",
       "trade": "Utility connection",
@@ -200,6 +212,32 @@
       "notes": "South East Water charge for the new mains connection."
     },
     {
+      "id": "po-disconnect-power-nissen-hut",
+      "supplierId": "sup-adam-watts",
+      "categoryId": "prelims",
+      "title": "Disconnect power from Nissen hut",
+      "amountExVat": 160,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-06-22",
+      "updatedDate": "2026-06-22",
+      "notes": "Enabling works charge to isolate and disconnect power before Nissen hut demolition."
+    },
+    {
+      "id": "po-skip-hire-2026-06-05",
+      "supplierId": "sup-mick-george",
+      "categoryId": "prelims",
+      "title": "Skip hire on 5 June 2026",
+      "amountExVat": 302.65,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-06-05",
+      "updatedDate": "2026-06-22",
+      "notes": "Skip hire recorded from a paid gross amount of £363.18, assumed to be £302.65 ex VAT plus 20% VAT."
+    },
+    {
       "id": "po-integrum-site-investigation",
       "supplierId": "sup-integrum-site-services",
       "categoryId": "fees",
@@ -319,6 +357,36 @@
       "notes": "South East Water charge for the new mains connection.",
       "createdDate": "2026-06-19",
       "updatedDate": "2026-06-19"
+    },
+    {
+      "id": "inv-adam-watts-001",
+      "purchaseOrderId": "po-disconnect-power-nissen-hut",
+      "supplierId": "sup-adam-watts",
+      "number": "AW-001",
+      "amountExVat": 160,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "issueDate": "2026-06-22",
+      "dueDate": "2026-06-22",
+      "status": "paid",
+      "notes": "Power disconnected from the existing Nissen hut, paid in cash from savings.",
+      "createdDate": "2026-06-22",
+      "updatedDate": "2026-06-22"
+    },
+    {
+      "id": "inv-mick-george-001",
+      "purchaseOrderId": "po-skip-hire-2026-06-05",
+      "supplierId": "sup-mick-george",
+      "number": "MG-001",
+      "amountExVat": 302.65,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-06-05",
+      "dueDate": "2026-06-05",
+      "status": "paid",
+      "notes": "Skip hire on 5 June 2026. Recorded from a paid gross amount of £363.18, assumed to be £302.65 ex VAT plus 20% VAT.",
+      "createdDate": "2026-06-22",
+      "updatedDate": "2026-06-22"
     },
     {
       "id": "inv-integrum-001",

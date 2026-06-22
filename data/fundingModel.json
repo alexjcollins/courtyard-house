@@ -1,7 +1,7 @@
 {
   "model": "generic-self-build-stages",
   "assumptions": {
-    "baselineBuildBudgetExVat": 710150,
+    "baselineBuildBudgetExVat": 722000,
     "contingencyExVat": 100000,
     "startDate": "2026-04-01",
     "buildStartDate": "2026-09-07",
