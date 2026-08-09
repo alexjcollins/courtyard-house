@@ -15,6 +15,7 @@ export const APP_PERMISSIONS = [
   "inspiration:view",
   "tasks:view",
   "timeline:view",
+  "critical-path:view",
   "procurement:view",
   "funding:view",
   "admin:view",
@@ -40,6 +41,7 @@ const ROLE_PERMISSIONS: Record<AppRole, AppPermission[]> = {
     "tasks:view",
     "tasks:edit",
     "timeline:view",
+    "critical-path:view",
     "plan:view",
   ],
 }

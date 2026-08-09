@@ -5,10 +5,22 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+// Shared gate for every password-protected public page (/plan, /critical-path).
+// All copy is parameterised; the defaults preserve the original /plan wording.
 export function PlanPasswordGate({
   passwordConfigured,
+  eyebrow = "Courtyard House",
+  title = "House plan",
+  description,
+  unconfiguredDescription,
+  submitLabel = "View plan",
 }: {
   passwordConfigured: boolean
+  eyebrow?: string
+  title?: string
+  description?: string
+  unconfiguredDescription?: string
+  submitLabel?: string
 }) {
   const router = useRouter()
   const [password, setPassword] = useState("")
@@ -47,13 +59,14 @@ export function PlanPasswordGate({
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm rounded-2xl border border-border/80 bg-card p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-          Courtyard House
+          {eyebrow}
         </p>
-        <h1 className="mt-3 text-2xl font-medium">House plan</h1>
+        <h1 className="mt-3 text-2xl font-medium">{title}</h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
           {passwordConfigured
-            ? "Enter the access password to view the plan."
-            : "Public access has not been configured for this plan."}
+            ? description || "Enter the access password to view the plan."
+            : unconfiguredDescription ||
+              "Public access has not been configured for this plan."}
         </p>
 
         {passwordConfigured ? (
@@ -72,7 +85,7 @@ export function PlanPasswordGate({
               className="w-full"
               disabled={isSubmitting || isPending || !password.trim()}
             >
-              {isSubmitting || isPending ? "Checking…" : "View plan"}
+              {isSubmitting || isPending ? "Checking…" : submitLabel}
             </Button>
           </form>
         ) : null}

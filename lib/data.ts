@@ -2336,6 +2336,38 @@ export async function generateAssistantDiff(prompt: string): Promise<AssistantDi
   )
 }
 
+export type TimelineOverview = {
+  milestones: Milestone[]
+  phases: ProjectData["timeline"]["phases"]
+  chains: string[][]
+}
+
+/**
+ * Narrow timeline loader for the public /critical-path page.
+ *
+ * Deliberately NOT getProjectData(): that reads nine files, hits Postgres via
+ * getLegacyDecisionsFileFromDatabase(), and runs validateBudgetIntegrity(), which
+ * throws when category totals drift from the baseline — a cost bug would take down a
+ * page that shows no costs at all. This reads two files, makes no DB call, and returns
+ * a closed shape with no cost field in it to leak.
+ *
+ * It lives here because readJsonFile, deriveTimelinePhases and buildDependencyChains
+ * are all module-private.
+ */
+export async function getTimelineOverview(): Promise<TimelineOverview> {
+  const [timelineFile, fundingModel] = await Promise.all([
+    readJsonFile<TimelineFile>("timeline.json"),
+    // Only assumptions.startDate is read — a date, not a cost.
+    readJsonFile<FundingModelFile>("fundingModel.json"),
+  ])
+
+  return {
+    milestones: timelineFile.milestones,
+    phases: deriveTimelinePhases(timelineFile, fundingModel.assumptions.startDate),
+    chains: buildDependencyChains(timelineFile),
+  }
+}
+
 export async function getProjectData(): Promise<ProjectData> {
   const [
     project,

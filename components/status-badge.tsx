@@ -31,6 +31,7 @@ const statusStyles: Record<
     className: "border-emerald-300 bg-emerald-50 text-emerald-950",
   },
   overdue: { variant: "destructive" },
+  late: { variant: "destructive" },
   done: {
     variant: "outline",
     className: "border-emerald-300 bg-emerald-50 text-emerald-950",
