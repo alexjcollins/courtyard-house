@@ -21,7 +21,12 @@ export function proxyLinearAsset(src: string | undefined): string {
   return `/api/critical-path/asset?url=${encodeURIComponent(src)}`
 }
 
-const components: Components = {
+/**
+ * Exported so the assistant panel can render markdown in the same house styling
+ * rather than duplicating the map. It composes over this and overrides `img`,
+ * which is Linear-specific.
+ */
+export const markdownComponents: Components = {
   // Headings are downgraded so a description never emits a heading that competes
   // with the drawer's own title.
   h1: (props) => (
@@ -129,7 +134,7 @@ const components: Components = {
 export function IssueMarkdown({ source }: { source: string }) {
   return (
     <div className="space-y-3">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
         {source}
       </ReactMarkdown>
     </div>

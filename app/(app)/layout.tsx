@@ -2,6 +2,7 @@ import Link from "next/link"
 import { signOut } from "@workos-inc/authkit-nextjs"
 import { getProjectData } from "@/lib/data"
 import { ProjectNav, type ProjectNavItem } from "@/components/project-nav"
+import { AssistantLauncher } from "@/components/assistant/assistant-launcher"
 import { hasPermission, requireSession } from "@/lib/auth"
 
 export default async function ProtectedLayout({
@@ -85,6 +86,10 @@ export default async function ProtectedLayout({
 
         <main className="flex-1 py-8">{children}</main>
       </div>
+
+      {/* Authenticated routes only — /plan and /critical-path render outside
+          this group and are reachable with just the shared plan password. */}
+      <AssistantLauncher canEdit={hasPermission(viewer, "decisions:edit")} />
     </div>
   )
 }
