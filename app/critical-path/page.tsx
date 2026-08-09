@@ -3,7 +3,10 @@ import { differenceInCalendarDays } from "date-fns"
 import { getCurrentViewer, hasPermission } from "@/lib/auth"
 import { getTimelineOverview } from "@/lib/data"
 import { getLinearCriticalPath, getLinearProjectName } from "@/lib/linear"
-import { deriveMilestoneStatus, summariseIssues } from "@/lib/critical-path-utils"
+import {
+  deriveMilestoneStatus,
+  summariseIssues,
+} from "@/lib/critical-path-utils"
 import {
   hasPlanCookieAccess,
   isPlanPasswordConfigured,
@@ -11,8 +14,9 @@ import {
 import { formatDate } from "@/lib/format"
 import { PlanPasswordGate } from "@/components/plan/plan-password-gate"
 import { CriticalPathClient } from "@/components/critical-path/critical-path-client"
+import { CriticalPathFocusProvider } from "@/components/critical-path/focus-context"
+import { CriticalPathMetrics } from "@/components/critical-path/critical-path-metrics"
 import { RefreshButton } from "@/components/critical-path/refresh-button"
-import { MetricCard } from "@/components/metric-card"
 import { StatusBadge } from "@/components/status-badge"
 import { TimelineStrip } from "@/components/timeline-strip"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -98,121 +102,119 @@ export default async function CriticalPathPage({
   }))
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-border/80 bg-background/85 px-6 py-4 backdrop-blur-sm">
-        <div>
-          <Eyebrow>Courtyard House</Eyebrow>
-          <h1 className="mt-1 text-2xl font-medium">The Critical Path</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <RefreshButton fetchedAt={linear.ok ? linear.fetchedAt : null} />
-          {viewer ? (
-            <Link
-              href="/"
-              className="inline-flex h-9 items-center rounded-full border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
-            >
-              Back to app
-            </Link>
-          ) : (
-            <span className="rounded-full border border-border px-4 py-1.5 text-xs text-muted-foreground">
-              View only
-            </span>
-          )}
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-[1400px] space-y-10 px-6 py-8">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label="Open tasks"
-            value={String(summary.open)}
-            detail={`${summary.total} in the project`}
-          />
-          <MetricCard
-            label="In progress"
-            value={String(summary.inProgress)}
-            detail={summary.inProgress === 0 ? "Nothing started" : undefined}
-          />
-          <MetricCard
-            label="Overdue"
-            value={String(summary.overdue)}
-            detail={summary.overdue === 0 ? "On schedule" : "Past due date"}
-          />
-          <MetricCard
-            label="Next milestone"
-            value={nextMilestone ? formatDate(nextMilestone.plannedDate) : "—"}
-            detail={nextMilestone?.name}
-          />
-        </div>
-
-        <section className="space-y-6">
+    // The provider lets the metric tiles drive the Gantt and the task list, which are
+    // siblings here. Server-rendered children pass straight through it.
+    <CriticalPathFocusProvider>
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-40 flex items-center justify-between gap-4 border-b border-border/80 bg-background/85 px-6 py-4 backdrop-blur-sm">
           <div>
-            <Eyebrow>Build programme</Eyebrow>
-            <h2 className="mt-3 text-2xl font-medium tracking-tight">
-              Timeline and milestones
-            </h2>
+            <Eyebrow>Courtyard House</Eyebrow>
+            <h1 className="mt-1 text-2xl font-medium">The Critical Path</h1>
           </div>
-
-          <TimelineStrip
-            milestones={timeline.milestones}
-            phases={timeline.phases}
-          />
-        </section>
-
-        {/* Milestones and tasks sit side by side at equal width. */}
-        <div className="grid gap-6 xl:grid-cols-2">
-          <Card className="flex max-h-[640px] flex-col overflow-hidden border-border/70 py-0">
-            <CardHeader className="shrink-0 px-5 pt-5">
-              <CardTitle className="text-2xl font-medium tracking-tight">
-                Milestones
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
-              <Table>
-                <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
-                  <TableRow>
-                    <TableHead>Milestone</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {milestoneRows.map((milestone) => (
-                    <TableRow key={milestone.id}>
-                      <TableCell className="font-medium">
-                        {milestone.name}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {formatDate(milestone.plannedDate)}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={milestone.derivedStatus} />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-
-          <div>
-            {linear.ok ? (
-              <CriticalPathClient issues={issues} initialTaskId={initialTaskId} />
+          <div className="flex items-center gap-2">
+            <RefreshButton fetchedAt={linear.ok ? linear.fetchedAt : null} />
+            {viewer ? (
+              <Link
+                href="/"
+                className="inline-flex h-9 items-center rounded-full border border-border px-4 text-sm text-muted-foreground transition hover:text-foreground"
+              >
+                Back to app
+              </Link>
             ) : (
-              <div className="border border-dashed border-border/70 bg-secondary/30 px-6 py-12 text-center">
-                <p className="text-sm text-muted-foreground">
-                  {/* Config detail is only useful to — and only shown to — the team. */}
-                  {hasSessionAccess
-                    ? linear.reason === "not-configured"
-                      ? `Linear is not connected. Set LINEAR_API_KEY to sync the “${getLinearProjectName()}” project.`
-                      : linear.message
-                    : "Tasks are temporarily unavailable. The build programme above is still current."}
-                </p>
-              </div>
+              <span className="rounded-full border border-border px-4 py-1.5 text-xs text-muted-foreground">
+                View only
+              </span>
             )}
           </div>
-        </div>
-      </main>
-    </div>
+        </header>
+
+        <main className="mx-auto max-w-[1400px] space-y-10 px-6 py-8">
+          <CriticalPathMetrics
+            summary={summary}
+            nextMilestone={
+              nextMilestone
+                ? {
+                    id: nextMilestone.id,
+                    name: nextMilestone.name,
+                    formattedDate: formatDate(nextMilestone.plannedDate),
+                  }
+                : null
+            }
+          />
+
+          <section className="space-y-6">
+            <div>
+              <Eyebrow>Build programme</Eyebrow>
+              <h2 className="mt-3 text-2xl font-medium tracking-tight">
+                Timeline and milestones
+              </h2>
+            </div>
+
+            <TimelineStrip
+              milestones={timeline.milestones}
+              phases={timeline.phases}
+              centerOnToday
+            />
+          </section>
+
+          {/* Milestones and tasks sit side by side at equal width. */}
+          <div className="grid gap-6 xl:grid-cols-2">
+            <Card className="flex max-h-[640px] flex-col overflow-hidden border-border/70 py-0">
+              <CardHeader className="shrink-0 px-5 pt-5">
+                <CardTitle className="text-2xl font-medium tracking-tight">
+                  Milestones
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
+                    <TableRow>
+                      <TableHead>Milestone</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {milestoneRows.map((milestone) => (
+                      <TableRow key={milestone.id}>
+                        <TableCell className="font-medium">
+                          {milestone.name}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {formatDate(milestone.plannedDate)}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={milestone.derivedStatus} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+            <div>
+              {linear.ok ? (
+                <CriticalPathClient
+                  issues={issues}
+                  initialTaskId={initialTaskId}
+                />
+              ) : (
+                <div className="border border-dashed border-border/70 bg-secondary/30 px-6 py-12 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {/* Config detail is only useful to — and only shown to — the team. */}
+                    {hasSessionAccess
+                      ? linear.reason === "not-configured"
+                        ? `Linear is not connected. Set LINEAR_API_KEY to sync the “${getLinearProjectName()}” project.`
+                        : linear.message
+                      : "Tasks are temporarily unavailable. The build programme above is still current."}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      </div>
+    </CriticalPathFocusProvider>
   )
 }

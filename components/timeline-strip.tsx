@@ -1,4 +1,5 @@
 import { differenceInCalendarDays } from "date-fns"
+import { TimelineScroller } from "@/components/critical-path/timeline-scroller"
 import { formatDate, formatShortDate } from "@/lib/format"
 import type { Milestone, ProjectData } from "@/lib/data"
 import { cn } from "@/lib/utils"
@@ -6,12 +7,20 @@ import { cn } from "@/lib/utils"
 type TimelineStripProps = {
   milestones: Milestone[]
   phases: ProjectData["timeline"]["phases"]
+  /**
+   * Scroll so today sits in the middle of the visible strip on mount, and allow the
+   * /critical-path metric tiles to re-centre on a milestone. Opt-in so /timeline and
+   * the dashboard keep their existing left-anchored behaviour.
+   */
+  centerOnToday?: boolean
 }
 
-function offsetPercent(date: string, startDate: Date, totalSpan: number): number {
-  return (
-    (differenceInCalendarDays(new Date(date), startDate) / totalSpan) * 100
-  )
+function offsetPercent(
+  date: string,
+  startDate: Date,
+  totalSpan: number,
+): number {
+  return (differenceInCalendarDays(new Date(date), startDate) / totalSpan) * 100
 }
 
 function startOfDay(date: Date) {
@@ -35,7 +44,11 @@ const labelColumnWidth = 180
 const viewportDays = 61
 const viewportWidthPx = 1800
 
-export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
+export function TimelineStrip({
+  milestones,
+  phases,
+  centerOnToday = false,
+}: TimelineStripProps) {
   if (milestones.length === 0) {
     return null
   }
@@ -53,7 +66,10 @@ export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
   ].sort()
 
   const firstDate = new Date(allDates[0] || milestones[0].plannedDate)
-  const lastDate = new Date(allDates[allDates.length - 1] || milestones[milestones.length - 1].plannedDate)
+  const lastDate = new Date(
+    allDates[allDates.length - 1] ||
+      milestones[milestones.length - 1].plannedDate,
+  )
   const firstVisibleDate = startOfDay(firstDate)
   const lastVisibleDate = startOfDay(lastDate)
   const totalSpan = Math.max(differenceInCalendarDays(lastDate, firstDate), 1)
@@ -88,12 +104,15 @@ export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
     if (cursor.getDay() === 6) {
       const weekendEnd = addDays(cursor, 2)
       const clippedWeekendEnd =
-        weekendEnd > addDays(lastVisibleDate, 1) ? addDays(lastVisibleDate, 1) : weekendEnd
+        weekendEnd > addDays(lastVisibleDate, 1)
+          ? addDays(lastVisibleDate, 1)
+          : weekendEnd
       weekendBands.push({
         key: cursor.toISOString(),
         left: offsetPercent(cursor.toISOString(), firstDate, totalSpan),
         width:
-          (differenceInCalendarDays(clippedWeekendEnd, cursor) / (totalSpan + 1)) *
+          (differenceInCalendarDays(clippedWeekendEnd, cursor) /
+            (totalSpan + 1)) *
           100,
       })
     }
@@ -135,14 +154,19 @@ export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    <TimelineScroller
+      labelColumnWidth={labelColumnWidth}
+      centerOnToday={centerOnToday}
+    >
       <div
         className="border border-border/70 bg-card"
         style={{ minWidth: `${labelColumnWidth + timelineWidth}px` }}
       >
         <div
           className="grid border-b border-border/70"
-          style={{ gridTemplateColumns: `${labelColumnWidth}px minmax(${timelineWidth}px, 1fr)` }}
+          style={{
+            gridTemplateColumns: `${labelColumnWidth}px minmax(${timelineWidth}px, 1fr)`,
+          }}
         >
           <div className="sticky left-0 z-30 border-r border-border/70 bg-card/85 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground backdrop-blur-sm">
             Phases
@@ -150,6 +174,7 @@ export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
           <div className="relative px-4 py-3">
             {renderTimeGrid("header", "weeks")}
             <div
+              data-timeline-today
               className="pointer-events-none absolute top-0 bottom-0 z-10 border-l border-dashed border-[color:var(--accent)]"
               style={{ left: `${todayPercent}%` }}
             >
@@ -174,10 +199,14 @@ export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
               <div
                 key={phase.id}
                 className="grid border-b border-border/70 last:border-b-0"
-                style={{ gridTemplateColumns: `${labelColumnWidth}px minmax(${timelineWidth}px, 1fr)` }}
+                style={{
+                  gridTemplateColumns: `${labelColumnWidth}px minmax(${timelineWidth}px, 1fr)`,
+                }}
               >
                 <div className="sticky left-0 z-20 border-r border-border/70 bg-card/85 px-4 py-4 backdrop-blur-sm">
-                  <p className="text-sm font-medium text-foreground">{phase.name}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {phase.name}
+                  </p>
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     {formatDate(phase.startDate)} to {formatDate(phase.endDate)}
                   </p>
@@ -214,12 +243,14 @@ export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
                       return (
                         <div
                           key={milestone.id}
+                          data-milestone-id={milestone.id}
                           className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
                           style={{ left: `${milestoneLeft}%` }}
                         >
                           <div className="size-2 rounded-full bg-foreground" />
                           <div className="pointer-events-none absolute left-1/2 top-5 hidden -translate-x-1/2 whitespace-nowrap border border-border/70 bg-background px-2 py-1 text-[11px] text-foreground group-hover:block">
-                            {milestone.name} · {formatDate(milestone.plannedDate)}
+                            {milestone.name} ·{" "}
+                            {formatDate(milestone.plannedDate)}
                           </div>
                         </div>
                       )
@@ -233,7 +264,9 @@ export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
           {standaloneMilestones.length > 0 ? (
             <div
               className="grid"
-              style={{ gridTemplateColumns: `${labelColumnWidth}px minmax(${timelineWidth}px, 1fr)` }}
+              style={{
+                gridTemplateColumns: `${labelColumnWidth}px minmax(${timelineWidth}px, 1fr)`,
+              }}
             >
               <div className="sticky left-0 z-20 border-r border-border/70 bg-card/85 px-4 py-4 backdrop-blur-sm" />
               <div className="relative px-4 py-4">
@@ -244,11 +277,16 @@ export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
                 />
                 <div className="relative h-8">
                   {standaloneMilestones.map((milestone) => {
-                    const left = offsetPercent(milestone.plannedDate, firstDate, totalSpan)
+                    const left = offsetPercent(
+                      milestone.plannedDate,
+                      firstDate,
+                      totalSpan,
+                    )
 
                     return (
                       <div
                         key={milestone.id}
+                        data-milestone-id={milestone.id}
                         className="group absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
                         style={{ left: `${left}%` }}
                       >
@@ -265,6 +303,6 @@ export function TimelineStrip({ milestones, phases }: TimelineStripProps) {
           ) : null}
         </div>
       </div>
-    </div>
+    </TimelineScroller>
   )
 }

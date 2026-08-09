@@ -1,7 +1,8 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { Search } from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Search, X } from "lucide-react"
+import { useCriticalPathFocus } from "@/components/critical-path/focus-context"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
@@ -13,16 +14,25 @@ import {
 } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { IssueDrawer } from "@/components/critical-path/issue-drawer"
-import { IssueGroup, type IssueGroupModel } from "@/components/critical-path/issue-group"
-import { PriorityIcon, StateIcon, priorityLabel } from "@/components/critical-path/linear-icons"
+import {
+  IssueGroup,
+  type IssueGroupModel,
+} from "@/components/critical-path/issue-group"
+import {
+  PriorityIcon,
+  StateIcon,
+  priorityLabel,
+} from "@/components/critical-path/linear-icons"
 import {
   CLOSED_STATE_TYPES,
   PRIORITY_RANK,
   STATE_TYPE_RANK,
   compareIssues,
   isClosed,
+  isOverdue,
 } from "@/lib/critical-path-utils"
 import type { LinearPriority, LinearViewIssue } from "@/lib/linear"
+import { scrollWindowToElement } from "@/lib/smooth-scroll"
 import { cn } from "@/lib/utils"
 
 type Scope = "open" | "all" | "done"
@@ -67,7 +77,10 @@ function buildGroups(
   if (groupBy === "priority") {
     const byPriority = new Map<LinearPriority, LinearViewIssue[]>()
     for (const issue of issues) {
-      byPriority.set(issue.priority, [...(byPriority.get(issue.priority) || []), issue])
+      byPriority.set(issue.priority, [
+        ...(byPriority.get(issue.priority) || []),
+        issue,
+      ])
     }
 
     return [...byPriority.entries()]
@@ -153,7 +166,9 @@ function buildGroups(
       return {
         key: `status-${state.id}`,
         label: state.name,
-        icon: <StateIcon type={state.type} color={state.color} name={state.name} />,
+        icon: (
+          <StateIcon type={state.type} color={state.color} name={state.name} />
+        ),
         issues: groupIssues.sort(compareIssues),
         defaultOpen: expandClosed || !CLOSED_STATE_TYPES.includes(state.type),
         rank: STATE_TYPE_RANK[state.type],
@@ -174,6 +189,13 @@ export function CriticalPathClient({
   const [query, setQuery] = useState("")
   const [scope, setScope] = useState<Scope>("open")
   const [groupBy, setGroupBy] = useState<GroupBy>("status")
+  // Extra filters that only the metric tiles set, surfaced as a clearable chip.
+  const [tileFilter, setTileFilter] = useState<
+    "in-progress" | "overdue" | null
+  >(null)
+  const rootRef = useRef<HTMLDivElement>(null)
+  const focus = useCriticalPathFocus()
+  const focusRequest = focus?.request ?? null
   const [selectedId, setSelectedId] = useState<string | null>(() => {
     if (!initialTaskId) return null
     const match = issues.find(
@@ -206,16 +228,29 @@ export function CriticalPathClient({
     return () => window.removeEventListener("popstate", handlePopState)
   }, [])
 
+  // A metric tile was clicked: apply its filter and bring the list into view.
+  useEffect(() => {
+    if (focusRequest?.kind !== "tasks") return
+
+    setQuery("")
+    setScope("open")
+    setTileFilter(focusRequest.filter === "open" ? null : focusRequest.filter)
+    if (rootRef.current) scrollWindowToElement(rootRef.current)
+  }, [focusRequest])
+
   const filtered = useMemo(() => {
     const normalisedQuery = query.trim().toLowerCase()
 
     return issues.filter((issue) => {
       if (scope === "open" && isClosed(issue)) return false
       if (scope === "done" && !isClosed(issue)) return false
+      if (tileFilter === "in-progress" && issue.state.type !== "started")
+        return false
+      if (tileFilter === "overdue" && !isOverdue(issue)) return false
       if (normalisedQuery && !matchesQuery(issue, normalisedQuery)) return false
       return true
     })
-  }, [issues, query, scope])
+  }, [issues, query, scope, tileFilter])
 
   const expandClosed = scope === "done" || query.trim().length > 0
 
@@ -275,7 +310,7 @@ export function CriticalPathClient({
   return (
     // @container: the list now lives in a half-width column, so rows and toolbar
     // respond to the column's width, not the viewport's.
-    <div className="@container space-y-6">
+    <div ref={rootRef} className="@container scroll-mt-24 space-y-6">
       <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:justify-between">
         <div className="relative w-full @2xl:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -289,11 +324,25 @@ export function CriticalPathClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {tileFilter ? (
+            <button
+              type="button"
+              onClick={() => setTileFilter(null)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--accent)]/40 bg-[rgba(255,72,0,0.08)] px-3 py-1.5 text-sm text-[color:var(--accent)] transition-colors hover:bg-[rgba(255,72,0,0.14)]"
+            >
+              {tileFilter === "in-progress" ? "In progress" : "Overdue"}
+              <X className="size-3" />
+            </button>
+          ) : null}
+
           {SCOPES.map((option) => (
             <button
               key={option.value}
               type="button"
-              onClick={() => setScope(option.value)}
+              onClick={() => {
+                setScope(option.value)
+                setTileFilter(null)
+              }}
               className={cn(
                 "inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm transition-colors",
                 scope === option.value
@@ -350,6 +399,7 @@ export function CriticalPathClient({
               onClick={() => {
                 setQuery("")
                 setScope("all")
+                setTileFilter(null)
               }}
               className="mt-3 inline-flex items-center rounded-full border border-border px-4 py-1.5 text-sm text-muted-foreground transition hover:text-foreground"
             >
