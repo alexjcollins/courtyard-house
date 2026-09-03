@@ -14,7 +14,7 @@ import { isLinearUploadUrl } from "@/lib/critical-path-utils"
 // IMPORTANT: nothing here throws. The page is public and must degrade, never 500.
 
 const LINEAR_ENDPOINT = "https://api.linear.app/graphql"
-const DEFAULT_PROJECT_NAME = "Architecture"
+const DEFAULT_PROJECT_NAMES = ["Architecture", "Room Designs"]
 const DEFAULT_CACHE_SECONDS = 300
 const ISSUES_PER_PAGE = 100
 const MAX_PAGES = 5
@@ -76,6 +76,8 @@ export type LinearViewMilestone = {
 export type LinearViewIssue = {
   id: string
   identifier: string
+  /** Which Linear project the issue came from — the page merges several. */
+  project: { name: string }
   title: string
   description: string | null
   priority: LinearPriority
@@ -116,7 +118,9 @@ export type LinearFailureReason =
 export type LinearProjectResult =
   | {
       ok: true
-      project: LinearViewProject
+      /** Every configured project that resolved, in configuration order. */
+      projects: LinearViewProject[]
+      /** Issues from all resolved projects, merged. */
       issues: LinearViewIssue[]
       fetchedAt: string
     }
@@ -285,8 +289,18 @@ function getApiKey(): string | null {
   return process.env.LINEAR_API_KEY?.trim() || null
 }
 
-export function getLinearProjectName(): string {
-  return process.env.LINEAR_PROJECT_NAME?.trim() || DEFAULT_PROJECT_NAME
+/**
+ * Projects to pull, in display order. LINEAR_PROJECT_NAMES is comma-separated;
+ * the singular LINEAR_PROJECT_NAME is still honoured for older deployments.
+ */
+export function getLinearProjectNames(): string[] {
+  const configured =
+    process.env.LINEAR_PROJECT_NAMES ?? process.env.LINEAR_PROJECT_NAME ?? ""
+  const names = configured
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean)
+  return names.length ? [...new Set(names)] : DEFAULT_PROJECT_NAMES
 }
 
 function getCacheSeconds(): number {
@@ -405,13 +419,14 @@ function toHost(url: string): string | null {
  * Maps a raw issue to the view model, enumerating every field explicitly.
  * Never spread the raw node here — the explicit list is the privacy boundary.
  */
-function toViewIssue(raw: RawIssue): LinearViewIssue {
+function toViewIssue(raw: RawIssue, projectName: string): LinearViewIssue {
   const assigneeName = raw.assignee?.displayName || raw.assignee?.name || null
   const description = raw.description?.trim() || null
 
   return {
     id: raw.id,
     identifier: raw.identifier,
+    project: { name: projectName },
     title: raw.title,
     description:
       description && description.length > MAX_DESCRIPTION_CHARS
@@ -469,15 +484,16 @@ function toViewIssue(raw: RawIssue): LinearViewIssue {
 
 // --- fetching ----------------------------------------------------------------------
 
-async function fetchLinearProjectUncached(
+type FetchedProject = {
+  project: LinearViewProject
+  issues: LinearViewIssue[]
+}
+
+/** Resolves one project by name and pages through its issues. */
+async function fetchOneProject(
+  apiKey: string,
   projectName: string,
-): Promise<LinearProjectResult> {
-  const apiKey = getApiKey()
-
-  if (!apiKey) {
-    throw new LinearRequestError("not-configured", "Linear is not connected.")
-  }
-
+): Promise<FetchedProject> {
   type QueryData = { projects: { nodes: RawProject[] } }
 
   // Exact (case-insensitive) match first, then fall back to a contains match so a
@@ -536,7 +552,6 @@ async function fetchLinearProjectUncached(
   }
 
   return {
-    ok: true,
     project: {
       name: project.name,
       description: project.description,
@@ -545,7 +560,61 @@ async function fetchLinearProjectUncached(
       targetDate: project.targetDate,
       progress: project.progress ?? 0,
     },
-    issues: rawIssues.map(toViewIssue),
+    issues: rawIssues.map((raw) => toViewIssue(raw, project.name)),
+  }
+}
+
+/**
+ * Fetches every configured project in parallel and merges their issues. A project
+ * that doesn't exist is skipped with a warning so one renamed project doesn't blank
+ * the page; only when none resolve is "project-not-found" surfaced.
+ */
+async function fetchLinearProjectsUncached(
+  projectNames: string[],
+): Promise<LinearProjectResult> {
+  const apiKey = getApiKey()
+
+  if (!apiKey) {
+    throw new LinearRequestError("not-configured", "Linear is not connected.")
+  }
+
+  const settled = await Promise.all(
+    projectNames.map(async (name) => {
+      try {
+        return await fetchOneProject(apiKey, name)
+      } catch (error) {
+        if (error instanceof LinearRequestError && error.reason === "project-not-found") {
+          console.warn(`[linear] ${error.message}`)
+          return null
+        }
+        throw error
+      }
+    }),
+  )
+
+  const found = settled.filter((entry): entry is FetchedProject => entry !== null)
+
+  if (!found.length) {
+    throw new LinearRequestError(
+      "project-not-found",
+      `No Linear project named ${projectNames.map((name) => `“${name}”`).join(" or ")} was found.`,
+    )
+  }
+
+  // Dedupe by issue id in case one issue is somehow reachable from two projects.
+  const seen = new Set<string>()
+  const issues = found.flatMap((entry) =>
+    entry.issues.filter((issue) => {
+      if (seen.has(issue.id)) return false
+      seen.add(issue.id)
+      return true
+    }),
+  )
+
+  return {
+    ok: true,
+    projects: found.map((entry) => entry.project),
+    issues,
     fetchedAt: new Date().toISOString(),
   }
 }
@@ -555,19 +624,19 @@ async function fetchLinearProjectUncached(
  * fetches, so caching has to happen at the function level.
  *
  * unstable_cache is deprecated in favour of `use cache` in Next 16 but still functional.
- * fetchLinearProjectUncached is kept separate so that swap stays a one-line change.
+ * fetchLinearProjectsUncached is kept separate so that swap stays a one-line change.
  */
-function fetchLinearProjectCached(projectName: string) {
+function fetchLinearProjectsCached(projectNames: string[]) {
   return unstable_cache(
-    () => fetchLinearProjectUncached(projectName),
-    ["linear-critical-path", projectName],
+    () => fetchLinearProjectsUncached(projectNames),
+    ["linear-critical-path", projectNames.join("|")],
     { revalidate: getCacheSeconds(), tags: [LINEAR_CACHE_TAG] },
   )()
 }
 
 export const getLinearCriticalPath = cache(
   async (): Promise<LinearProjectResult> => {
-    const projectName = getLinearProjectName()
+    const projectNames = getLinearProjectNames()
 
     if (!getApiKey()) {
       return {
@@ -578,7 +647,7 @@ export const getLinearCriticalPath = cache(
     }
 
     try {
-      return await fetchLinearProjectCached(projectName)
+      return await fetchLinearProjectsCached(projectNames)
     } catch (error) {
       // A thrown result is not written to the cache, so transient failures are not
       // pinned for the whole TTL.

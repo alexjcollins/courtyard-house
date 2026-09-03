@@ -57,19 +57,40 @@ export const markdownComponents: Components = {
       {...props}
     />
   ),
-  ul: (props) => (
+  ul: ({ className, ...props }) => (
     <ul
-      className="list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground marker:text-border"
+      className={
+        // remark-gfm marks checklists with `contains-task-list`. Those lose the
+        // bullet indent so the boxes sit flush with the surrounding text.
+        className?.includes("contains-task-list")
+          ? "list-none space-y-1 text-sm leading-6 text-muted-foreground"
+          : "list-disc space-y-1 pl-5 text-sm leading-6 text-muted-foreground marker:text-border"
+      }
       {...props}
     />
   ),
-  ol: (props) => (
+  ol: ({ className, ...props }) => (
     <ol
-      className="list-decimal space-y-1 pl-5 text-sm leading-6 text-muted-foreground marker:text-border"
+      className={
+        className?.includes("contains-task-list")
+          ? "list-none space-y-1 text-sm leading-6 text-muted-foreground"
+          : "list-decimal space-y-1 pl-5 text-sm leading-6 text-muted-foreground marker:text-border"
+      }
       {...props}
     />
   ),
-  li: (props) => <li className="text-sm leading-6" {...props} />,
+  li: ({ className, ...props }) => (
+    <li
+      className={
+        // remark-gfm tags checklist items. The box is pulled out of the text flow so
+        // a wrapped line aligns with the first line's text, not under the box.
+        className?.includes("task-list-item")
+          ? "relative list-none pl-6 text-sm leading-6 [&_input]:absolute [&_input]:left-0 [&_input]:top-[5px]"
+          : "text-sm leading-6"
+      }
+      {...props}
+    />
+  ),
   blockquote: (props) => (
     <blockquote
       className="border-l-2 border-border pl-4 text-sm italic leading-6 text-muted-foreground"
@@ -116,7 +137,7 @@ export const markdownComponents: Components = {
         disabled
         checked={Boolean(checked)}
         readOnly
-        className="mr-2 size-3.5 align-middle accent-[color:var(--accent)]"
+        className="size-3.5 accent-[color:var(--accent)]"
       />
     ) : null,
   img: ({ src, alt }) => (

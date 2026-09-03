@@ -1,7 +1,15 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { ArrowUpRight, CalendarDays, Flag, Link2, Milestone, X } from "lucide-react"
+import {
+  ArrowUpRight,
+  CalendarDays,
+  Flag,
+  FolderKanban,
+  Link2,
+  Milestone,
+  X,
+} from "lucide-react"
 import {
   Sheet,
   SheetContent,
@@ -161,6 +169,10 @@ export function IssueDrawer({
                     {issue.milestone.name}
                   </MetaItem>
                 ) : null}
+
+                <MetaItem icon={<FolderKanban className="size-3.5" />}>
+                  {issue.project.name}
+                </MetaItem>
               </div>
             </div>
 

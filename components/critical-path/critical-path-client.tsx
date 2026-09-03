@@ -36,7 +36,7 @@ import { scrollWindowToElement } from "@/lib/smooth-scroll"
 import { cn } from "@/lib/utils"
 
 type Scope = "open" | "all" | "done"
-type GroupBy = "status" | "priority" | "assignee" | "milestone"
+type GroupBy = "status" | "priority" | "assignee" | "milestone" | "project"
 
 const SCOPES: Array<{ value: Scope; label: string }> = [
   { value: "open", label: "Open" },
@@ -45,6 +45,7 @@ const SCOPES: Array<{ value: Scope; label: string }> = [
 ]
 
 const GROUP_OPTIONS: Array<{ value: GroupBy; label: string }> = [
+  { value: "project", label: "Project" },
   { value: "status", label: "Status" },
   { value: "priority", label: "Priority" },
   { value: "assignee", label: "Assignee" },
@@ -56,12 +57,22 @@ function matchesQuery(issue: LinearViewIssue, query: string): boolean {
     issue.identifier,
     issue.title,
     issue.assignee?.name ?? "",
+    issue.project.name,
     ...issue.labels.map((label) => label.name),
   ]
     .join(" ")
     .toLowerCase()
 
   return haystack.includes(query)
+}
+
+/** Status order (started → unstarted → … → canceled), then the usual issue order. */
+function compareByStatusThenIssue(a: LinearViewIssue, b: LinearViewIssue): number {
+  return (
+    STATE_TYPE_RANK[a.state.type] - STATE_TYPE_RANK[b.state.type] ||
+    a.state.position - b.state.position ||
+    compareIssues(a, b)
+  )
 }
 
 /**
@@ -154,7 +165,25 @@ function buildGroups(
       .map(({ targetDate: _targetDate, ...group }) => group)
   }
 
-  // Status — the default. Ordered so live work sits above finished work.
+  if (groupBy === "project") {
+    const byProject = new Map<string, LinearViewIssue[]>()
+    for (const issue of issues) {
+      const key = issue.project.name
+      byProject.set(key, [...(byProject.get(key) || []), issue])
+    }
+
+    // Insertion order is the server's configured project order, so no sort here.
+    // Within a project, live work sits above finished work, mirroring the status view.
+    return [...byProject.entries()].map(([name, groupIssues]) => ({
+      key: `project-${name}`,
+      label: name,
+      icon: <span className="size-1.5 rounded-full bg-muted-foreground" />,
+      issues: groupIssues.sort(compareByStatusThenIssue),
+      defaultOpen: true,
+    }))
+  }
+
+  // Status. Ordered so live work sits above finished work.
   const byState = new Map<string, LinearViewIssue[]>()
   for (const issue of issues) {
     byState.set(issue.state.id, [...(byState.get(issue.state.id) || []), issue])
@@ -188,7 +217,8 @@ export function CriticalPathClient({
 }) {
   const [query, setQuery] = useState("")
   const [scope, setScope] = useState<Scope>("open")
-  const [groupBy, setGroupBy] = useState<GroupBy>("status")
+  // Project is the default now that the page merges several Linear projects.
+  const [groupBy, setGroupBy] = useState<GroupBy>("project")
   // Extra filters that only the metric tiles set, surfaced as a clearable chip.
   const [tileFilter, setTileFilter] = useState<
     "in-progress" | "overdue" | null
@@ -390,7 +420,7 @@ export function CriticalPathClient({
         <div className="border border-dashed border-border/70 bg-secondary/30 px-6 py-12 text-center">
           <p className="text-sm text-muted-foreground">
             {issues.length === 0
-              ? "No tasks in this project yet."
+              ? "No tasks in these projects yet."
               : "No tasks match this filter."}
           </p>
           {issues.length > 0 ? (

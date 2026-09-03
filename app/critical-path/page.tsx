@@ -2,7 +2,7 @@ import Link from "next/link"
 import { differenceInCalendarDays } from "date-fns"
 import { getCurrentViewer, hasPermission } from "@/lib/auth"
 import { getTimelineOverview } from "@/lib/data"
-import { getLinearCriticalPath, getLinearProjectName } from "@/lib/linear"
+import { getLinearCriticalPath, getLinearProjectNames } from "@/lib/linear"
 import {
   deriveMilestoneStatus,
   summariseIssues,
@@ -13,6 +13,7 @@ import {
 } from "@/lib/plan-access"
 import { formatDate } from "@/lib/format"
 import { PlanPasswordGate } from "@/components/plan/plan-password-gate"
+import { CollapsibleSection } from "@/components/critical-path/collapsible-section"
 import { CriticalPathClient } from "@/components/critical-path/critical-path-client"
 import { CriticalPathFocusProvider } from "@/components/critical-path/focus-context"
 import { CriticalPathMetrics } from "@/components/critical-path/critical-path-metrics"
@@ -142,20 +143,17 @@ export default async function CriticalPathPage({
             }
           />
 
-          <section className="space-y-6">
-            <div>
-              <Eyebrow>Build programme</Eyebrow>
-              <h2 className="mt-3 text-2xl font-medium tracking-tight">
-                Timeline and milestones
-              </h2>
-            </div>
-
+          <CollapsibleSection
+            storageKey="critical-path:timeline"
+            eyebrow="Build programme"
+            title="Timeline and milestones"
+          >
             <TimelineStrip
               milestones={timeline.milestones}
               phases={timeline.phases}
               centerOnToday
             />
-          </section>
+          </CollapsibleSection>
 
           {/* Milestones and tasks sit side by side at equal width. */}
           <div className="grid gap-6 xl:grid-cols-2">
@@ -205,7 +203,9 @@ export default async function CriticalPathPage({
                     {/* Config detail is only useful to — and only shown to — the team. */}
                     {hasSessionAccess
                       ? linear.reason === "not-configured"
-                        ? `Linear is not connected. Set LINEAR_API_KEY to sync the “${getLinearProjectName()}” project.`
+                        ? `Linear is not connected. Set LINEAR_API_KEY to sync the ${getLinearProjectNames()
+                            .map((name) => `“${name}”`)
+                            .join(" and ")} projects.`
                         : linear.message
                       : "Tasks are temporarily unavailable. The build programme above is still current."}
                   </p>
