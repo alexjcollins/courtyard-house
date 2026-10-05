@@ -20,14 +20,14 @@
       "name": "Groundworks, drainage & foundations",
       "budgetExVat": 140000,
       "vatRate": 0.0,
-      "notes": "Planning allowance of \u00a3140,000 ex VAT (was \u00a394,000). September foundations-and-drainage quotes are still about \u00a3154,000 before driveway, gym and design fees. Not a received quote."
+      "notes": "Planning allowance of £140,000 ex VAT (was £94,000). September foundations-and-drainage quotes are still about £154,000 before driveway, gym and design fees. Not a received quote."
     },
     {
       "id": "steel_structure",
       "name": "Steel structure",
-      "budgetExVat": 55000,
+      "budgetExVat": 29423.47,
       "vatRate": 0.0,
-      "notes": "Primary steel frame package, main connection strategy, and any core allowances tied directly to the portal frame itself."
+      "notes": "MJ Allen H7545 Rev 1, 11 Sep 2026: £29,423.47 ex VAT for supply and install of 7.9 t beams and columns, plus supply only of 0.77 t flitch steels. No fire protection (optional 60-minute intumescent £9,636.31, not included). Excludes steel-to-steel connection design, stainless angles, Nylon 6 thermal breaks, 8 mm fabrications at 800 mm centres, and bracket fabrication. The price was held for 24 hours from the estimate date."
     },
     {
       "id": "timber_frame",
@@ -62,7 +62,7 @@
       "name": "Windows & external doors (incl large sliders)",
       "budgetExVat": 72486,
       "vatRate": 0.0,
-      "notes": "Glideline 1 Oct 2026, matt silver anodised, supply, survey and install: \u00a372,486 ex VAT. Entrance doors are not included. Quote shows 20% VAT; this budget stays at 0% pending self-build treatment."
+      "notes": "Glideline 1 Oct 2026, matt silver anodised, supply, survey and install: £72,486 ex VAT. Entrance doors are not included. Quote shows 20% VAT; this budget stays at 0% pending self-build treatment."
     },
     {
       "id": "mech_elec",
@@ -83,7 +83,7 @@
       "name": "Kitchen, utility & appliances",
       "budgetExVat": 47350,
       "vatRate": 0.2,
-      "notes": "Vermland quotation \u20ac38044 ex VAT converted at ECB \u20ac1 = \u00a30.85033 (2 Oct 2026) to \u00a332350. Utility is included as a phase-1 optional. Appliances are excluded from Vermland and kept as a \u00a315000 allowance."
+      "notes": "Vermland quotation €38044 ex VAT converted at ECB €1 = £0.85033 (2 Oct 2026) to £32350. Utility is included as a phase-1 optional. Appliances are excluded from Vermland and kept as a £15000 allowance."
     },
     {
       "id": "bathrooms",
@@ -104,7 +104,7 @@
       "name": "Finishes (flooring, decorating, tiling beyond baths)",
       "budgetExVat": 27000,
       "vatRate": 0.2,
-      "notes": "Polished terrazzo dropped. Polished concrete planning allowance \u00a320,000 ex VAT for about 140\u2013150 m\u00b2. Not a received quote. Engineered oak remains \u00a37,000."
+      "notes": "Polished terrazzo dropped. Polished concrete planning allowance £20,000 ex VAT for about 140–150 m². Not a received quote. Engineered oak remains £7,000."
     },
     {
       "id": "utilities",
@@ -134,8 +134,8 @@
     "rules": "Global pot; allocate via decisions or manual transfers later."
   },
   "totals": {
-    "baselineBuildBudgetExVat": 843166,
+    "baselineBuildBudgetExVat": 817589.47,
     "contingencyExVat": 100000,
-    "envelopeExVat": 943166
+    "envelopeExVat": 917589.47
   }
 }

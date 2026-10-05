@@ -71,6 +71,12 @@
       "name": "South East Water",
       "trade": "Utility connection",
       "notes": "Water authority charges for new mains connection works."
+    },
+    {
+      "id": "sup-mj-allen",
+      "name": "MJ Allen Metalwork",
+      "trade": "Structural steel",
+      "notes": "H7545 Rev 1, Oliver Morgan-Whitcombe, 11 Sep 2026."
     }
   ],
   "quotes": [
@@ -86,7 +92,7 @@
       "quoteDate": "2026-10-01",
       "createdDate": "2026-02-28",
       "updatedDate": "2026-10-03",
-      "notes": "Vermland \u20ac38,044 ex VAT converted at ECB \u20ac1=\u00a30.85033 (2 Oct 2026) to \u00a332350. Includes utility, shipping, design and virtual support. Appliances excluded."
+      "notes": "Vermland €38,044 ex VAT converted at ECB €1=£0.85033 (2 Oct 2026) to £32350. Includes utility, shipping, design and virtual support. Appliances excluded."
     },
     {
       "id": "q-002",
@@ -129,7 +135,21 @@
       "quoteDate": "2026-10-01",
       "createdDate": "2026-06-19",
       "updatedDate": "2026-10-03",
-      "notes": "Glideline 1 Oct 2026, matt silver anodised, supply, survey and install. \u00a372,486 ex VAT. Quote also shows VAT at 20% (\u00a314,497). Entrance doors not priced."
+      "notes": "Glideline 1 Oct 2026, matt silver anodised, supply, survey and install. £72,486 ex VAT. Quote also shows VAT at 20% (£14,497). Entrance doors not priced."
+    },
+    {
+      "id": "q-005",
+      "supplierId": "sup-mj-allen",
+      "categoryId": "steel_structure",
+      "title": "Structural steel supply and installation",
+      "amountExVat": 29423.47,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "received",
+      "quoteDate": "2026-09-11",
+      "createdDate": "2026-10-04",
+      "updatedDate": "2026-10-04",
+      "notes": "H7545 Rev 1. £29,423.47 ex VAT. Optional 60-minute intumescent £9,636.31 excluded. Bracket fabrication, stainless angles, Nylon 6 thermal breaks and 8 mm fabrications at 800 mm centres excluded. Price held for 24 hours from 11 Sep 2026."
     }
   ],
   "purchaseOrders": [
@@ -235,7 +255,7 @@
       "status": "issued",
       "issuedDate": "2026-06-05",
       "updatedDate": "2026-06-22",
-      "notes": "Skip hire recorded from a paid gross amount of \u00a3363.18, assumed to be \u00a3302.65 ex VAT plus 20% VAT."
+      "notes": "Skip hire recorded from a paid gross amount of £363.18, assumed to be £302.65 ex VAT plus 20% VAT."
     },
     {
       "id": "po-integrum-site-investigation",
@@ -384,7 +404,7 @@
       "issueDate": "2026-06-05",
       "dueDate": "2026-06-05",
       "status": "paid",
-      "notes": "Skip hire on 5 June 2026. Recorded from a paid gross amount of \u00a3363.18, assumed to be \u00a3302.65 ex VAT plus 20% VAT.",
+      "notes": "Skip hire on 5 June 2026. Recorded from a paid gross amount of £363.18, assumed to be £302.65 ex VAT plus 20% VAT.",
       "createdDate": "2026-06-22",
       "updatedDate": "2026-06-22"
     },

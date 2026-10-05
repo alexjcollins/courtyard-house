@@ -1,7 +1,7 @@
 {
   "model": "generic-self-build-stages",
   "assumptions": {
-    "baselineBuildBudgetExVat": 760836,
+    "baselineBuildBudgetExVat": 735259.47,
     "contingencyExVat": 100000,
     "startDate": "2026-04-01",
     "buildStartDate": "2026-09-07",
@@ -16,7 +16,7 @@
       "actualAmountExVat": 180000,
       "predictedAmountExVat": 180000,
       "status": "available",
-      "notes": "Company funding assumption: \u00a3100k of core company cash plus most professional fees, currently modelled as roughly \u00a380k."
+      "notes": "Company funding assumption: £100k of core company cash plus most professional fees, currently modelled as roughly £80k."
     },
     {
       "id": "src-savings",
