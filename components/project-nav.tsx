@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Armchair, Home, FolderKanban, ShoppingCart, GitBranch, Settings2, Wallet, Images, ListTodo, Map, Route } from "lucide-react"
+import { Armchair, Home, FolderKanban, ShoppingCart, GitBranch, Settings2, Wallet, Images, ListTodo, Map, Route, Sun } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const iconMap = {
@@ -17,6 +17,7 @@ const iconMap = {
   "/timeline": GitBranch,
   "/critical-path": Route,
   "/plan": Map,
+  "/solar-planner": Sun,
 } as const
 
 export type ProjectNavItem = {

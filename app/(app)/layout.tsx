@@ -24,8 +24,10 @@ export default async function ProtectedLayout({
     { href: "/timeline", label: "Timeline" },
     { href: "/critical-path", label: "Critical path" },
     { href: "/plan", label: "Plan" },
+    { href: "/solar-planner", label: "Solar planner" },
   ] satisfies ProjectNavItem[]
   const navigationItems = allNavigationItems.filter((item) => {
+    if (item.href === "/solar-planner") return true
     const permissionMap = {
       "/": "dashboard:view",
       "/categories": "categories:view",
