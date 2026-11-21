@@ -21,8 +21,36 @@ To change decisions, write to the database (connection string in `.env` as `DATA
 Prefer doing multi-row changes in a single transaction, and snapshot affected rows first
 (see `exports/db-backups/` and `scripts/consolidate-flooring.sql` for a worked example).
 
-Other `data/*.json` files (project, lineItems, procurement, payments, tasks, timeline,
-funding, ideas, inspiration, categories) ARE still read from disk via `readJsonFile`.
+## Budget data lives in Postgres too, NOT in `categories.json` / `lineItems.json`
+
+Budget categories and line items moved to Postgres (migrated by `scripts/setup-budget-db.mjs`;
+Spaces snapshots in `exports/db-backups/budget-*`). `readJsonFile("categories.json" |
+"lineItems.json")` in `lib/data.ts` transparently rebuilds the legacy shapes from the database,
+so old readers keep working; the Spaces/`data/` copies are dead and the Admin JSON editor
+refuses them.
+
+- **One write path.** Every budget write — the `/budget` grid, the ⌘J assistant's
+  `propose_budget_changes` Apply, and the CLI — goes through `applyBudgetChanges()` in
+  `lib/budget-core.mjs` (plain ESM so node scripts can import it; types in `.d.mts`). Don't
+  write the tables directly.
+- **Nothing is stored that can drift.** A category's budget = Σ its active line items.
+  Contingency = fixed envelope (`budget_settings`) − Σ line items. Raising a budget eats
+  contingency; `max_drawdown_ex_vat` (£40k) caps the drawdown below the starting contingency.
+- Each batch is one transaction that row-locks `budget_settings`, so concurrent writers
+  serialise and the cap can't be raced. Rows carry `version`; pass `expectedVersion` to get a
+  409 instead of overwriting someone else's edit. Every field change lands in `budget_changes`
+  with actor + source (`grid` / `assistant` / `cli` / `migration`).
+- A line item's live quote is `budget_line_items.quote_id` (one line item per quote, same
+  category). Line-item Actual (invoiced) / Paid follow quote → PO → invoices → payments.
+- Bulk edits by agents: `npm run budget -- show --json`, write a changes file, then
+  `npm run budget -- apply changes.json --dry-run` before applying for real. Shapes are
+  documented at the top of `scripts/budget.mjs`. `npm run budget -- log` shows the audit trail.
+
+Production, Preview (staging) and local dev all share the same Neon database and Spaces bucket,
+so any budget write from any of them is live.
+
+Other `data/*.json` files (project, procurement, payments, tasks, timeline,
+funding, ideas, inspiration) ARE still read from disk via `readJsonFile`.
 
 ## The project assistant (`lib/assistant/`) — the system prompt must stay byte-stable
 

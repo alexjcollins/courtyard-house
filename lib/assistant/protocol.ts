@@ -10,6 +10,7 @@ export type ProposalKind =
   | "furniture.item"
   | "procurement.save"
   | "procurement.delete"
+  | "budget.changes"
 
 export type ProposalField = {
   field: string

@@ -212,7 +212,7 @@ export async function POST(request: Request) {
               needsAnotherPass = true
             } else if (PROPOSE_TOOL_NAMES.has(use.name)) {
               try {
-                const proposalValue: Proposal = describeProposal(
+                const proposalValue: Proposal = await describeProposal(
                   index,
                   viewer,
                   use.name,

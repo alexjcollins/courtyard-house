@@ -27,6 +27,7 @@ import {
   updateFurnitureWorkspaceItem,
 } from "@/lib/furniture-db"
 import { hasPermission, type AppPermission, type AuthViewer } from "@/lib/auth"
+import { applyBudgetChangesFromApp, BudgetError, type BudgetChange } from "@/lib/budget-db"
 import type { ProjectIndex, IndexEntity } from "@/lib/assistant/index-builder"
 import type { Proposal, ProposalField, ProposalKind } from "@/lib/assistant/protocol"
 
@@ -52,6 +53,7 @@ export const PROPOSAL_PERMISSION: Record<ProposalKind, AppPermission> = {
   "furniture.item": "decisions:edit",
   "procurement.save": "admin:edit",
   "procurement.delete": "admin:edit",
+  "budget.changes": "budget:edit",
 }
 
 // --- schemas -----------------------------------------------------------------
@@ -79,6 +81,51 @@ const itemUpdateSchema = z.object({
   description: z.string().optional(),
   architectNote: z.string().optional(),
   summary: z.string().min(1),
+})
+
+const budgetChangeInputSchema = z.object({
+  action: z.enum(["update", "add", "remove"]),
+  ref: z.string().min(1).optional(),
+  budgetCat: z.string().min(1).optional(),
+  name: z.string().min(1).optional(),
+  budgetExVat: z.number().finite().nonnegative().optional(),
+  vatRate: z.number().min(0).max(1).nullable().optional(),
+  quoteRef: z.string().min(1).nullable().optional(),
+})
+
+const budgetChangesSchema = z.object({
+  changes: z.array(budgetChangeInputSchema).min(1).max(200),
+  summary: z.string().min(1),
+})
+
+/** What gets applied: real ids only, re-validated at apply time. */
+const budgetChangePayloadSchema = z.object({
+  changes: z
+    .array(
+      z.discriminatedUnion("type", [
+        z.object({
+          type: z.literal("update_line_item"),
+          id: z.string().min(1),
+          patch: z.object({
+            name: z.string().min(1).optional(),
+            budgetExVat: z.number().finite().nonnegative().optional(),
+            vatRate: z.number().min(0).max(1).nullable().optional(),
+            quoteId: z.string().min(1).nullable().optional(),
+          }),
+        }),
+        z.object({
+          type: z.literal("create_line_item"),
+          categoryId: z.string().min(1),
+          name: z.string().min(1),
+          budgetExVat: z.number().finite().nonnegative().optional(),
+          vatRate: z.number().min(0).max(1).nullable().optional(),
+          quoteId: z.string().min(1).nullable().optional(),
+        }),
+        z.object({ type: z.literal("delete_line_item"), id: z.string().min(1) }),
+      ]),
+    )
+    .min(1)
+    .max(200),
 })
 
 const money = z.number().finite().nonnegative()
@@ -244,13 +291,15 @@ function resolve(index: ProjectIndex, ref: string): IndexEntity {
  * failure the caller feeds it back as a tool result so the model gets one shot
  * at correcting itself.
  */
-export function describeProposal(
+export async function describeProposal(
   index: ProjectIndex,
   viewer: AuthViewer,
   toolName: string,
   rawInput: unknown,
-): Proposal {
+): Promise<Proposal> {
   switch (toolName) {
+    case "propose_budget_changes":
+      return describeBudgetChanges(index, viewer, rawInput)
     case "propose_selection":
       return describeSelection(index, viewer, rawInput)
     case "propose_item_update":
@@ -425,6 +474,119 @@ function describeDelete(
   )
 }
 
+function formatGbp(value: unknown): string {
+  if (typeof value !== "number") return fmt(value)
+  return `£${value.toLocaleString("en-GB", { maximumFractionDigits: 2 })}`
+}
+
+/**
+ * Budget proposals are dry-run against the live database here, so the card's
+ * before/after values, quote links and the contingency cap are all checked
+ * against current data — not the index snapshot and never the model's claims.
+ */
+async function describeBudgetChanges(
+  index: ProjectIndex,
+  viewer: AuthViewer,
+  raw: unknown,
+): Promise<Proposal> {
+  const input = parse(budgetChangesSchema, raw)
+  requirePermission(viewer, "budget.changes")
+
+  const resolveKind = (ref: string | undefined, kind: "lineItem" | "quote", what: string) => {
+    if (!ref) fail(`${what} needs a ref.`)
+    const entity = resolve(index, ref)
+    if (entity.kind !== kind) fail(`Ref "${ref}" is a ${entity.kind}, not a ${kind}.`)
+    return entity
+  }
+
+  const changes: BudgetChange[] = input.changes.map((change, i) => {
+    const where = `changes[${i}]`
+    const quoteId =
+      change.quoteRef === undefined
+        ? undefined
+        : change.quoteRef === null
+          ? null
+          : resolveKind(change.quoteRef, "quote", `${where}.quoteRef`).id
+    if (change.action === "add") {
+      if (!change.budgetCat) fail(`${where}: add needs budgetCat.`)
+      if (!change.name) fail(`${where}: add needs a name.`)
+      return {
+        type: "create_line_item",
+        categoryId: change.budgetCat,
+        name: change.name,
+        budgetExVat: change.budgetExVat ?? 0,
+        ...(change.vatRate !== undefined ? { vatRate: change.vatRate } : {}),
+        ...(quoteId !== undefined ? { quoteId } : {}),
+      }
+    }
+    const item = resolveKind(change.ref, "lineItem", where)
+    if (change.action === "remove") return { type: "delete_line_item", id: item.id }
+    const patch: Extract<BudgetChange, { type: "update_line_item" }>["patch"] = {}
+    if (change.name !== undefined) patch.name = change.name
+    if (change.budgetExVat !== undefined) patch.budgetExVat = change.budgetExVat
+    if (change.vatRate !== undefined) patch.vatRate = change.vatRate
+    if (quoteId !== undefined) patch.quoteId = quoteId
+    if (Object.keys(patch).length === 0) fail(`${where}: update has no fields to change.`)
+    return { type: "update_line_item", id: item.id, patch }
+  })
+
+  let result
+  try {
+    result = await applyBudgetChangesFromApp(changes, {
+      actor: viewer.user.email || viewer.user.id,
+      source: "assistant",
+      dryRun: true,
+    })
+  } catch (error) {
+    if (error instanceof BudgetError) fail(error.message)
+    throw error
+  }
+
+  const labelById = new Map<string, string>()
+  for (const entity of index.entities.values()) {
+    if (entity.kind === "lineItem" || entity.kind === "quote") labelById.set(entity.id, entity.label)
+  }
+
+  const before: ProposalField[] = []
+  const after: ProposalField[] = []
+  for (const entry of result.changes) {
+    if (entry.field === "*") {
+      const created = entry.after as { name?: string; budgetExVat?: number } | null
+      const removed = entry.before as { name?: string; budgetExVat?: number } | null
+      const name = created?.name ?? removed?.name ?? labelById.get(entry.entityId) ?? entry.entityId
+      before.push({ field: name, value: removed ? formatGbp(removed.budgetExVat) : "—" })
+      after.push({ field: name, value: created ? `${formatGbp(created.budgetExVat)} (new)` : "removed" })
+      continue
+    }
+    const label = labelById.get(entry.entityId) ?? entry.entityId
+    const show = (v: unknown) =>
+      entry.field === "budgetExVat"
+        ? formatGbp(v)
+        : entry.field === "quoteId"
+          ? typeof v === "string" ? labelById.get(v) ?? v : "none"
+          : entry.field === "vatRate"
+            ? v === null ? "category rate" : `${Number(v) * 100}%`
+            : fmt(v)
+    before.push({ field: `${label} · ${entry.field}`, value: show(entry.before) })
+    after.push({ field: `${label} · ${entry.field}`, value: show(entry.after) })
+  }
+  if (result.before.contingencyExVat !== result.after.contingencyExVat) {
+    before.push({ field: "Contingency", value: formatGbp(result.before.contingencyExVat) })
+    after.push({
+      field: "Contingency",
+      value: `${formatGbp(result.after.contingencyExVat)} (${formatGbp(result.after.drawdownExVat)} of ${formatGbp(result.after.maxDrawdownExVat)} cap drawn)`,
+    })
+  }
+
+  return proposal(
+    "budget.changes",
+    input.summary,
+    { id: "budget", label: `${changes.length} budget change${changes.length === 1 ? "" : "s"}` },
+    { before, after },
+    { changes },
+  )
+}
+
 // --- apply -------------------------------------------------------------------
 
 /** Drop undefined so a partial update never blanks an unmentioned field. */
@@ -469,6 +631,20 @@ export async function applyProposal(
   requirePermission(viewer, kind)
 
   switch (kind) {
+    case "budget.changes": {
+      const input = parse(budgetChangePayloadSchema, proposalToApply.payload)
+      try {
+        await applyBudgetChangesFromApp(input.changes as BudgetChange[], {
+          actor: viewer.user.email || viewer.user.id,
+          source: "assistant",
+        })
+      } catch (error) {
+        if (error instanceof BudgetError) fail(error.message)
+        throw error
+      }
+      return
+    }
+
     case "decision.selection":
     case "furniture.selection": {
       const input = parse(applySelectionSchema, proposalToApply.payload)

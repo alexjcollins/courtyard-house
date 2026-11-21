@@ -3,7 +3,7 @@ import type Anthropic from "@anthropic-ai/sdk"
 import { MAX_DETAIL_IDS, type AssistantVariant } from "@/lib/assistant/config"
 
 /**
- * The assistant's tool surface: one read tool and four propose tools.
+ * The assistant's tool surface: one read tool and five propose tools.
  *
  * Kept deliberately small. Tool schemas are re-sent on every request (they sit
  * at the very front of the prompt, ahead of the cache breakpoint), and a wide
@@ -145,6 +145,48 @@ const proposeDelete: Anthropic.Tool = {
   },
 }
 
+const proposeBudgetChanges: Anthropic.Tool = {
+  name: "propose_budget_changes",
+  description:
+    "Propose a batch of edits to budget line items (LINEITEMS): change a line item's budget, name, VAT rate or live quote; add a line item to a budget category; or remove one. Use one call for the whole request, even for many rows — it becomes one confirmation card that applies all-or-nothing. The envelope is fixed, so budget increases draw down contingency, which has a cap; the server checks the batch against live data and refuses it with the overrun if it would breach the cap.",
+  input_schema: {
+    type: "object",
+    properties: {
+      changes: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            action: { type: "string", enum: ["update", "add", "remove"] },
+            ref: {
+              type: "string",
+              description: "Line item ref (l…) for update and remove.",
+            },
+            budgetCat: {
+              type: "string",
+              description: "Budget category id from BUDGET, for add.",
+            },
+            name: { type: "string" },
+            budgetExVat: { type: "number", description: "GBP excluding VAT." },
+            vatRate: {
+              type: ["number", "null"],
+              description: "0.2 for 20%. null to inherit the category's rate.",
+            },
+            quoteRef: {
+              type: ["string", "null"],
+              description:
+                "Quote ref (q…) from the same budget category to make this item's live quote; null to unlink.",
+            },
+          },
+          required: ["action"],
+        },
+      },
+      summary: { type: "string", description: SUMMARY_HINT },
+    },
+    required: ["changes", "summary"],
+  },
+}
+
 /**
  * Frozen arrays in a fixed order, one per variant.
  *
@@ -158,6 +200,7 @@ const ADMIN_TOOLS: Anthropic.Tool[] = [
   proposeItemUpdate,
   proposeProcurement,
   proposeDelete,
+  proposeBudgetChanges,
 ]
 
 const ARCHITECT_TOOLS: Anthropic.Tool[] = [getDetail]
@@ -176,4 +219,5 @@ export const PROPOSE_TOOL_NAMES = new Set([
   "propose_item_update",
   "propose_procurement",
   "propose_delete",
+  "propose_budget_changes",
 ])

@@ -6,10 +6,9 @@ import {
   getProcurementSnapshot,
   getTasksRegisterData,
   getTimelineOverview,
-  type CategoriesFile,
   type FundingModelFile,
-  type LineItem,
 } from "@/lib/data"
+import { getLegacyBudgetFilesFromDatabase } from "@/lib/budget-db"
 import { getDecisionWorkspaceData } from "@/lib/decisions-db"
 import { getFurnitureWorkspaceData } from "@/lib/furniture-db"
 import { readDataFileText } from "@/lib/storage"
@@ -350,11 +349,11 @@ export async function buildProjectIndex(
   }
 
   // -- budget (admin only) -----------------------------------------------------
+  const lineItemHandleByQuoteId = new Map<string, string>()
   if (showCosts) {
     try {
-      const categoriesFile = JSON.parse(
-        await readDataFileText("categories.json"),
-      ) as CategoriesFile
+      // Budget data lives in Postgres; this rebuilds the legacy file shape.
+      const { categoriesFile } = await getLegacyBudgetFilesFromDatabase()
 
       // Budget category ids are short and already appear inline as the
       // `budgetCat` foreign key on line items, quotes and POs. Registering the
@@ -387,20 +386,22 @@ export async function buildProjectIndex(
     }
 
     try {
-      const lineItemsFile = JSON.parse(await readDataFileText("lineItems.json")) as {
-        lineItems: LineItem[]
-      }
+      const { lineItemsFile } = await getLegacyBudgetFilesFromDatabase()
 
+      // A line item's live quote is shown from the quote side (QUOTES.lineItem),
+      // because quote handles are minted later in the procurement section.
       sections.push({
-        header: "## LINEITEMS ref|budgetCat|name|budgetExVat|status",
+        header: "## LINEITEMS ref|budgetCat|name|budgetExVat|vatRate",
         lines: byId(lineItemsFile.lineItems).map((l) => {
           const handle = add("lineItem", "l", l.id, l.name, {
             name: f(l.name),
             categoryId: f(l.categoryId),
             budgetExVat: num(l.budgetExVat),
-            status: f(l.status),
+            vatRate: f(l.vatRate),
+            quoteId: f(l.quoteId),
           })
-          return row(handle, l.categoryId, l.name, num(l.budgetExVat), l.status)
+          if (l.quoteId) lineItemHandleByQuoteId.set(l.quoteId, handle)
+          return row(handle, l.categoryId, l.name, num(l.budgetExVat), f(l.vatRate))
         }),
       })
     } catch (error) {
@@ -431,7 +432,7 @@ export async function buildProjectIndex(
       })
 
       sections.push({
-        header: "## QUOTES ref|supplier|budgetCat|title|amountExVat|status",
+        header: "## QUOTES ref|supplier|budgetCat|title|amountExVat|status|lineItem",
         lines: byId(procurementFile.quotes).map((q) => {
           const handle = add("quote", "q", q.id, q.title, {
             supplierId: f(q.supplierId),
@@ -452,6 +453,7 @@ export async function buildProjectIndex(
             q.title,
             num(q.amountExVat),
             q.status,
+            lineItemHandleByQuoteId.get(q.id) ?? "",
           )
         }),
       })

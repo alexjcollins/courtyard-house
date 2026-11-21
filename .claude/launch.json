@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "dev", "url": "http://localhost:3001" }
+    { "name": "dev", "url": "http://localhost:3001" },
+    { "name": "dev-3000", "url": "http://localhost:3000" }
   ]
 }

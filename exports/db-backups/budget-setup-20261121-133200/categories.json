@@ -1,0 +1,141 @@
+{
+  "categories": [
+    {
+      "id": "prelims",
+      "name": "Prelims & site setup",
+      "budgetExVat": 20000,
+      "vatRate": 0.0,
+      "notes": "Temporary works, site welfare, setup, access, enabling works, and general contractor overheads before the main build flow starts."
+    },
+    {
+      "id": "fees",
+      "name": "Professional fees & statutory",
+      "budgetExVat": 82330,
+      "vatRate": 0.2,
+      "reportingBucket": "soft_cost",
+      "notes": "Architect, structural engineer, topographical study, ecological study, arboricultural study, pre-planning application, site investigation, consultants, approvals, and other non-construction professional costs."
+    },
+    {
+      "id": "groundworks",
+      "name": "Groundworks, drainage & foundations",
+      "budgetExVat": 140000,
+      "vatRate": 0.0,
+      "notes": "Planning allowance of £140,000 ex VAT (was £94,000). September foundations-and-drainage quotes are still about £154,000 before driveway, gym and design fees. Not a received quote."
+    },
+    {
+      "id": "steel_structure",
+      "name": "Steel structure",
+      "budgetExVat": 29423.47,
+      "vatRate": 0.0,
+      "notes": "MJ Allen H7545 Rev 1, 11 Sep 2026: £29,423.47 ex VAT for supply and install of 7.9 t beams and columns, plus supply only of 0.77 t flitch steels. No fire protection (optional 60-minute intumescent £9,636.31, not included). Excludes steel-to-steel connection design, stainless angles, Nylon 6 thermal breaks, 8 mm fabrications at 800 mm centres, and bracket fabrication. The price was held for 24 hours from the estimate date."
+    },
+    {
+      "id": "timber_frame",
+      "name": "Timber frame",
+      "budgetExVat": 100000,
+      "vatRate": 0.0,
+      "notes": "Secondary timber infill, structural carpentry, and framed build-up elements that sit alongside the primary steel package."
+    },
+    {
+      "id": "structural_other",
+      "name": "Other structural works",
+      "budgetExVat": 7000,
+      "vatRate": 0.0,
+      "notes": "Residual structural items outside the main steel and timber packages, including secondary metalwork, fixings, coordination, and leftover structural allowances from the reorder."
+    },
+    {
+      "id": "roofs",
+      "name": "Roofs (pitched + warm roof links)",
+      "budgetExVat": 35000,
+      "vatRate": 0.0,
+      "notes": "Pitched roof build-ups, flat link roofs, waterproofing, and associated trims and rainwater interfaces."
+    },
+    {
+      "id": "envelope",
+      "name": "Envelope (walls/insulation/cladding/airtightness + courtyard interface)",
+      "budgetExVat": 90000,
+      "vatRate": 0.0,
+      "notes": "External wall build-up, insulation, membranes, cladding, and the critical detailing around the courtyard edge."
+    },
+    {
+      "id": "windows",
+      "name": "Windows & external doors (incl large sliders)",
+      "budgetExVat": 72486,
+      "vatRate": 0.0,
+      "notes": "Glideline 1 Oct 2026, matt silver anodised, supply, survey and install: £72,486 ex VAT. Entrance doors are not included. Quote shows 20% VAT; this budget stays at 0% pending self-build treatment."
+    },
+    {
+      "id": "mech_elec",
+      "name": "M&E (ASHP, UFH, electrical, plumbing)",
+      "budgetExVat": 52000,
+      "vatRate": 0.0,
+      "notes": "Lean all-electric services package for the heated house area only: ASHP plant, wet UFH distribution, standard electrical first and second fix, basic plumbing distribution, and recessed ceiling spotlights across the main living area, bedrooms, and office. MVHR has been removed in favour of local extract and natural ventilation."
+    },
+    {
+      "id": "internal_buildup",
+      "name": "Internal build-up (partitions/plaster/screed)",
+      "budgetExVat": 40000,
+      "vatRate": 0.0,
+      "notes": "Stud partitions, linings, screeds, plastering, and the work needed to turn the shell into usable internal rooms."
+    },
+    {
+      "id": "kitchen_utility",
+      "name": "Kitchen, utility & appliances",
+      "budgetExVat": 47350,
+      "vatRate": 0.2,
+      "notes": "Vermland quotation €38044 ex VAT converted at ECB €1 = £0.85033 (2 Oct 2026) to £32350. Utility is included as a phase-1 optional. Appliances are excluded from Vermland and kept as a £15000 allowance."
+    },
+    {
+      "id": "bathrooms",
+      "name": "Bathrooms (ensuites + powder)",
+      "budgetExVat": 35000,
+      "vatRate": 0.2,
+      "notes": "Sanitaryware, showers, bath, basins, bathroom brassware, and associated finish allowances for all bathroom spaces."
+    },
+    {
+      "id": "joinery",
+      "name": "Second-fix carpentry & joinery (doors/wardrobes)",
+      "budgetExVat": 25000,
+      "vatRate": 0.2,
+      "notes": "Internal doors, skirtings, architraves, fitted wardrobes, and other bespoke second-fix timber elements."
+    },
+    {
+      "id": "finishes",
+      "name": "Finishes (flooring, decorating, tiling beyond baths)",
+      "budgetExVat": 27000,
+      "vatRate": 0.2,
+      "notes": "Polished terrazzo dropped. Polished concrete planning allowance £20,000 ex VAT for about 140–150 m². Not a received quote. Engineered oak remains £7,000."
+    },
+    {
+      "id": "utilities",
+      "name": "Utilities & compliance (connections/testing/certs/EV)",
+      "budgetExVat": 15000,
+      "vatRate": 0.2,
+      "notes": "Final connections, certification, testing, EV charger provision, new mains water connection, and close-out items needed to make the project compliant and occupiable."
+    },
+    {
+      "id": "courtyard_finish_longterm",
+      "name": "Courtyard finishing (long-term)",
+      "budgetExVat": 0,
+      "vatRate": 0.2,
+      "notes": "Separate long-term allowance for courtyard paving, joinery, and detailed finishing once the design is fixed."
+    },
+    {
+      "id": "landscaping",
+      "name": "Landscaping (excluded for now)",
+      "budgetExVat": 0,
+      "vatRate": 0.2,
+      "notes": "External soft and hard landscaping beyond immediate building interfaces; currently excluded from the active build budget."
+    }
+  ],
+  "globalContingency": {
+    "budgetExVat": 100000,
+    "vatRate": 0.0,
+    "rules": "Global pot; allocate via decisions or manual transfers later."
+  },
+  "totals": {
+    "baselineBuildBudgetExVat": 817589.47,
+    "contingencyExVat": 100000,
+    "envelopeExVat": 917589.47
+  }
+}

@@ -15,6 +15,7 @@ export default async function ProtectedLayout({
   const allNavigationItems = [
     { href: "/", label: "Dashboard" },
     { href: "/categories", label: "Categories" },
+    { href: "/budget", label: "Budget" },
     { href: "/procurement", label: "Procurement" },
     { href: "/decisions", label: "Decisions" },
     { href: "/furniture", label: "Furniture" },
@@ -31,6 +32,7 @@ export default async function ProtectedLayout({
     const permissionMap = {
       "/": "dashboard:view",
       "/categories": "categories:view",
+      "/budget": "budget:view",
       "/procurement": "procurement:view",
       "/decisions": "decisions:view",
       "/furniture": "decisions:view",

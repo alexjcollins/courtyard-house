@@ -2,12 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Armchair, Home, FolderKanban, ShoppingCart, GitBranch, Settings2, Wallet, Images, ListTodo, Map, Route, Sun } from "lucide-react"
+import { Armchair, Sheet, Home, FolderKanban, ShoppingCart, GitBranch, Settings2, Wallet, Images, ListTodo, Map, Route, Sun } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const iconMap = {
   "/": Home,
   "/categories": FolderKanban,
+  "/budget": Sheet,
   "/procurement": ShoppingCart,
   "/decisions": Settings2,
   "/furniture": Armchair,

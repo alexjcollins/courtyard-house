@@ -1,0 +1,477 @@
+{
+  "lineItems": [
+    {
+      "id": "fees-architect",
+      "categoryId": "fees",
+      "name": "Architect",
+      "budgetExVat": 62000,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "fees-structural-engineer",
+      "categoryId": "fees",
+      "name": "Structural engineer",
+      "budgetExVat": 8000,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "fees-topographical-study",
+      "categoryId": "fees",
+      "name": "Topographical study",
+      "budgetExVat": 1900,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "fees-ecological-study",
+      "categoryId": "fees",
+      "name": "Ecological study",
+      "budgetExVat": 3300,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "fees-pre-planning-application",
+      "categoryId": "fees",
+      "name": "Pre-planning application fee",
+      "budgetExVat": 555,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "fees-arboricultural-study",
+      "categoryId": "fees",
+      "name": "Arboricultural study",
+      "budgetExVat": 1475,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "fees-integrum-site-investigation",
+      "categoryId": "fees",
+      "name": "Integrum site investigation and interpretative report",
+      "budgetExVat": 5100,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "prelims-disconnect-power-nissen-hut",
+      "categoryId": "prelims",
+      "name": "Disconnect power from Nissen hut",
+      "budgetExVat": 160,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "prelims-skip-hire-2026-06-05",
+      "categoryId": "prelims",
+      "name": "Skip hire on 5 June 2026",
+      "budgetExVat": 302.65,
+      "vatRate": 0.2,
+      "status": "budgeted",
+      "meta": {
+        "amountIncVat": 363.18
+      }
+    },
+    {
+      "id": "prelims-site-welfare-setup",
+      "categoryId": "prelims",
+      "name": "Site setup, temporary welfare, and basic compound establishment",
+      "budgetExVat": 7500,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "prelims-temp-works-access-overheads",
+      "categoryId": "prelims",
+      "name": "Temporary works, access measures, fencing, and early site overheads",
+      "budgetExVat": 6000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "prelims-contractor-general-overheads",
+      "categoryId": "prelims",
+      "name": "General preliminaries allowance and contractor site overhead",
+      "budgetExVat": 6037.35,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "gw-raft-slab",
+      "categoryId": "groundworks",
+      "name": "Raft slab foundations (incl reinforcement, pour, standard insulation where required)",
+      "budgetExVat": 58000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "gw-drainage-core",
+      "categoryId": "groundworks",
+      "name": "Drainage runs, manholes, connections within site (incl courtyard drainage allowance)",
+      "budgetExVat": 20000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "gw-plinth-terrace",
+      "categoryId": "groundworks",
+      "name": "Plinth/terrace concrete element (2.5m x 21.5m ≈ 53.75sqm)",
+      "budgetExVat": 7000,
+      "vatRate": 0.0,
+      "status": "budgeted",
+      "meta": {
+        "area_sqm": 53.75
+      }
+    },
+    {
+      "id": "gw-nissen-hut-demo",
+      "categoryId": "groundworks",
+      "name": "Demolition of existing Nissen hut and breakup/removal of remaining foundations",
+      "budgetExVat": 9000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "gw-planning-uplift",
+      "categoryId": "groundworks",
+      "name": "Planning uplift to a £140,000 groundworks package",
+      "budgetExVat": 46000,
+      "vatRate": 0.0,
+      "status": "budgeted",
+      "meta": {
+        "note": "Bridges the old £94,000 lines to the Oct 2026 planning allowance. Not a quote."
+      }
+    },
+    {
+      "id": "str-steel-fabrication-supply",
+      "categoryId": "steel_structure",
+      "name": "Steel frame fabrication, primer and drawings",
+      "budgetExVat": 21239.47,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "str-steel-erection-connections",
+      "categoryId": "steel_structure",
+      "name": "Steel delivery, Hiab and installation",
+      "budgetExVat": 8184,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "tf-wall-panels-infill",
+      "categoryId": "timber_frame",
+      "name": "Timber frame wall panels and structural infill package",
+      "budgetExVat": 70000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "tf-structural-carpentry-roof-carcassing",
+      "categoryId": "timber_frame",
+      "name": "Structural carpentry and roof carcassing",
+      "budgetExVat": 20000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "tf-sheathing-membranes-sundries",
+      "categoryId": "timber_frame",
+      "name": "Sheathing, breather membranes, and timber frame sundries",
+      "budgetExVat": 10000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "str-secondary-metalwork",
+      "categoryId": "structural_other",
+      "name": "Secondary structural metalwork",
+      "budgetExVat": 5000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "str-structural-remainder-allowance",
+      "categoryId": "structural_other",
+      "name": "Residual structural coordination and allowance",
+      "budgetExVat": 2000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "env-cladding-materials",
+      "categoryId": "envelope",
+      "name": "Timber cladding materials package",
+      "budgetExVat": 33000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "env-cladding-install-labour",
+      "categoryId": "envelope",
+      "name": "Cladding battens, fixings, and installation labour",
+      "budgetExVat": 18000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "env-wall-buildup-insulation",
+      "categoryId": "envelope",
+      "name": "External wall build-up, sheathing, and insulation allowance",
+      "budgetExVat": 19000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "env-airtightness",
+      "categoryId": "envelope",
+      "name": "Airtightness membranes, tapes, seals, testing allowance",
+      "budgetExVat": 10000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "env-courtyard-interface-detailing",
+      "categoryId": "envelope",
+      "name": "Courtyard threshold, envelope interface, and detailing allowance",
+      "budgetExVat": 10000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "win-large-sliders",
+      "categoryId": "windows",
+      "name": "Glideline GS25 sliders D/11, D/17 and D/18, anodised",
+      "budgetExVat": 31031,
+      "vatRate": 0.0,
+      "status": "budgeted",
+      "meta": {
+        "quote": "Glideline 2026-10-01",
+        "refs": [
+          "D/11",
+          "D/17",
+          "D/18"
+        ]
+      }
+    },
+    {
+      "id": "win-remaining-windows-doors",
+      "categoryId": "windows",
+      "name": "Glideline windows W/01–W/13 and back door D/03, anodised. Entrance doors not included.",
+      "budgetExVat": 41455,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "mep-ashp-hot-water-plant",
+      "categoryId": "mech_elec",
+      "name": "Air source heat pump plant, cylinder, and commissioning",
+      "budgetExVat": 15000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "mep-ufh-distribution-controls",
+      "categoryId": "mech_elec",
+      "name": "Wet underfloor heating pipework, manifolds, zoning, and controls",
+      "budgetExVat": 11000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "mep-electrical-first-fix",
+      "categoryId": "mech_elec",
+      "name": "Electrical first fix, consumer unit, cabling, and core containment",
+      "budgetExVat": 9000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "mep-electrical-second-fix",
+      "categoryId": "mech_elec",
+      "name": "Electrical second fix, standard sockets, switches, and essential external points",
+      "budgetExVat": 6500,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "mep-plumbing-distribution",
+      "categoryId": "mech_elec",
+      "name": "Domestic hot and cold water distribution, wastes, and plantroom plumbing",
+      "budgetExVat": 7500,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "mep-ceiling-spotlights",
+      "categoryId": "mech_elec",
+      "name": "Recessed ceiling spotlight provision to living area, bedrooms, and office",
+      "budgetExVat": 3000,
+      "vatRate": 0.0,
+      "status": "budgeted",
+      "meta": {
+        "allowance": {
+          "livingArea": 8,
+          "bedrooms": 6,
+          "office": 4
+        },
+        "totalSpotlights": 18
+      }
+    },
+    {
+      "id": "gar-min-insul-plaster",
+      "categoryId": "internal_buildup",
+      "name": "Garage: minimal insulation + plastering allowance (worst-case placeholder)",
+      "budgetExVat": 7000,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "kit-vermland-cabinetry-worktops",
+      "categoryId": "kitchen_utility",
+      "name": "Vermland kitchen string and island",
+      "budgetExVat": 20758,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "kit-vermland-utility",
+      "categoryId": "kitchen_utility",
+      "name": "Vermland utility room cabinetry (phase-1 optional, included)",
+      "budgetExVat": 8292,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "kit-vermland-shipping-design",
+      "categoryId": "kitchen_utility",
+      "name": "Vermland shipping, design work and virtual install support",
+      "budgetExVat": 3300,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "kit-appliance-allowance",
+      "categoryId": "kitchen_utility",
+      "name": "Kitchen appliance allowance",
+      "budgetExVat": 15000,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "bath-master-hers",
+      "categoryId": "bathrooms",
+      "name": "Master ensuite (hers) sanitaryware, bath, brassware, and finishes",
+      "budgetExVat": 9000,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "bath-master-his",
+      "categoryId": "bathrooms",
+      "name": "Master ensuite (his) sanitaryware, shower, brassware, and finishes",
+      "budgetExVat": 6500,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "bath-guest-ensuite-1",
+      "categoryId": "bathrooms",
+      "name": "Guest ensuite 1 sanitaryware, shower, brassware, and finishes",
+      "budgetExVat": 6000,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "bath-guest-ensuite-2",
+      "categoryId": "bathrooms",
+      "name": "Guest ensuite 2 sanitaryware, shower, brassware, and finishes",
+      "budgetExVat": 6000,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "bath-powder-room",
+      "categoryId": "bathrooms",
+      "name": "Powder room WC, basin, taps, and accessories",
+      "budgetExVat": 2500,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "bath-screens-mirrors-ancillary",
+      "categoryId": "bathrooms",
+      "name": "Bathroom screens, mirrors, extract accessories, and ancillary allowances",
+      "budgetExVat": 5000,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "fin-polished-concrete",
+      "categoryId": "finishes",
+      "name": "Polished concrete flooring allowance (about 140–150 m²)",
+      "budgetExVat": 20000,
+      "vatRate": 0.2,
+      "status": "budgeted",
+      "meta": {
+        "area_sqm": "140-150",
+        "basis": "Planning allowance, not a quote. Wearing course on beam and block."
+      }
+    },
+    {
+      "id": "fin-engineered-oak",
+      "categoryId": "finishes",
+      "name": "Engineered oak flooring allowance",
+      "budgetExVat": 7000,
+      "vatRate": 0.2,
+      "status": "budgeted",
+      "meta": {
+        "area_sqm": 110,
+        "budgetNote": "Balance of the flooring allowance after terrazzo"
+      }
+    },
+    {
+      "id": "util-ev-charger",
+      "categoryId": "utilities",
+      "name": "EV charger (supply + install)",
+      "budgetExVat": 1200,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "util-new-mains-water-connection",
+      "categoryId": "utilities",
+      "name": "New mains water connection",
+      "budgetExVat": 2150,
+      "vatRate": 0.0,
+      "status": "budgeted"
+    },
+    {
+      "id": "util-connections-metering-sundries",
+      "categoryId": "utilities",
+      "name": "Utility connections, metering, and service authority sundries",
+      "budgetExVat": 3650,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "util-testing-commissioning-certification",
+      "categoryId": "utilities",
+      "name": "Testing, commissioning, and certification allowance",
+      "budgetExVat": 4000,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    },
+    {
+      "id": "util-final-compliance-closeout",
+      "categoryId": "utilities",
+      "name": "Final compliance, sign-off, and close-out documentation",
+      "budgetExVat": 4000,
+      "vatRate": 0.2,
+      "status": "budgeted"
+    }
+  ]
+}

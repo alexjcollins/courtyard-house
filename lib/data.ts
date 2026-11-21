@@ -8,6 +8,7 @@ import {
   writeDataFileText,
   type StorageStatus,
 } from "@/lib/storage"
+import { getLegacyBudgetFilesFromDatabase } from "@/lib/budget-db"
 import { getLegacyDecisionsFileFromDatabase } from "@/lib/decisions-db"
 
 export const DATA_FILE_NAMES = [
@@ -79,6 +80,8 @@ export type LineItem = {
   vatRate?: VatRate
   vatIncluded?: boolean
   status: string
+  /** The procurement quote picked as this line item's live quote. */
+  quoteId?: string
   meta?: Record<string, unknown>
 }
 
@@ -559,7 +562,18 @@ export type AssistantDiff = {
   nextContent: string
 }
 
+/** Budget files now live in Postgres (see lib/budget-core.mjs); never read from Spaces. */
+export const DATABASE_BACKED_DATA_FILES: readonly DataFileName[] = [
+  "categories.json",
+  "lineItems.json",
+]
+
 async function readJsonFile<T>(fileName: DataFileName): Promise<T> {
+  if (fileName === "categories.json" || fileName === "lineItems.json") {
+    const files = await getLegacyBudgetFilesFromDatabase()
+    return (fileName === "categories.json" ? files.categoriesFile : files.lineItemsFile) as T
+  }
+
   const content = await readDataFileText(fileName)
   return JSON.parse(content) as T
 }
@@ -1138,7 +1152,7 @@ function generateQuoteDiff(
 
 export async function getEditableFiles(): Promise<EditableFile[]> {
   return Promise.all(
-    DATA_FILE_NAMES.map(async (name) => ({
+    DATA_FILE_NAMES.filter((name) => !DATABASE_BACKED_DATA_FILES.includes(name)).map(async (name) => ({
       name,
       content: await readDataFileText(name),
     })),
@@ -1149,11 +1163,13 @@ export async function saveEditableFile(
   fileName: DataFileName,
   content: string,
 ): Promise<void> {
-  const parsed = JSON.parse(content)
-
-  if (fileName === "categories.json") {
-    validateBudgetIntegrity(parsed as CategoriesFile)
+  if (DATABASE_BACKED_DATA_FILES.includes(fileName)) {
+    throw new Error(
+      `${fileName} is no longer used — budget data lives in Postgres. Edit it on the Budget page or with \`npm run budget\`.`,
+    )
   }
+
+  const parsed = JSON.parse(content)
 
   await writeDataFileText(fileName, formatJson(parsed))
 }
