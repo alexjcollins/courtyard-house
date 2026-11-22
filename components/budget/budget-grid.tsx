@@ -41,6 +41,7 @@ import {
   FileText,
   Hash,
   Hourglass,
+  Loader2,
   MoreHorizontal,
   Percent,
   Plus,
@@ -349,6 +350,8 @@ export function BudgetGrid({
   const [editing, setEditing] = useState<{ initial: string } | null>(null)
   const [paidOpenFor, setPaidOpenFor] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<BudgetGridItem | null>(null)
+  // Category an "Add item" is in flight for: blocks double-clicks while the server round-trips.
+  const [addingTo, setAddingTo] = useState<string | null>(null)
   const [saving, setSaving] = useState(0)
   const [lastSyncedAt, setLastSyncedAt] = useState(() => Date.now())
   const [now, setNow] = useState(() => Date.now())
@@ -401,6 +404,8 @@ export function BudgetGrid({
       options: {
         optimistic?: (current: BudgetGridData) => BudgetGridData
         onSuccess?: (response: SaveResponse) => void
+        /** Runs after success or failure. */
+        onSettled?: () => void
       } = {},
     ) => {
       if (options.optimistic) {
@@ -450,6 +455,7 @@ export function BudgetGrid({
           await refetch()
         } finally {
           setSaving((n) => n - 1)
+          options.onSettled?.()
         }
       })
     },
@@ -605,17 +611,23 @@ export function BudgetGrid({
 
   const addItem = useCallback(
     (category: BudgetGridCategory) => {
+      if (addingTo) return
+      setAddingTo(category.id)
       submit([{ type: "create_line_item", categoryId: category.id, name: "New item", budgetExVat: 0 }], {
         onSuccess: (response) => {
           const id = response.result?.createdIds[0]
           if (!id) return
           setExpanded((prev) => (prev === true ? prev : { ...prev, [`c:${category.id}`]: true }))
+          // Only jump into the new row if the user isn't already editing something else:
+          // the row lands a second or two after the click, and stealing focus then loses keystrokes.
+          if (editingRef.current) return
           setActive({ rowId: `i:${id}`, columnId: "name" })
           setEditing({ initial: "New item" })
         },
+        onSettled: () => setAddingTo(null),
       })
     },
-    [submit],
+    [submit, addingTo],
   )
 
   const confirmDelete = useCallback(() => {
@@ -924,7 +936,16 @@ export function BudgetGrid({
                           key={cell.id}
                           data-cell={`${row.id}|${columnId}`}
                           onMouseDown={() => {
-                            if (!isEditing) setActive({ rowId: row.id, columnId })
+                            if (isEditing) return
+                            // Another cell is mid-edit: commit it first. Moving the active cell would
+                            // otherwise unmount its input without a blur, dropping the typed value and
+                            // re-opening the editor here with the old text.
+                            if (editing !== null) {
+                              const focused = document.activeElement
+                              if (focused instanceof HTMLElement && focused.tagName === "INPUT") focused.blur()
+                              setEditing(null)
+                            }
+                            setActive({ rowId: row.id, columnId })
                           }}
                           onDoubleClick={() => {
                             if (editor) setEditing({ initial: editorInitialValue(row.original, columnId) })
@@ -986,11 +1007,21 @@ export function BudgetGrid({
                         <button
                           type="button"
                           tabIndex={-1}
+                          disabled={addingTo !== null}
                           onClick={() => addItem(row.original.category)}
-                          className="inline-flex items-center gap-1.5 pl-6 text-muted-foreground hover:text-foreground"
+                          className="inline-flex items-center gap-1.5 pl-6 text-muted-foreground hover:text-foreground disabled:cursor-wait disabled:hover:text-muted-foreground"
                         >
-                          <Plus className="size-3.5" />
-                          Add item
+                          {addingTo === row.original.categoryId ? (
+                            <>
+                              <Loader2 className="size-3.5 animate-spin" />
+                              Adding…
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="size-3.5" />
+                              Add item
+                            </>
+                          )}
                         </button>
                       </td>
                       <td colSpan={COLUMN_IDS.length - 1} className="border-b border-border/60" />
