@@ -148,7 +148,7 @@ const proposeDelete: Anthropic.Tool = {
 const proposeBudgetChanges: Anthropic.Tool = {
   name: "propose_budget_changes",
   description:
-    "Propose a batch of edits to budget line items (LINEITEMS): change a line item's budget, name, VAT rate or live quote; add a line item to a budget category; or remove one. Use one call for the whole request, even for many rows — it becomes one confirmation card that applies all-or-nothing. The envelope is fixed, so budget increases draw down contingency, which has a cap; the server checks the batch against live data and refuses it with the overrun if it would breach the cap.",
+    "Propose a batch of edits to budget line items (LINEITEMS): change a line item's budget, name, VAT rate or live quote; add a line item to a budget category; or remove one. Use one call for the whole request, even for many rows — it becomes one confirmation card that applies all-or-nothing. The envelope is fixed, so budget increases draw down contingency; the server checks the batch against live data and refuses it with the overrun if it would breach a drawdown cap, when one is set.",
   input_schema: {
     type: "object",
     properties: {

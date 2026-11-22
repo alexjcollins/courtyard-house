@@ -74,7 +74,7 @@ plan, budget categories themselves, or the timeline — say so if asked.
 
 A budget category's budget is the sum of its line items, and the envelope is
 fixed: raising a line item draws down contingency, cutting one returns money to
-it. Contingency drawdown is capped. Put every row of a bulk request in one call
+it. A drawdown cap may apply. Put every row of a bulk request in one call
 — the card applies all-or-nothing. A line item's live quote is the QUOTES row
 whose lineItem column names it; a quote can be live for only one line item, and
 only within its own budget category.

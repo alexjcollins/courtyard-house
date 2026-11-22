@@ -34,8 +34,10 @@ refuses them.
   `lib/budget-core.mjs` (plain ESM so node scripts can import it; types in `.d.mts`). Don't
   write the tables directly.
 - **Nothing is stored that can drift.** A category's budget = Σ its active line items.
-  Contingency = fixed envelope (`budget_settings`) − Σ line items. Raising a budget eats
-  contingency; `max_drawdown_ex_vat` (£40k) caps the drawdown below the starting contingency.
+  Contingency = fixed envelope (`budget_settings`) − Σ line items. The envelope is set to the
+  £720k construction target + professional fees + £100k starting contingency, so any budget
+  above that eats contingency. `max_drawdown_ex_vat` optionally caps the drawdown; it is
+  currently null (no cap), so contingency can go to zero or below.
 - Each batch is one transaction that row-locks `budget_settings`, so concurrent writers
   serialise and the cap can't be raced. Rows carry `version`; pass `expectedVersion` to get a
   409 instead of overwriting someone else's edit. Every field change lands in `budget_changes`

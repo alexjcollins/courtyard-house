@@ -90,7 +90,8 @@ export function recomputeGrid(grid: BudgetGridData): BudgetGridData {
       baselineExVat,
       contingencyExVat,
       drawdownExVat,
-      capHeadroomExVat: round(grid.totals.maxDrawdownExVat - drawdownExVat),
+      capHeadroomExVat:
+        grid.totals.maxDrawdownExVat === null ? null : round(grid.totals.maxDrawdownExVat - drawdownExVat),
     },
   }
 }

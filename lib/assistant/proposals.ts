@@ -574,7 +574,10 @@ async function describeBudgetChanges(
     before.push({ field: "Contingency", value: formatGbp(result.before.contingencyExVat) })
     after.push({
       field: "Contingency",
-      value: `${formatGbp(result.after.contingencyExVat)} (${formatGbp(result.after.drawdownExVat)} of ${formatGbp(result.after.maxDrawdownExVat)} cap drawn)`,
+      value:
+        result.after.maxDrawdownExVat === null
+          ? `${formatGbp(result.after.contingencyExVat)} (${formatGbp(result.after.drawdownExVat)} drawn)`
+          : `${formatGbp(result.after.contingencyExVat)} (${formatGbp(result.after.drawdownExVat)} of ${formatGbp(result.after.maxDrawdownExVat)} cap drawn)`,
     })
   }
 

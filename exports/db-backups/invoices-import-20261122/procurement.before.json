@@ -1,0 +1,427 @@
+{
+  "suppliers": [
+    {
+      "id": "sup-arboricultural-consultant",
+      "name": "Arboricultural Consultant",
+      "trade": "Arboricultural consultancy",
+      "notes": "Tree survey and arboricultural planning input."
+    },
+    {
+      "id": "sup-ashford-borough-council",
+      "name": "Ashford Borough Council",
+      "trade": "Planning authority",
+      "notes": "Local authority fees and planning-related application charges."
+    },
+    {
+      "id": "sup-project-architect",
+      "name": "Project Architect",
+      "trade": "Architectural services",
+      "notes": "Lead architect appointment for design and coordination."
+    },
+    {
+      "id": "sup-ecological-consultant",
+      "name": "Ecological Consultant",
+      "trade": "Ecological consultancy",
+      "notes": "Ecological study and planning support."
+    },
+    {
+      "id": "sup-topographical-surveyor",
+      "name": "Topographical Surveyor",
+      "trade": "Topographical survey",
+      "notes": "Topographical survey and related site information."
+    },
+    {
+      "id": "sup-vermland",
+      "name": "Vermland",
+      "trade": "Kitchen cabinetry & worktops",
+      "notes": "Current kitchen supplier for cabinetry and worktops."
+    },
+    {
+      "id": "sup-integrum-site-services",
+      "name": "Integrum Site Services Ltd",
+      "trade": "Site investigation",
+      "notes": "Ground investigation, infiltration testing, factual reporting, and interpretative geotechnical reporting."
+    },
+    {
+      "id": "sup-compass-glass",
+      "name": "Compass Glass",
+      "trade": "Glazing",
+      "notes": "Current glazing supplier for the main windows and external doors package."
+    },
+    {
+      "id": "sup-glideline",
+      "name": "Glideline",
+      "trade": "Glazing",
+      "notes": "Alternative glazing supplier for the main windows and external doors package."
+    },
+    {
+      "id": "sup-adam-watts",
+      "name": "Adam Watts",
+      "trade": "Electrical disconnect / enabling works",
+      "notes": "Disconnect power from the existing Nissen hut ahead of demolition and site enabling works."
+    },
+    {
+      "id": "sup-mick-george",
+      "name": "Mick George",
+      "trade": "Skip hire",
+      "notes": "Skip hire and waste removal support during early enabling and site setup works."
+    },
+    {
+      "id": "sup-south-east-water",
+      "name": "South East Water",
+      "trade": "Utility connection",
+      "notes": "Water authority charges for new mains connection works."
+    },
+    {
+      "id": "sup-mj-allen",
+      "name": "MJ Allen Metalwork",
+      "trade": "Structural steel",
+      "notes": "H7545 Rev 1, Oliver Morgan-Whitcombe, 11 Sep 2026."
+    }
+  ],
+  "quotes": [
+    {
+      "id": "q-001",
+      "supplierId": "sup-vermland",
+      "categoryId": "kitchen_utility",
+      "title": "Kitchen, island and utility cabinetry",
+      "amountExVat": 32350,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "received",
+      "quoteDate": "2026-10-01",
+      "createdDate": "2026-02-28",
+      "updatedDate": "2026-10-03",
+      "notes": "Vermland €38,044 ex VAT converted at ECB €1=£0.85033 (2 Oct 2026) to £32350. Includes utility, shipping, design and virtual support. Appliances excluded."
+    },
+    {
+      "id": "q-002",
+      "supplierId": "sup-compass-glass",
+      "categoryId": "windows",
+      "title": "Main glazing package",
+      "amountExVat": 80000,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "status": "received",
+      "quoteDate": "2026-04-04",
+      "createdDate": "2026-04-04",
+      "updatedDate": "2026-04-04",
+      "notes": "Compass Glass quote for the main glazing package."
+    },
+    {
+      "id": "q-003",
+      "supplierId": "sup-integrum-site-services",
+      "categoryId": "fees",
+      "title": "Site investigation and interpretative report",
+      "amountExVat": 5100,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "accepted",
+      "quoteDate": "2026-03-11",
+      "convertedToPurchaseOrderId": "po-integrum-site-investigation",
+      "createdDate": "2026-04-04",
+      "updatedDate": "2026-06-19",
+      "notes": "Integrum quote covering boreholes, infiltration testing, factual reporting, and interpretative reporting. Planned funding source: Ether."
+    },
+    {
+      "id": "q-004",
+      "supplierId": "sup-glideline",
+      "categoryId": "windows",
+      "title": "Anodised glazing package (entrance doors excluded)",
+      "amountExVat": 72486,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "status": "received",
+      "quoteDate": "2026-10-01",
+      "createdDate": "2026-06-19",
+      "updatedDate": "2026-10-03",
+      "notes": "Glideline 1 Oct 2026, matt silver anodised, supply, survey and install. £72,486 ex VAT. Quote also shows VAT at 20% (£14,497). Entrance doors not priced."
+    },
+    {
+      "id": "q-005",
+      "supplierId": "sup-mj-allen",
+      "categoryId": "steel_structure",
+      "title": "Structural steel supply and installation",
+      "amountExVat": 29423.47,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "received",
+      "quoteDate": "2026-09-11",
+      "createdDate": "2026-10-04",
+      "updatedDate": "2026-10-04",
+      "notes": "H7545 Rev 1. £29,423.47 ex VAT. Optional 60-minute intumescent £9,636.31 excluded. Bracket fabrication, stainless angles, Nylon 6 thermal breaks and 8 mm fabrications at 800 mm centres excluded. Price held for 24 hours from 11 Sep 2026."
+    }
+  ],
+  "purchaseOrders": [
+    {
+      "id": "po-architect-appointment",
+      "supplierId": "sup-project-architect",
+      "categoryId": "fees",
+      "title": "Architect appointment",
+      "amountExVat": 62000,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Professional appointment for architect services."
+    },
+    {
+      "id": "po-topographical-study",
+      "supplierId": "sup-topographical-surveyor",
+      "categoryId": "fees",
+      "title": "Topographical study",
+      "amountExVat": 1900,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Initial topographical study and survey information."
+    },
+    {
+      "id": "po-ecological-study",
+      "supplierId": "sup-ecological-consultant",
+      "categoryId": "fees",
+      "title": "Ecological study",
+      "amountExVat": 3300,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Ecological study and related planning input."
+    },
+    {
+      "id": "po-pre-planning-application",
+      "supplierId": "sup-ashford-borough-council",
+      "categoryId": "fees",
+      "title": "Pre-planning application",
+      "amountExVat": 555,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Pre-planning application fee paid to the local authority."
+    },
+    {
+      "id": "po-arboricultural-study",
+      "supplierId": "sup-arboricultural-consultant",
+      "categoryId": "fees",
+      "title": "Arboricultural study",
+      "amountExVat": 1475,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-03-01",
+      "updatedDate": "2026-03-01",
+      "notes": "Arboricultural study and associated reporting."
+    },
+    {
+      "id": "po-new-mains-water-connection",
+      "supplierId": "sup-south-east-water",
+      "categoryId": "utilities",
+      "title": "New mains water connection",
+      "amountExVat": 2150,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-06-19",
+      "updatedDate": "2026-06-19",
+      "notes": "South East Water charge for the new mains connection."
+    },
+    {
+      "id": "po-disconnect-power-nissen-hut",
+      "supplierId": "sup-adam-watts",
+      "categoryId": "prelims",
+      "title": "Disconnect power from Nissen hut",
+      "amountExVat": 160,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-06-22",
+      "updatedDate": "2026-06-22",
+      "notes": "Enabling works charge to isolate and disconnect power before Nissen hut demolition."
+    },
+    {
+      "id": "po-skip-hire-2026-06-05",
+      "supplierId": "sup-mick-george",
+      "categoryId": "prelims",
+      "title": "Skip hire on 5 June 2026",
+      "amountExVat": 302.65,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-06-05",
+      "updatedDate": "2026-06-22",
+      "notes": "Skip hire recorded from a paid gross amount of £363.18, assumed to be £302.65 ex VAT plus 20% VAT."
+    },
+    {
+      "id": "po-integrum-site-investigation",
+      "supplierId": "sup-integrum-site-services",
+      "categoryId": "fees",
+      "quoteId": "q-003",
+      "title": "Site investigation and interpretative report",
+      "amountExVat": 5100,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "status": "issued",
+      "issuedDate": "2026-06-19",
+      "updatedDate": "2026-06-19",
+      "notes": "Integrum appointment for boreholes, infiltration testing, factual reporting, and interpretative geotechnical reporting."
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-architect-001",
+      "purchaseOrderId": "po-architect-appointment",
+      "supplierId": "sup-project-architect",
+      "number": "ARCH-001",
+      "amountExVat": 30000,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Architect payment recorded against appointment.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-architect-stage4-001",
+      "purchaseOrderId": "po-architect-appointment",
+      "supplierId": "sup-project-architect",
+      "number": "ARCH-004",
+      "amountExVat": 9750,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Architect RIBA Stage 4 fees, settled across three payments.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-topographical-001",
+      "purchaseOrderId": "po-topographical-study",
+      "supplierId": "sup-topographical-surveyor",
+      "number": "TOPO-001",
+      "amountExVat": 1900,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Topographical study payment recorded in full.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-ecological-001",
+      "purchaseOrderId": "po-ecological-study",
+      "supplierId": "sup-ecological-consultant",
+      "number": "ECO-001",
+      "amountExVat": 3300,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Ecological study payment recorded in full.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-pre-planning-001",
+      "purchaseOrderId": "po-pre-planning-application",
+      "supplierId": "sup-ashford-borough-council",
+      "number": "ABC-PP-001",
+      "amountExVat": 555,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Pre-planning application fee paid to Ashford Borough Council.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-arboricultural-001",
+      "purchaseOrderId": "po-arboricultural-study",
+      "supplierId": "sup-arboricultural-consultant",
+      "number": "ARB-001",
+      "amountExVat": 1475,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-03-01",
+      "dueDate": "2026-03-01",
+      "status": "paid",
+      "notes": "Arboricultural study payment recorded in full.",
+      "createdDate": "2026-03-01",
+      "updatedDate": "2026-03-01"
+    },
+    {
+      "id": "inv-south-east-water-001",
+      "purchaseOrderId": "po-new-mains-water-connection",
+      "supplierId": "sup-south-east-water",
+      "number": "SEW-001",
+      "amountExVat": 2150,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "issueDate": "2026-06-19",
+      "dueDate": "2026-06-19",
+      "status": "paid",
+      "notes": "South East Water charge for the new mains connection.",
+      "createdDate": "2026-06-19",
+      "updatedDate": "2026-06-19"
+    },
+    {
+      "id": "inv-adam-watts-001",
+      "purchaseOrderId": "po-disconnect-power-nissen-hut",
+      "supplierId": "sup-adam-watts",
+      "number": "AW-001",
+      "amountExVat": 160,
+      "vatRate": 0.0,
+      "vatIncluded": false,
+      "issueDate": "2026-06-22",
+      "dueDate": "2026-06-22",
+      "status": "paid",
+      "notes": "Power disconnected from the existing Nissen hut, paid in cash from savings.",
+      "createdDate": "2026-06-22",
+      "updatedDate": "2026-06-22"
+    },
+    {
+      "id": "inv-mick-george-001",
+      "purchaseOrderId": "po-skip-hire-2026-06-05",
+      "supplierId": "sup-mick-george",
+      "number": "MG-001",
+      "amountExVat": 302.65,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-06-05",
+      "dueDate": "2026-06-05",
+      "status": "paid",
+      "notes": "Skip hire on 5 June 2026. Recorded from a paid gross amount of £363.18, assumed to be £302.65 ex VAT plus 20% VAT.",
+      "createdDate": "2026-06-22",
+      "updatedDate": "2026-06-22"
+    },
+    {
+      "id": "inv-integrum-001",
+      "purchaseOrderId": "po-integrum-site-investigation",
+      "supplierId": "sup-integrum-site-services",
+      "number": "INT-001",
+      "amountExVat": 5100,
+      "vatRate": 0.2,
+      "vatIncluded": false,
+      "issueDate": "2026-06-19",
+      "dueDate": "2026-06-19",
+      "status": "paid",
+      "notes": "Integrum site investigation and interpretative report paid in full.",
+      "createdDate": "2026-06-19",
+      "updatedDate": "2026-06-19"
+    }
+  ]
+}

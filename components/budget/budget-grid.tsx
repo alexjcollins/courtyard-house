@@ -34,6 +34,7 @@ import {
   ArrowUp,
   ArrowUpRight,
   Banknote,
+  Calculator,
   ChevronRight,
   ChevronsDownUp,
   ChevronsUpDown,
@@ -69,6 +70,14 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -298,12 +307,14 @@ type ActiveCell = { rowId: string; columnId: ColumnId }
 export function BudgetGrid({
   initialData,
   canEdit,
+  saleScenarios,
 }: {
   initialData: BudgetGridData
   canEdit: boolean
+  saleScenarios?: ReactNode
 }) {
   const [grid, setGrid] = useState(initialData)
-  const [constructionOnly, setConstructionOnly] = useState(false)
+  const [constructionOnly, setConstructionOnly] = useState(true)
   const [expanded, setExpanded] = useState<ExpandedState>({})
   const [sorting, setSorting] = useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -370,6 +381,7 @@ export function BudgetGrid({
         const next = recomputeGrid(options.optimistic(before))
         const t = next.totals
         if (
+          t.maxDrawdownExVat !== null &&
           t.drawdownExVat > t.maxDrawdownExVat + 0.005 &&
           t.drawdownExVat > before.totals.drawdownExVat + 0.005
         ) {
@@ -696,7 +708,9 @@ export function BudgetGrid({
   }, [data])
 
   const totals = grid.totals
-  const usedPct = totals.maxDrawdownExVat > 0 ? Math.max(0, totals.drawdownExVat) / totals.maxDrawdownExVat : 0
+  // Measure drawdown against the cap when there is one, otherwise against the whole starting pot.
+  const drawdownLimit = totals.maxDrawdownExVat ?? totals.startingContingencyExVat
+  const usedPct = drawdownLimit > 0 ? Math.max(0, totals.drawdownExVat) / drawdownLimit : 0
   const tableWidth = COLUMN_IDS.reduce((s, id) => s + columnMeta(id).width, 0)
   const allExpanded = table.getIsAllRowsExpanded()
 
@@ -710,7 +724,34 @@ export function BudgetGrid({
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">Budget</p>
           <h1 className="mt-2 text-3xl font-medium tracking-tight">Cost drivers</h1>
         </div>
-        <ContingencyMeter totals={totals} usedPct={usedPct} />
+        <div className="flex items-end gap-3">
+          {saleScenarios ? (
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-[13px] text-muted-foreground transition hover:text-foreground"
+                >
+                  <Calculator className="size-3.5" />
+                  Sale scenarios
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-h-[calc(100vh-4rem)] overflow-y-auto sm:max-w-3xl">
+                <DialogHeader>
+                  <DialogTitle>Sale scenarios</DialogTitle>
+                  <DialogDescription>
+                    Whole project, including professional fees. Project costs shown before VAT. Refresh the page to
+                    pick up budget changes.
+                  </DialogDescription>
+                </DialogHeader>
+                {/* Sole child of its wrapper: a server-rendered element passed as a prop trips
+                    React's dev-only list-key check when rendered beside siblings. */}
+                <div>{saleScenarios}</div>
+              </DialogContent>
+            </Dialog>
+          ) : null}
+          <ContingencyMeter totals={totals} usedPct={usedPct} />
+        </div>
       </div>
 
       {grid.warnings.length > 0 ? (
@@ -954,8 +995,18 @@ export function BudgetGrid({
             />
             <FooterRow
               label="Contingency"
-              hint={`${formatMoney(totals.drawdownExVat)} drawn of ${formatMoney(totals.maxDrawdownExVat)} cap`}
-              tone={totals.capHeadroomExVat < 0 ? "danger" : usedPct >= 0.75 ? "warn" : undefined}
+              hint={
+                totals.maxDrawdownExVat === null
+                  ? `${formatMoney(totals.drawdownExVat)} drawn of ${formatMoney(totals.startingContingencyExVat)}`
+                  : `${formatMoney(totals.drawdownExVat)} drawn of ${formatMoney(totals.maxDrawdownExVat)} cap`
+              }
+              tone={
+                totals.contingencyExVat < 0 || (totals.capHeadroomExVat ?? 0) < 0
+                  ? "danger"
+                  : usedPct >= 0.75
+                    ? "warn"
+                    : undefined
+              }
               values={{ budget: formatMoney(totals.contingencyExVat) }}
             />
             <FooterRow
@@ -1430,7 +1481,10 @@ function ContingencyMeter({
         <span className="text-muted-foreground">Contingency used</span>
         <span className="tabular-nums">
           <span className="font-medium">{formatMoney(Math.max(0, totals.drawdownExVat))}</span>
-          <span className="text-muted-foreground"> of {formatMoney(totals.maxDrawdownExVat)}</span>
+          <span className="text-muted-foreground">
+            {" "}
+            of {formatMoney(totals.maxDrawdownExVat ?? totals.startingContingencyExVat)}
+          </span>
         </span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -1438,7 +1492,7 @@ function ContingencyMeter({
       </div>
       <div className="mt-1.5 flex justify-between text-[11px] text-muted-foreground tabular-nums">
         <span>Remaining {formatMoney(totals.contingencyExVat)}</span>
-        <span>Floor {formatMoney(totals.contingencyFloorExVat)}</span>
+        {totals.contingencyFloorExVat !== null ? <span>Floor {formatMoney(totals.contingencyFloorExVat)}</span> : null}
       </div>
     </div>
   )

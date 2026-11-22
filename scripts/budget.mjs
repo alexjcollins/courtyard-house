@@ -64,8 +64,12 @@ function defaultActor() {
 }
 
 function printTotals(label, t) {
+  const drawn =
+    t.maxDrawdownExVat === null
+      ? `drawn ${gbp(t.drawdownExVat)} of ${gbp(t.startingContingencyExVat)} (no cap)`
+      : `drawn ${gbp(t.drawdownExVat)} of ${gbp(t.maxDrawdownExVat)} cap`
   console.log(
-    `${label}: baseline ${gbp(t.baselineExVat)} · contingency ${gbp(t.contingencyExVat)} · drawn ${gbp(t.drawdownExVat)} of ${gbp(t.maxDrawdownExVat)} cap · envelope ${gbp(t.envelopeExVat)}`,
+    `${label}: baseline ${gbp(t.baselineExVat)} · contingency ${gbp(t.contingencyExVat)} · ${drawn} · envelope ${gbp(t.envelopeExVat)}`,
   )
 }
 

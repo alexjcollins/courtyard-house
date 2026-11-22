@@ -213,19 +213,44 @@ function createSignedHeaders(
   }
 }
 
-async function fetchSpacesText(key: string): Promise<string> {
-  const signed = createSignedHeaders("GET", key, sha256Hex(""))
-  const response = await fetch(signed.url, {
-    method: "GET",
-    headers: signed.headers,
-    cache: "no-store",
-  })
+const SPACES_READ_ATTEMPTS = 3
 
-  if (!response.ok) {
-    throw new Error(`Spaces read failed for ${key} (${response.status}).`)
+/**
+ * Reads are retried on network-level failures (undici's "fetch failed", e.g. a TLS
+ * handshake reset) and on 5xx. A single page load fans out to a dozen reads, so one
+ * dropped connection used to take the whole page down. GETs are idempotent, so this is
+ * safe; writes are deliberately not retried.
+ */
+async function fetchSpacesText(key: string): Promise<string> {
+  let lastError: unknown
+
+  for (let attempt = 1; attempt <= SPACES_READ_ATTEMPTS; attempt++) {
+    // Re-sign each attempt: the signature embeds a timestamp.
+    const signed = createSignedHeaders("GET", key, sha256Hex(""))
+    try {
+      const response = await fetch(signed.url, {
+        method: "GET",
+        headers: signed.headers,
+        cache: "no-store",
+      })
+
+      if (response.ok) return await response.text()
+
+      const error = new Error(`Spaces read failed for ${key} (${response.status}).`)
+      if (response.status < 500) throw Object.assign(error, { retryable: false })
+      lastError = error
+    } catch (error) {
+      if (error instanceof Error && "retryable" in error && error.retryable === false) throw error
+      lastError = error
+    }
+
+    if (attempt < SPACES_READ_ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, 150 * attempt))
+    }
   }
 
-  return response.text()
+  console.warn(`[storage] Spaces read for ${key} failed after ${SPACES_READ_ATTEMPTS} attempts`, lastError)
+  throw lastError
 }
 
 async function putSpacesText(

@@ -14,7 +14,8 @@ export declare class BudgetError extends Error {
 export type BudgetSettings = {
   envelopeExVat: number
   startingContingencyExVat: number
-  maxDrawdownExVat: number
+  /** null = no cap on contingency drawdown. */
+  maxDrawdownExVat: number | null
   contingencyVatRate: number
   contingencyRules: string | null
   updatedAt: string | null
@@ -69,10 +70,10 @@ export type BudgetTotals = {
   envelopeExVat: number
   contingencyExVat: number
   startingContingencyExVat: number
-  maxDrawdownExVat: number
+  maxDrawdownExVat: number | null
   drawdownExVat: number
-  contingencyFloorExVat: number
-  capHeadroomExVat: number
+  contingencyFloorExVat: number | null
+  capHeadroomExVat: number | null
 }
 
 export type BudgetChangeSource = "grid" | "assistant" | "cli" | "migration"

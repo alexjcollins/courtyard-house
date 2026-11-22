@@ -72,10 +72,11 @@ export type BudgetGridTotals = {
   baselineExVat: number
   contingencyExVat: number
   startingContingencyExVat: number
-  maxDrawdownExVat: number
+  /** null = no cap on contingency drawdown. */
+  maxDrawdownExVat: number | null
   drawdownExVat: number
-  contingencyFloorExVat: number
-  capHeadroomExVat: number
+  contingencyFloorExVat: number | null
+  capHeadroomExVat: number | null
 }
 
 export type BudgetGridData = {
