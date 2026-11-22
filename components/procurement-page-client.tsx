@@ -48,6 +48,7 @@ type ProcurementPageClientProps = {
   initialProcurementFile: ProcurementFile
   initialPaymentsFile: PaymentsFile
   categories: Array<{ id: string; name: string }>
+  lineItems: Array<{ id: string; categoryId: string; name: string }>
   milestones: Array<{ id: string; name: string; plannedDate: string }>
   fundingSources: Array<{
     id: string
@@ -93,6 +94,7 @@ const EMPTY_PURCHASE_ORDER_FORM: SavePurchaseOrderInput = {
   supplierId: "",
   categoryId: "",
   quoteId: "",
+  lineItemId: "",
   title: "",
   amountExVat: 0,
   vatRate: 0.2,
@@ -176,6 +178,7 @@ function createPurchaseOrderForm(purchaseOrder?: PurchaseOrder): SavePurchaseOrd
     supplierId: purchaseOrder.supplierId,
     categoryId: purchaseOrder.categoryId || "",
     quoteId: purchaseOrder.quoteId || "",
+    lineItemId: purchaseOrder.lineItemId || "",
     title: purchaseOrder.title,
     amountExVat: purchaseOrder.amountExVat,
     vatRate: purchaseOrder.vatRate ?? 0.2,
@@ -237,6 +240,7 @@ export function ProcurementPageClient({
   initialProcurementFile,
   initialPaymentsFile,
   categories,
+  lineItems,
   milestones,
   fundingSources,
   canEdit,
@@ -824,6 +828,13 @@ export function ProcurementPageClient({
                   setPurchaseOrderForm((current) => ({
                     ...current,
                     categoryId: event.target.value,
+                    lineItemId: lineItems.some(
+                      (lineItem) =>
+                        lineItem.id === current.lineItemId &&
+                        lineItem.categoryId === event.target.value,
+                    )
+                      ? current.lineItemId
+                      : "",
                   }))
                 }
                 className="h-10 border border-border/70 bg-background px-3 text-sm"
@@ -835,6 +846,42 @@ export function ProcurementPageClient({
                     {category.name}
                   </option>
                 ))}
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Budget line</label>
+              <select
+                value={purchaseOrderForm.lineItemId || ""}
+                onChange={(event) => {
+                  const lineItem = lineItems.find((entry) => entry.id === event.target.value)
+                  setPurchaseOrderForm((current) => ({
+                    ...current,
+                    lineItemId: event.target.value,
+                    categoryId: lineItem?.categoryId || current.categoryId,
+                  }))
+                }}
+                className="h-10 border border-border/70 bg-background px-3 text-sm"
+                disabled={isSaving}
+              >
+                <option value="">Not allocated</option>
+                {categories
+                  .filter(
+                    (category) =>
+                      !purchaseOrderForm.categoryId || category.id === purchaseOrderForm.categoryId,
+                  )
+                  .map((category) => {
+                    const options = lineItems.filter((lineItem) => lineItem.categoryId === category.id)
+                    if (options.length === 0) return null
+                    return (
+                      <optgroup key={category.id} label={category.name}>
+                        {options.map((lineItem) => (
+                          <option key={lineItem.id} value={lineItem.id}>
+                            {lineItem.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )
+                  })}
               </select>
             </div>
             <div className="grid gap-2 xl:col-span-3">

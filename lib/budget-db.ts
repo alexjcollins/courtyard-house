@@ -159,6 +159,17 @@ export async function getBudgetGridData(): Promise<BudgetGridData> {
   const quoteById = new Map(procurement.quotes.map((q) => [q.id, q]))
   const lineItemByQuote = new Map(state.lineItems.filter((i) => i.quoteId).map((i) => [i.quoteId as string, i.id]))
 
+  const lineItemIds = new Set(state.lineItems.map((i) => i.id))
+  const posByLineItem = new Map<string, PurchaseOrder[]>()
+  for (const po of procurement.purchaseOrders) {
+    if (!po.lineItemId) continue
+    if (!lineItemIds.has(po.lineItemId)) {
+      warnings.push(`Purchase order "${po.title}" points at budget line ${po.lineItemId}, which no longer exists.`)
+      continue
+    }
+    posByLineItem.set(po.lineItemId, [...(posByLineItem.get(po.lineItemId) || []), po])
+  }
+
   for (const item of state.lineItems) {
     if (item.quoteId && !quoteById.has(item.quoteId)) {
       warnings.push(`"${item.name}" links to quote ${item.quoteId}, which no longer exists in procurement.`)
@@ -175,7 +186,10 @@ export async function getBudgetGridData(): Promise<BudgetGridData> {
       .filter((item) => item.categoryId === category.id)
       .map((item) => {
         const quote = item.quoteId ? quoteById.get(item.quoteId) : undefined
-        const pos = quote ? poByQuoteId.get(quote.id) || [] : []
+        // Spend reaches a line item two ways: its picked quote's PO, and any PO filed
+        // directly against it (e.g. every skip-hire PO → one "Skip hire" line).
+        const pos = [...(quote ? poByQuoteId.get(quote.id) || [] : []), ...(posByLineItem.get(item.id) || [])]
+          .filter((po, index, all) => all.findIndex((p) => p.id === po.id) === index)
         for (const po of pos) attributedPoIds.add(po.id)
         const spend = pos.length > 0 ? spendForPos(pos) : null
         return {

@@ -28,6 +28,11 @@ export default async function ProcurementPage() {
           id: category.id,
           name: category.name,
         }))}
+        lineItems={data.lineItemsFile.lineItems.map((lineItem) => ({
+          id: lineItem.id,
+          categoryId: lineItem.categoryId,
+          name: lineItem.name,
+        }))}
         milestones={data.timelineFile.milestones.map((milestone) => ({
           id: milestone.id,
           name: milestone.name,

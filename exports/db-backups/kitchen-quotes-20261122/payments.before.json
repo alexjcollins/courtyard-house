@@ -1,0 +1,321 @@
+{
+  "payments": [
+    {
+      "id": "pay-adam-watts-001",
+      "invoiceId": "inv-adam-watts-001",
+      "amountExVat": 160,
+      "paidDate": "2026-06-22",
+      "fundingSourceId": "src-savings",
+      "reference": "AW-PMT-001",
+      "notes": "Cash payment from personal savings for disconnecting power from the Nissen hut."
+    },
+    {
+      "id": "pay-integrum-001",
+      "invoiceId": "inv-integrum-001",
+      "amountExVat": 5100,
+      "paidDate": "2026-06-19",
+      "fundingSourceId": "src-ether",
+      "reference": "INT-PMT-001",
+      "notes": "Integrum site investigation and interpretative report paid from Ether."
+    },
+    {
+      "id": "pay-jba-045-01",
+      "invoiceId": "inv-jba-045-01",
+      "amountExVat": 6000,
+      "paidDate": "2025-07-30",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/01",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-02",
+      "invoiceId": "inv-jba-045-02",
+      "amountExVat": 6000,
+      "paidDate": "2025-08-23",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/02",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-03",
+      "invoiceId": "inv-jba-045-03",
+      "amountExVat": 6000,
+      "paidDate": "2025-09-21",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/03",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-05",
+      "invoiceId": "inv-jba-045-05",
+      "amountExVat": 6000,
+      "paidDate": "2025-10-24",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/05",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-07",
+      "invoiceId": "inv-jba-045-07",
+      "amountExVat": 6000,
+      "paidDate": "2025-11-19",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/07",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-08",
+      "invoiceId": "inv-jba-045-08",
+      "amountExVat": 3250,
+      "paidDate": "2025-12-17",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/08",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-09",
+      "invoiceId": "inv-jba-045-09",
+      "amountExVat": 3250,
+      "paidDate": "2026-01-12",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/09",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-10",
+      "invoiceId": "inv-jba-045-10",
+      "amountExVat": 3250,
+      "paidDate": "2026-02-12",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/10",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-11",
+      "invoiceId": "inv-jba-045-11",
+      "amountExVat": 3250,
+      "paidDate": "2026-03-12",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/11",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-12",
+      "invoiceId": "inv-jba-045-12",
+      "amountExVat": 3250,
+      "paidDate": "2026-04-12",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/12",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-jba-045-13",
+      "invoiceId": "inv-jba-045-13",
+      "amountExVat": 3250,
+      "paidDate": "2026-05-12",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/13",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-topographical-001",
+      "invoiceId": "inv-topographical-001",
+      "amountExVat": 1900,
+      "paidDate": "2025-07-30",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/01",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-pre-planning-001",
+      "invoiceId": "inv-pre-planning-001",
+      "amountExVat": 462.5,
+      "paidDate": "2025-09-30",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/04",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-arboricultural-001",
+      "invoiceId": "inv-arboricultural-001",
+      "amountExVat": 1475,
+      "paidDate": "2025-10-24",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/05",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-ecological-001",
+      "invoiceId": "inv-ecological-001",
+      "amountExVat": 3300,
+      "paidDate": "2025-11-14",
+      "fundingSourceId": "src-ether",
+      "reference": "JBA/045/06",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-csd-4297",
+      "invoiceId": "inv-csd-4297",
+      "amountExVat": 1200,
+      "paidDate": "2026-03-27",
+      "fundingSourceId": "src-ether",
+      "reference": "INV-4297",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-csd-4325",
+      "invoiceId": "inv-csd-4325",
+      "amountExVat": 1600,
+      "paidDate": "2026-04-24",
+      "fundingSourceId": "src-ether",
+      "reference": "INV-4325",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-csd-4354",
+      "invoiceId": "inv-csd-4354",
+      "amountExVat": 1200,
+      "paidDate": "2026-05-25",
+      "fundingSourceId": "src-ether",
+      "reference": "INV-4354",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-csd-4417",
+      "invoiceId": "inv-csd-4417",
+      "amountExVat": 1200,
+      "paidDate": "2026-07-20",
+      "fundingSourceId": "src-ether",
+      "reference": "INV-4417",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-csd-4460",
+      "invoiceId": "inv-csd-4460",
+      "amountExVat": 600,
+      "paidDate": "2026-08-21",
+      "fundingSourceId": "src-ether",
+      "reference": "INV-4460",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-eco-1794",
+      "invoiceId": "inv-eco-1794",
+      "amountExVat": 1150,
+      "paidDate": "2026-06-02",
+      "fundingSourceId": "src-savings",
+      "reference": "INV-1794",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-eco-1883",
+      "invoiceId": "inv-eco-1883",
+      "amountExVat": 450,
+      "paidDate": "2026-08-31",
+      "fundingSourceId": "src-savings",
+      "reference": "INV-1883",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-ne-neg5750",
+      "invoiceId": "inv-ne-neg5750",
+      "amountExVat": 570,
+      "paidDate": "2026-03-18",
+      "fundingSourceId": "src-savings",
+      "reference": "NEG5750",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-ne-neg7553",
+      "invoiceId": "inv-ne-neg7553",
+      "amountExVat": 1616,
+      "paidDate": "2026-07-23",
+      "fundingSourceId": "src-savings",
+      "reference": "NEG7553",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-mg3-006573",
+      "invoiceId": "inv-mg3-006573",
+      "amountExVat": 325,
+      "paidDate": "2026-03-20",
+      "fundingSourceId": "src-savings",
+      "reference": "INV-006573",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-planning-pp14662984",
+      "invoiceId": "inv-planning-pp14662984",
+      "amountExVat": 658.83,
+      "paidDate": "2026-01-29",
+      "fundingSourceId": "src-savings",
+      "reference": "PP-14662984"
+    },
+    {
+      "id": "pay-abc-street-naming",
+      "invoiceId": "inv-abc-street-naming",
+      "amountExVat": 78,
+      "paidDate": "2026-05-19",
+      "fundingSourceId": "src-savings",
+      "reference": "159-40016"
+    },
+    {
+      "id": "pay-cr-36262-0779",
+      "invoiceId": "inv-cr-36262-0779",
+      "amountExVat": 250,
+      "paidDate": "2026-09-11",
+      "fundingSourceId": "src-savings",
+      "reference": "36262/0779",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-mick-george-001",
+      "invoiceId": "inv-mick-george-001",
+      "amountExVat": 306.15,
+      "paidDate": "2026-05-24",
+      "fundingSourceId": "src-savings",
+      "reference": "Order #326905"
+    },
+    {
+      "id": "pay-sew-0252900",
+      "invoiceId": "inv-sew-0252900",
+      "amountExVat": 84.58,
+      "paidDate": "2026-05-28",
+      "fundingSourceId": "src-savings",
+      "reference": "INV0252900"
+    },
+    {
+      "id": "pay-south-east-water-001",
+      "invoiceId": "inv-south-east-water-001",
+      "amountExVat": 2142.23,
+      "paidDate": "2026-06-19",
+      "fundingSourceId": "src-savings",
+      "reference": "INV0254186"
+    },
+    {
+      "id": "pay-fgs-2876",
+      "invoiceId": "inv-fgs-2876",
+      "amountExVat": 1203.75,
+      "paidDate": "2026-08-13",
+      "fundingSourceId": "src-savings",
+      "reference": "INV-2876",
+      "notes": "Paid date assumed = due date (no remittance on file) — confirm."
+    },
+    {
+      "id": "pay-ukpn-92302226",
+      "invoiceId": "inv-ukpn-92302226",
+      "amountExVat": 1599,
+      "paidDate": "2026-06-22",
+      "fundingSourceId": "src-savings",
+      "reference": "92302226"
+    },
+    {
+      "id": "pay-enclosure-es6118",
+      "invoiceId": "inv-enclosure-es6118",
+      "amountExVat": 735,
+      "paidDate": "2026-06-28",
+      "fundingSourceId": "src-savings",
+      "reference": "ES6118"
+    }
+  ]
+}

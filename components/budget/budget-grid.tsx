@@ -1021,7 +1021,7 @@ export function BudgetGrid({
 
       <p className="text-xs text-muted-foreground">
         Amounts ex VAT. Arrow keys move, Enter or typing edits, Tab/Enter saves, Esc cancels. Actual = invoiced; Paid = money
-        out to contractors. Line-item Actual/Paid follow the picked quote’s purchase order.
+        out to contractors. Line-item Actual/Paid come from purchase orders filed against the line (Procurement → Budget line) or its picked quote.
       </p>
 
       <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => !open && setPendingDelete(null)}>

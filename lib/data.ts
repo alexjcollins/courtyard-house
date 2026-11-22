@@ -127,6 +127,8 @@ export type PurchaseOrder = {
   supplierId: string
   categoryId?: string
   quoteId?: string
+  /** Budget line item this PO's spend rolls up to (many POs → one line item). */
+  lineItemId?: string
   title: string
   amountExVat: number
   vatRate?: VatRate
@@ -1510,6 +1512,8 @@ export type SavePurchaseOrderInput = {
   supplierId: string
   categoryId?: string
   quoteId?: string
+  /** Omit to keep the current link; "" clears it. */
+  lineItemId?: string
   title: string
   amountExVat: number
   vatRate?: VatRate
@@ -1872,13 +1876,22 @@ export async function deleteQuote(quoteId: string): Promise<void> {
 export async function savePurchaseOrder(
   input: SavePurchaseOrderInput,
 ): Promise<PurchaseOrder> {
-  const [procurementFile, categoriesFile] = await Promise.all([
+  const [procurementFile, categoriesFile, lineItemsFile] = await Promise.all([
     readJsonFile<ProcurementFile>("procurement.json"),
     readJsonFile<CategoriesFile>("categories.json"),
+    readJsonFile<{ lineItems: LineItem[] }>("lineItems.json"),
   ])
 
   if (!procurementFile.suppliers.some((supplier) => supplier.id === input.supplierId)) {
     throw new Error("Supplier not found.")
+  }
+
+  const linkedLineItem = input.lineItemId
+    ? lineItemsFile.lineItems.find((lineItem) => lineItem.id === input.lineItemId) || null
+    : null
+
+  if (input.lineItemId && !linkedLineItem) {
+    throw new Error("Budget line item not found.")
   }
 
   if (input.categoryId && !categoriesFile.categories.some((category) => category.id === input.categoryId)) {
@@ -1950,8 +1963,14 @@ export async function savePurchaseOrder(
   const nextPurchaseOrder: PurchaseOrder = {
     id: existingPurchaseOrder?.id || createPurchaseOrderId(input.title),
     supplierId: input.supplierId,
-    categoryId: input.categoryId || linkedQuote?.categoryId || undefined,
+    // A budget line fixes the category, so the PO can't roll up across categories.
+    categoryId:
+      linkedLineItem?.categoryId || input.categoryId || linkedQuote?.categoryId || undefined,
     quoteId: input.quoteId || undefined,
+    lineItemId:
+      input.lineItemId === undefined
+        ? existingPurchaseOrder?.lineItemId
+        : linkedLineItem?.id || undefined,
     title: input.title.trim(),
     amountExVat: Number(input.amountExVat || 0),
     vatRate: input.vatRate ?? existingPurchaseOrder?.vatRate ?? linkedQuote?.vatRate ?? 0,
