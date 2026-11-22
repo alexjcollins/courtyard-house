@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { formatDelta, formatMoney, parseMoney } from "@/components/budget/budget-format"
 
-const LAND_COST = 260_000
+const LAND_COST = 285_000
 const STORAGE_KEY = "courtyard-house:sale-scenarios:v1"
 const CASES = ["Low", "Base", "High"] as const
 type SaleCase = (typeof CASES)[number]

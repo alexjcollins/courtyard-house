@@ -40,6 +40,7 @@ import {
   ChevronsUpDown,
   FileText,
   Hash,
+  Hourglass,
   MoreHorizontal,
   Percent,
   Plus,
@@ -118,6 +119,8 @@ type BudgetRow = {
   quoteDeltaExVat: number | null
   actualExVat: number | null
   paidExVat: number | null
+  /** Invoiced but not yet paid (Actual − Paid). Null when nothing is invoiced against the row. */
+  outstandingExVat: number | null
   remainingExVat: number
   vatRate: number
   category: BudgetGridCategory
@@ -151,6 +154,11 @@ type BudgetTableRow = Row<typeof features, BudgetRow>
 
 const helper = createColumnHelper<typeof features, BudgetRow>()
 
+function outstanding(actual: number | null, paid: number | null): number | null {
+  if (actual === null) return null
+  return Math.round((actual - (paid ?? 0)) * 100) / 100
+}
+
 function itemRemaining(item: BudgetGridItem): number {
   return Math.round((item.budgetExVat - (item.actualExVat ?? 0)) * 100) / 100
 }
@@ -166,6 +174,7 @@ function toRows(categories: BudgetGridCategory[]): BudgetRow[] {
     quoteDeltaExVat: category.quoteDeltaExVat,
     actualExVat: category.actualExVat,
     paidExVat: category.paidExVat,
+    outstandingExVat: outstanding(category.actualExVat, category.paidExVat),
     remainingExVat: Math.round((category.budgetExVat - category.actualExVat) * 100) / 100,
     vatRate: category.vatRate,
     category,
@@ -181,6 +190,7 @@ function toRows(categories: BudgetGridCategory[]): BudgetRow[] {
         item.quotedExVat === null ? null : Math.round((item.quotedExVat - item.budgetExVat) * 100) / 100,
       actualExVat: item.actualExVat,
       paidExVat: item.paidExVat,
+      outstandingExVat: outstanding(item.actualExVat, item.paidExVat),
       remainingExVat: itemRemaining(item),
       vatRate: item.vatRate,
       category,
@@ -248,11 +258,18 @@ const columns = helper.columns([
     sortUndefined: "last",
     meta: { align: "right", width: 124, icon: <Banknote className="size-3.5" /> },
   }),
+  helper.accessor((row) => row.outstandingExVat ?? undefined, {
+    id: "outstanding",
+    header: "Outstanding",
+    sortFn: "basic",
+    sortUndefined: "last",
+    meta: { align: "right", width: 136, icon: <Hourglass className="size-3.5" /> },
+  }),
   helper.accessor("remainingExVat", {
     id: "remaining",
-    header: "Remaining",
+    header: "Remaining Budget",
     sortFn: "basic",
-    meta: { align: "right", width: 128, icon: <Wallet className="size-3.5" /> },
+    meta: { align: "right", width: 164, icon: <Wallet className="size-3.5" /> },
   }),
   helper.accessor("vatRate", {
     id: "vat",
@@ -267,7 +284,17 @@ const columns = helper.columns([
   }),
 ])
 
-const COLUMN_IDS = ["name", "budget", "quoted", "quoteDelta", "actual", "paid", "remaining", "vat"] as const
+const COLUMN_IDS = [
+  "name",
+  "budget",
+  "quoted",
+  "quoteDelta",
+  "actual",
+  "paid",
+  "outstanding",
+  "remaining",
+  "vat",
+] as const
 type ColumnId = (typeof COLUMN_IDS)[number]
 
 function columnMeta(columnId: string): BudgetColumnMeta {
@@ -703,6 +730,7 @@ export function BudgetGrid({
       quoteDelta: quoted.length ? sum((c) => c.quoteDeltaExVat ?? 0) : null,
       actual: sum((c) => c.actualExVat),
       paid: sum((c) => c.paidExVat),
+      outstanding: sum((c) => c.actualExVat - c.paidExVat),
       remaining: sum((c) => c.budgetExVat - c.actualExVat),
     }
   }, [data])
@@ -990,6 +1018,7 @@ export function BudgetGrid({
                 quoteDelta: <DeltaText value={visibleTotals.quoteDelta} />,
                 actual: formatMoney(visibleTotals.actual),
                 paid: formatMoney(visibleTotals.paid),
+                outstanding: formatMoney(visibleTotals.outstanding),
                 remaining: formatMoney(visibleTotals.remaining),
               }}
             />
@@ -1021,7 +1050,7 @@ export function BudgetGrid({
 
       <p className="text-xs text-muted-foreground">
         Amounts ex VAT. Arrow keys move, Enter or typing edits, Tab/Enter saves, Esc cancels. Actual = invoiced; Paid = money
-        out to contractors. Line-item Actual/Paid come from purchase orders filed against the line (Procurement → Budget line) or its picked quote.
+        out to contractors; Outstanding = invoiced but not yet paid; Remaining Budget = budget − invoiced. Line-item Actual/Paid come from purchase orders filed against the line (Procurement → Budget line) or its picked quote.
       </p>
 
       <AlertDialog open={pendingDelete !== null} onOpenChange={(open) => !open && setPendingDelete(null)}>
@@ -1400,6 +1429,20 @@ function CellDisplay({
         </Popover>
       )
     }
+
+    case "outstanding":
+      if (r.outstandingExVat === null) return <Muted>—</Muted>
+      if (Math.abs(r.outstandingExVat) < 0.005) return <span className="text-muted-foreground/60">£0</span>
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="text-amber-700 dark:text-amber-400">{formatMoney(r.outstandingExVat)}</span>
+          </TooltipTrigger>
+          <TooltipContent className="text-xs">
+            Invoiced {formatMoney(r.actualExVat)} − paid {formatMoney(r.paidExVat ?? 0)}: still owed to contractors
+          </TooltipContent>
+        </Tooltip>
+      )
 
     case "remaining":
       return (

@@ -28,6 +28,9 @@ import type {
 import { getLegacyDecisionsFileFromDatabase, getPool } from "@/lib/decisions-db"
 import { readDataFileText } from "@/lib/storage"
 
+/** Quotes that no longer need a budget line (they don't count as "unassigned"). */
+const CLOSED_QUOTE_STATUSES = new Set(["superseded", "rejected", "declined", "expired"])
+
 export { BudgetError } from "@/lib/budget-core.mjs"
 export type { BudgetChange, BudgetApplyResult } from "@/lib/budget-core.mjs"
 
@@ -239,7 +242,10 @@ export async function getBudgetGridData(): Promise<BudgetGridData> {
       unallocatedPaidExVat: round(categorySpend.paid - ownAttributed.paid),
       payees: sortPayees(categorySpend.payees),
       unassignedQuoteCount: procurement.quotes.filter(
-        (q) => q.categoryId === category.id && !lineItemByQuote.has(q.id),
+        (q) =>
+          q.categoryId === category.id &&
+          !lineItemByQuote.has(q.id) &&
+          !CLOSED_QUOTE_STATUSES.has(q.status.toLowerCase()),
       ).length,
       decisionDeltaExVat: decisionDeltaByCategory.has(category.id)
         ? round(decisionDeltaByCategory.get(category.id) || 0)
